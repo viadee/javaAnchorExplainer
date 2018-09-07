@@ -11,9 +11,11 @@
     <name>AnchorJ</name>
     <description>Java application implementing the Anchors algorithm (https://github.com/marcotcr/anchor)</description>
 
-
     <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <jdk.version>8</jdk.version>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
         <slf4j.version>1.7.16</slf4j.version>
         <log4j.version>2.8.1</log4j.version>
     </properties>
