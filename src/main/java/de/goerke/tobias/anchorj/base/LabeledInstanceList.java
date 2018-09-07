@@ -29,9 +29,7 @@ public abstract class LabeledInstanceList<T extends DataInstance<?>> extends Abs
         if (labels.length != dataInstances.length)
             throw new IllegalArgumentException("There must be a label for each instance");
         // Not all instances must have the same feature length. Look at e.g. text instances where each
-        // instance is a text of variable length
-        //if (Stream.of(dataInstances).mapToInt(DataInstance::getFeatureCount).distinct().count() != 1)
-        //    throw new IllegalArgumentException("All instances must have the same feature count");
+        // instance is a text of variable length. Therefore, no validation here.
         this.dataInstances = dataInstances;
         this.labels = labels;
         this.featureCount = dataInstances[0].getFeatureCount();

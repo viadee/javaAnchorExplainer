@@ -1,6 +1,7 @@
 package de.goerke.tobias.anchorj.image;
 
 import java.awt.image.BufferedImage;
+import java.io.Serializable;
 
 /**
  * This interface is used to describe images.
@@ -10,7 +11,7 @@ import java.awt.image.BufferedImage;
  * <p>
  * Hence, this interface shall enable the use of different, optimized image implementations.
  */
-public interface ImageRepresentation {
+public interface ImageRepresentation extends Serializable {
 
     /**
      * Returns a blank image of the same size as the current one.
@@ -40,11 +41,6 @@ public interface ImageRepresentation {
      * @return the width of the image
      */
     int getWidth();
-
-//    /**
-//     * @return an array of all pixels the image contains. Indexed as {@code x + y * width}
-//     */
-//    int[] getPixels();
 
     /**
      * @param x x-coordinate

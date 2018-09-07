@@ -74,8 +74,8 @@ public class TabularInstanceVisualizer {
 
     private static <K, V> Map<V, K> invertMap(Map<K, V> toInvert) {
         final Map<V, K> result = new LinkedHashMap<>();
-        for (K k : toInvert.keySet()) {
-            result.put(toInvert.get(k), k);
+        for (Map.Entry<K, V> entry : toInvert.entrySet()) {
+            result.put(entry.getValue(), entry.getKey());
         }
         return result;
     }

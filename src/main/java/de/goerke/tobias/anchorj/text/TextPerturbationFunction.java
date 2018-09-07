@@ -51,8 +51,8 @@ public class TextPerturbationFunction implements PerturbationFunction<TextInstan
      * @return the alternative
      */
     private String getAlternative(final int index) {
-        final List<String> alternatives = this.alternatives.get(index);
-        return alternatives.get(random.nextInt(alternatives.size()));
+        final List<String> currentAlternatives = this.alternatives.get(index);
+        return currentAlternatives.get(random.nextInt(currentAlternatives.size()));
     }
 
     /**

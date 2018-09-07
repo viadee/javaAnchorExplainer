@@ -7,6 +7,9 @@ package de.goerke.tobias.anchorj.util;
  */
 public final class BernoulliUtils {
 
+    private BernoulliUtils() {
+    }
+
     static double klBernoulli(double p, double q) {
         p = Math.min(0.9999999999999999, Math.max(0.0000001, p));
         q = Math.min(0.9999999999999999, Math.max(0.0000001, q));

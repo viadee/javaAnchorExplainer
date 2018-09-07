@@ -9,6 +9,9 @@ import java.util.stream.Stream;
  */
 public final class ArrayUtils {
 
+    private ArrayUtils() {
+    }
+
     /**
      * Appends a column to an existing table
      *
@@ -89,7 +92,7 @@ public final class ArrayUtils {
                     try {
                         intRow[j] = Integer.valueOf((String) cell);
                     } catch (Exception e) {
-                        throw new RuntimeException("Cell is not convertable");
+                        throw new IllegalArgumentException("Cell is not convertable");
                     }
                 }
             }

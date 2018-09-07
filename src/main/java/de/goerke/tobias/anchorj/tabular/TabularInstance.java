@@ -28,13 +28,6 @@ public class TabularInstance implements DataInstance<Integer[]> {
         this.instance = copy;
     }
 
-    // public static TabularInstance[] fromArray(Integer[][] array) {
-    //     TabularInstance[] result = new TabularInstance[array.length];
-    //     for (int i = 0; i < result.length; i++)
-    //         result[i] = new TabularInstance(array[i]);
-    //     return result;
-    // }
-
     @Override
     public Integer[] getInstance() {
         return instance;

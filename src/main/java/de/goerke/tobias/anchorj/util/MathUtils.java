@@ -8,6 +8,9 @@ import java.util.stream.Stream;
  */
 public final class MathUtils {
 
+    private MathUtils() {
+    }
+
     /**
      * Argsort function
      * <p>
@@ -25,7 +28,7 @@ public final class MathUtils {
      * <p>
      * "Which index would belong where if the array was sorted?"
      *
-     * @param a the array
+     * @param a         the array
      * @param ascending if true, ascending. Descending otherwise
      * @return the array sorted by its indices
      */

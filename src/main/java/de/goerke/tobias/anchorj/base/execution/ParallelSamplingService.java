@@ -48,16 +48,6 @@ public class ParallelSamplingService extends AbstractSamplingService {
                 LOGGER.warn("Thread interrupted", e);
                 Thread.currentThread().interrupt();
             }
-            // This is actually slower as is shuts down the executor, requiring a new one that instantiates threads again
-//        for (Runnable runnable : runnableList) {
-//            executor.execute(runnable);
-//        }
-//        executor.shutdown();
-//        try {
-//            executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
-//        } catch (InterruptedException e) {
-//            throw new RuntimeException(e);
-//        }
         }
     }
 }

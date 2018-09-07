@@ -26,7 +26,7 @@ public class BalancedParallelSamplingService extends ParallelSamplingService {
     }
 
     private class BalancedParallelSession extends ParallelSession {
-
+        @Override
         protected Collection<Callable<Object>> createCallables() {
             Collection<Callable<Object>> result = new ArrayList<>();
             // Equally distribute all calls (no matter which candidate) among the different threads

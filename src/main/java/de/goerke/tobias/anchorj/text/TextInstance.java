@@ -9,7 +9,6 @@ import java.util.function.Function;
  */
 public class TextInstance implements DataInstance<String[]> {
     private static final Function<String, String[]> DEFAULT_TOKENIZER = s -> s.split(" ");
-    private final String content;
     private final String[] tokens;
 
     /**
@@ -17,7 +16,7 @@ public class TextInstance implements DataInstance<String[]> {
      * @param tokenizer the tokenizer used to extract all features
      */
     private TextInstance(final String content, final Function<String, String[]> tokenizer) {
-        this(content, tokenizer.apply(content));
+        this(tokenizer.apply(content));
     }
 
     /**
@@ -35,17 +34,6 @@ public class TextInstance implements DataInstance<String[]> {
      * @param tokens the tokens of the instance
      */
     public TextInstance(final String[] tokens) {
-        this(String.join(" ", tokens), tokens);
-    }
-
-    /**
-     * Creates the instance by specifying all features of it
-     *
-     * @param content the content
-     * @param tokens  the tokens of the instance
-     */
-    public TextInstance(final String content, final String[] tokens) {
-        this.content = content;
         this.tokens = tokens;
     }
 

@@ -34,10 +34,6 @@ public class ImageInstance implements DataInstance<ImageRepresentation> {
         this.featureCount = Math.toIntExact(IntStream.of(labels).distinct().count());
     }
 
-//    public static ImageInstance createLabelsFromSuperpixels(ImageRepresentation originalImage, int width, int proximityModifier) {
-//        return Superpixel.calculateClusters(originalImage, width, proximityModifier);
-//    }
-
     @Override
     public ImageRepresentation getInstance() {
         return originalImage;
