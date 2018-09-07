@@ -58,7 +58,7 @@ the coverage calculation function may be customized. Additionally, the algorithm
 
 ## License
 
-TODO no license, yet
+BSD 3-Clause License
 
 ## Acknowledgments
 
