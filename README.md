@@ -1,6 +1,8 @@
 # Anchorj
 
-This project provides an implementation of the Anchors explanation algorithm.
+[![Build Status](https://travis-ci.org/viadee/javaAnchorExplainer.svg?branch=master)](https://travis-ci.org/viadee/javaAnchorExplainer)
+
+This project provides an efficient java implementation of the Anchors explanation algorithm for machine learning models.
 
 The initial proposal "Anchors: High-Precision Model-Agnostic Explanations" by Marco Tulio Ribeiro (2018) can be found
 [*here*](https://homes.cs.washington.edu/~marcotcr/aaai18.pdf).
@@ -9,7 +11,6 @@ The initial proposal "Anchors: High-Precision Model-Agnostic Explanations" by Ma
 ## The Algorithm
 
 A short description of how the algorithm works is provided in the author's [*GitHub repository*](https://github.com/marcotcr/anchor/):
-
 
 > An anchor explanation is a rule that sufficiently “anchors” the
 prediction locally – such that changes to the rest of the feature
