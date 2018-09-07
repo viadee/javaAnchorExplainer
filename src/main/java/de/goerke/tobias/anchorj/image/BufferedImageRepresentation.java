@@ -15,6 +15,14 @@ import java.io.ByteArrayOutputStream;
 public class BufferedImageRepresentation extends BufferedImage implements ImageRepresentation {
 
     /**
+     * Only to be used for serialization purposes
+     */
+    @Deprecated
+    public BufferedImageRepresentation() {
+        super(0, 0, 0);
+    }
+
+    /**
      * Creates the instance
      *
      * @param source the image to copy from
