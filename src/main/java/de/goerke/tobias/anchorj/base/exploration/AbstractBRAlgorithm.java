@@ -121,6 +121,11 @@ abstract class AbstractBRAlgorithm implements BestAnchorIdentification {
 
                 @Override
                 public T next() {
+                    // Added to comply with code checks.
+                    // Contract of next-method required NoSuchElementException to be thrown when there are no more elems
+                    if (!hasNext()) {
+                        throw new NoSuchElementException();
+                    }
                     final T res = coll.get(index);
                     index = (index + 1) % coll.size();
                     return res;

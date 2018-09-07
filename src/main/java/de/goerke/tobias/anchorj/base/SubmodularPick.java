@@ -98,7 +98,8 @@ public class SubmodularPick<T extends DataInstance<?>> {
         try {
             executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
         } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+            LOGGER.warn("Thread interrupted", e);
+            Thread.currentThread().interrupt();
         }
         return threadResults;
     }

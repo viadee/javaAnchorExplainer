@@ -50,6 +50,36 @@ public class TabularInstanceList extends LabeledInstanceList<TabularInstance> {
         this(copyList.dataInstances, copyList.labels, copyList.features);
     }
 
+    private static Integer[][] balanceDataset(Integer[][] values, Integer[] labels) {
+        Map<Integer, List<Integer[]>> labelToRow = new HashMap<>();
+        Map<Integer, Integer> labelDistribution = new HashMap<>();
+        for (int i = 0; i < labels.length; i++) {
+            int label = labels[i];
+            int count;
+            List<Integer[]> rows;
+            if (labelDistribution.containsKey(label)) {
+                count = labelDistribution.get(label);
+                rows = labelToRow.get(label);
+            } else {
+                count = 0;
+                rows = new ArrayList<>();
+            }
+            labelDistribution.put(label, count + 1);
+            rows.add(values[i]);
+            labelToRow.put(label, rows);
+        }
+
+        List<Integer[]> rearranged = new ArrayList<>();
+        int rarestLabelCount = labelDistribution.entrySet().stream().min(Comparator.comparingInt(Map.Entry::getValue))
+                .orElseThrow(IllegalArgumentException::new).getValue();
+        for (int uniqueLabel : labelDistribution.keySet()) {
+            List<Integer[]> applicableRows = labelToRow.get(uniqueLabel);
+            rearranged.addAll(applicableRows.stream().limit(rarestLabelCount).collect(Collectors.toList()));
+        }
+        Collections.shuffle(rearranged);
+        return rearranged.toArray(new Integer[rearranged.size()][]);
+    }
+
     /**
      * Truncates the set of instances so that each label has the same amount of instances
      *
@@ -67,7 +97,6 @@ public class TabularInstanceList extends LabeledInstanceList<TabularInstance> {
         return new TabularInstanceList(Stream.of(table).map(TabularInstance::new).toArray(TabularInstance[]::new),
                 newLabels, features);
     }
-
 
     /**
      * @return an UnmodifiableList of the contained features
@@ -108,35 +137,6 @@ public class TabularInstanceList extends LabeledInstanceList<TabularInstance> {
                 new TabularInstanceList(beforeSplitArray, beforeSplitLabels, features),
                 new TabularInstanceList(afterSplitArray, afterSplitLabels, features)
         ));
-    }
-
-    private static Integer[][] balanceDataset(Integer[][] values, Integer[] labels) {
-        Map<Integer, List<Integer[]>> labelToRow = new HashMap<>();
-        Map<Integer, Integer> labelDistribution = new HashMap<>();
-        for (int i = 0; i < labels.length; i++) {
-            int label = labels[i];
-            int count;
-            List<Integer[]> rows;
-            if (labelDistribution.containsKey(label)) {
-                count = labelDistribution.get(label);
-                rows = labelToRow.get(label);
-            } else {
-                count = 0;
-                rows = new ArrayList<>();
-            }
-            labelDistribution.put(label, count + 1);
-            rows.add(values[i]);
-            labelToRow.put(label, rows);
-        }
-
-        List<Integer[]> rearranged = new ArrayList<>();
-        int rarestLabelCount = labelDistribution.entrySet().stream().min(Comparator.comparingInt(Map.Entry::getValue)).get().getValue();
-        for (int uniqueLabel : labelDistribution.keySet()) {
-            List<Integer[]> applicableRows = labelToRow.get(uniqueLabel);
-            rearranged.addAll(applicableRows.stream().limit(rarestLabelCount).collect(Collectors.toList()));
-        }
-        Collections.shuffle(rearranged);
-        return rearranged.toArray(new Integer[rearranged.size()][]);
     }
 
 }

@@ -113,7 +113,7 @@ public class BatchSAR extends AbstractBRAlgorithm {
 
     private int calculateM(int n, int c1, int s) {
         // Base term
-        final double baseNominator = (b * batchBudget) - IntStream.rangeClosed(nn + 1, n)
+        final int baseNominator = (b * batchBudget) - IntStream.rangeClosed(nn + 1, n)
                 .map(i -> ceil(b / (double) i)).sum() - c1;
         final double baseDenominator = (nn / (double) 2) + IntStream.rangeClosed(nn + 1, n)
                 .mapToDouble(i -> 1 / (double) i).sum();

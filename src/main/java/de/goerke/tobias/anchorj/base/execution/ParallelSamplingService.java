@@ -1,6 +1,8 @@
 package de.goerke.tobias.anchorj.base.execution;
 
 import de.goerke.tobias.anchorj.base.AnchorCandidate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.concurrent.Callable;
@@ -13,6 +15,8 @@ import java.util.stream.Collectors;
  * Implementation of the {@link AbstractSamplingService} that gathers samples in a multiple threads.
  */
 public class ParallelSamplingService extends AbstractSamplingService {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ParallelSamplingService.class);
+
     private final ExecutorService executor;
     final int threadCount;
 
@@ -41,7 +45,8 @@ public class ParallelSamplingService extends AbstractSamplingService {
             try {
                 executor.invokeAll(createCallables());
             } catch (InterruptedException e) {
-                throw new RuntimeException(e);
+                LOGGER.warn("Thread interrupted", e);
+                Thread.currentThread().interrupt();
             }
             // This is actually slower as is shuts down the executor, requiring a new one that instantiates threads again
 //        for (Runnable runnable : runnableList) {
