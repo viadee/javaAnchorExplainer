@@ -16,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * This test compares results with these of the original Anchor implementation
  */
-class KL_LUCBTest {
+public class KL_LUCBTest {
     private static AbstractSamplingService mockIdentify(int[] predictionsToReturn) {
         AtomicInteger currentIndex = new AtomicInteger(0);
         BiFunction<AnchorCandidate, Integer, Double> function = (a, b) -> {
@@ -48,7 +48,7 @@ class KL_LUCBTest {
 
     @Test
     @SuppressWarnings("deprecation")
-    void updateBoundsTest() {
+    public void updateBoundsTest() {
         int[] result = mockUpdateBounds(1, 5, new int[]{1, 1, 1, 1, 1},
                 new double[]{0, 1, 1, 1, 0}, 1, new double[]{0, 0, 0, 0, 0},
                 new double[]{0, 0, 0, 0, 0});
@@ -111,7 +111,7 @@ class KL_LUCBTest {
 
     @Test
     @SuppressWarnings("deprecation")
-    void testBestCandidate() {
+    public void testBestCandidate() {
         List<AnchorCandidate> candidates = mockCandidates(Arrays.asList(
                 new Integer[]{0},
                 new Integer[]{1},

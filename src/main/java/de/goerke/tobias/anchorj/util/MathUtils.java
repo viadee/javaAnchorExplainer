@@ -32,7 +32,7 @@ public final class MathUtils {
      * @param ascending if true, ascending. Descending otherwise
      * @return the array sorted by its indices
      */
-    private static int[] argSort(final double[] a, final boolean ascending) {
+    public static int[] argSort(final double[] a, final boolean ascending) {
         final Integer[] indexes = new Integer[a.length];
         for (int i = 0; i < indexes.length; i++) {
             indexes[i] = i;

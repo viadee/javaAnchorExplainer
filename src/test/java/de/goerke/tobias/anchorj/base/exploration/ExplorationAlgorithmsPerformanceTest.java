@@ -2,6 +2,7 @@ package de.goerke.tobias.anchorj.base.exploration;
 
 import de.goerke.tobias.anchorj.base.AnchorCandidate;
 import de.goerke.tobias.anchorj.base.execution.AbstractSamplingService;
+import de.goerke.tobias.anchorj.util.NoiseGenerator;
 import org.junit.jupiter.api.*;
 
 import java.util.*;
@@ -14,20 +15,17 @@ import java.util.function.BiFunction;
 @Disabled
 public class ExplorationAlgorithmsPerformanceTest {
 
-    /**
-     * Candidates under test
-     */
-    private Map<AnchorCandidate, Double> candidateToMeanValues;
-
     /*
      * Meta test vars
      */
     private static final int CANDIDATE_COUNT = 100;
-
     private final Map<String, Map<String, Object>> testParamsMap = new HashMap<>();
-    private Map<String, Object> currentMap;
-
     private final Random rnd = new Random();
+    /**
+     * Candidates under test
+     */
+    private Map<AnchorCandidate, Double> candidateToMeanValues;
+    private Map<String, Object> currentMap;
 
     @AfterAll
     void outputTestResults() {
@@ -113,7 +111,7 @@ public class ExplorationAlgorithmsPerformanceTest {
                 Thread.sleep(5);
             } catch (Exception ignored) {
             }
-            double noised = gaussianNoise(candidateToMeanValues.get(candidate));
+            double noised = NoiseGenerator.generateGaussianNoise(candidateToMeanValues.get(candidate), 0.04);
             if (noised < 0)
                 noised = 0;
             if (noised > 1)
@@ -124,10 +122,5 @@ public class ExplorationAlgorithmsPerformanceTest {
         };
 
         return AbstractSamplingService.createExecution(function, threadCount, true);
-    }
-
-
-    private double gaussianNoise(double mean) {
-        return rnd.nextGaussian() * Math.sqrt(0.04) + mean;
     }
 }

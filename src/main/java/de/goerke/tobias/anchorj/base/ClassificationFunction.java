@@ -1,7 +1,5 @@
 package de.goerke.tobias.anchorj.base;
 
-import java.lang.reflect.Array;
-
 /**
  * Interface for models predicting an instance's label
  *
@@ -15,17 +13,25 @@ public interface ClassificationFunction<T extends DataInstance<?>> {
      * @param instance the instance to predict a label for
      * @return the instance's predicted label
      */
-    default int predict(T instance) {
-        @SuppressWarnings("unchecked") final T[] array = (T[]) Array.newInstance(instance.getClass(), 1);
-        array[0] = instance;
-        return predict(array)[0];
-    }
+    int predict(T instance);
+//    {
+//        @SuppressWarnings("unchecked") final T[] array = (T[]) Array.newInstance(instance.getClass(), 1);
+//        array[0] = instance;
+//        return predict(array)[0];
+//    }
 
     /**
-     * Labels a set of instances according to the models prediction
+     * Labels a set of instances according to the models prediction.
+     * <p>
+     * Overwrite only if the model provides mechanisms to predict multiple instances more efficiently than a single one.
      *
      * @param instances the instances to predict labels for
      * @return the instances' predicted labels
      */
-    int[] predict(T[] instances);
+    default int[] predict(T[] instances) {
+        int[] result = new int[instances.length];
+        for (int i = 0; i < instances.length; i++)
+            result[i] = predict(instances[i]);
+        return result;
+    }
 }

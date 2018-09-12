@@ -18,7 +18,9 @@ public interface PerturbationFunction<T extends DataInstance<?>> {
      * @param instance the instance to initialize the function for
      * @return an instance of the {@link PerturbationFunction}
      */
-    PerturbationFunction<T> createForInstance(T instance);
+    default PerturbationFunction<T> createForInstance(T instance) {
+        throw new UnsupportedOperationException("createForInstance must be implemented to use SubmodularPick.");
+    }
 
     /**
      * Perturbs an instance to create a possibly similar instance.
