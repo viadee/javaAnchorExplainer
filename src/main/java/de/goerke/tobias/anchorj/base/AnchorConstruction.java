@@ -409,7 +409,7 @@ public class AnchorConstruction<T extends DataInstance<?>> {
      * In case no anchors get found or, in general, the precision is bad, there could be multiple reasons for this:
      * <ul>
      * <li>The perturbation function is of low quality</li>
-     * <li>The prediction for the current prediction is low as it might be a thin prediction</li>
+     * <li>The precision for the current prediction is low as it might be a thin prediction</li>
      * <li>The beam size is too small and suboptimal choices have been made</li>
      * </ul>
      *
@@ -417,7 +417,7 @@ public class AnchorConstruction<T extends DataInstance<?>> {
      * @throws NoCandidateFoundException if no single candidate with a precision &gt; 0 could be found.
      * @throws NoAnchorFoundException    if no candidate could be found that matches the specified bounds
      */
-    public AnchorResult<T> constructAnchor() throws NoCandidateFoundException, NoAnchorFoundException {
+    public AnchorResult<T> constructAnchor() throws NoCandidateFoundException, NoAnchorFoundException { // FIXME: Exceptions used as a control structure - this should be part of AnchorResult
         return new AnchorResult<>(beamSearch(), explainedInstance, explainedInstanceLabel);
     }
 }
