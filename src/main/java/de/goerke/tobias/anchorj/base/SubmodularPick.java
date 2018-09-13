@@ -107,14 +107,15 @@ public class SubmodularPick<T extends DataInstance<?>> {
     private AnchorResult<T> setupForInstance(final AnchorConstructionBuilder<T> anchorConstructionBuilder,
                                              final T instance, final int label) {
         try {
-            return anchorConstructionBuilder.setupForSP(instance, label).build().constructAnchor();
+            final AnchorResult<T> anchorResult = anchorConstructionBuilder.setupForSP(instance, label).build().constructAnchor();
+            if (!anchorResult.isAnchor()) {
+                LOGGER.debug("Could not find an anchor for instance {}. Discarding best candidate.",
+                        instance);
+                return null;
+            }
+            return anchorResult;
         } catch (NoCandidateFoundException e) {
             LOGGER.warn("Could not find a candidate for instance {}", instance);
-            return null;
-        } catch (NoAnchorFoundException e) {
-            LOGGER.debug("Could not find an anchor for instance {}. Discarding best candidate.",
-                    instance);
-            //return e.getBestCandidate();
             return null;
         }
     }

@@ -314,11 +314,10 @@ public class AnchorConstruction<T extends DataInstance<?>> {
      *      return A∗
      * </pre>
      *
-     * @return the {@link AnchorCandidate} result of the beam-search
+     * @return the {@link AnchorResult} of the beam-search
      * @throws NoCandidateFoundException if no single candidate with a precision greater than 0 could be found.
-     * @throws NoAnchorFoundException    if no candidate could be found that matches the specified bounds
      */
-    private AnchorCandidate beamSearch() throws NoCandidateFoundException, NoAnchorFoundException {
+    private AnchorResult<T> beamSearch() throws NoCandidateFoundException {
         LOGGER.info("Starting beam search with beam width {} and a max anchor size of {}", beamSize, maxAnchorSize);
         final double startTime = System.currentTimeMillis();
 
@@ -378,6 +377,7 @@ public class AnchorConstruction<T extends DataInstance<?>> {
         }
 
         // No anchor could be found. Now return best anchor out of all rounds
+        final boolean isAnchor = (bestCandidate != null);
         if (bestCandidate == null) {
             LOGGER.warn("Could not identify an anchor satisfying the parameters." +
                     "Searching for best candidate.");
@@ -392,13 +392,11 @@ public class AnchorConstruction<T extends DataInstance<?>> {
             bestCandidate = bestCandidates.get(0);
             // As the candidate is no anchor, its coverage has not yet been calculated
             calculateCandidateCoverage(bestCandidate);
-            LOGGER.warn("Throwing NoAnchorFoundException containing best found candidate");
-            throw new NoAnchorFoundException(new AnchorResult<>(
-                    bestCandidate, explainedInstance, explainedInstanceLabel));
+            LOGGER.warn("No anchor found, returning best candidate");
         }
 
         LOGGER.info("Found result {} in {}ms", bestCandidate, (System.currentTimeMillis() - startTime));
-        return bestCandidate;
+        return new AnchorResult<>(bestCandidate, explainedInstance, explainedInstanceLabel, isAnchor);
     }
 
     /**
@@ -415,9 +413,8 @@ public class AnchorConstruction<T extends DataInstance<?>> {
      *
      * @return the {@link AnchorResult} of the best-anchor identification and beam-search
      * @throws NoCandidateFoundException if no single candidate with a precision &gt; 0 could be found.
-     * @throws NoAnchorFoundException    if no candidate could be found that matches the specified bounds
      */
-    public AnchorResult<T> constructAnchor() throws NoCandidateFoundException, NoAnchorFoundException { // FIXME: Exceptions used as a control structure - this should be part of AnchorResult
-        return new AnchorResult<>(beamSearch(), explainedInstance, explainedInstanceLabel);
+    public AnchorResult<T> constructAnchor() throws NoCandidateFoundException {
+        return beamSearch();
     }
 }
