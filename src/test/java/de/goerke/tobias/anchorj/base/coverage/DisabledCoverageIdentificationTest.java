@@ -10,10 +10,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * Tests the {@link DisabledCoverageIdentification} to return correct values for respective input size sets
  */
-class DisabledCoverageIdentificationTest {
+public class DisabledCoverageIdentificationTest {
 
     @Test
-    void calculateCoverage() {
+    public void calculateCoverage() {
         DisabledCoverageIdentification disabledCoverageIdentification = new DisabledCoverageIdentification();
         final Number[][] expectedReturnValues = new Number[][]{{0, 1}, {1, 0.5}, {2, 0.25}, {3, 0.125}};
         for (final Number[] number : expectedReturnValues) {
