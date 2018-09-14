@@ -14,11 +14,6 @@ public interface ClassificationFunction<T extends DataInstance<?>> {
      * @return the instance's predicted label
      */
     int predict(T instance);
-//    {
-//        @SuppressWarnings("unchecked") final T[] array = (T[]) Array.newInstance(instance.getClass(), 1);
-//        array[0] = instance;
-//        return predict(array)[0];
-//    }
 
     /**
      * Labels a set of instances according to the models prediction.
