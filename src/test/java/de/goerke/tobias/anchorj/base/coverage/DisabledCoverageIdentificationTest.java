@@ -12,8 +12,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 public class DisabledCoverageIdentificationTest {
 
+    /**
+     * Actual test
+     */
     @Test
-    public void calculateCoverage() {
+    public void calculateCoverageTest() {
         DisabledCoverageIdentification disabledCoverageIdentification = new DisabledCoverageIdentification();
         final Number[][] expectedReturnValues = new Number[][]{{0, 1}, {1, 0.5}, {2, 0.25}, {3, 0.125}};
         for (final Number[] number : expectedReturnValues) {
