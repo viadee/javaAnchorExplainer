@@ -19,6 +19,7 @@ class DisabledCoverageIdentificationTest {
         for (final Number[] number : expectedReturnValues) {
             assertEquals(disabledCoverageIdentification.calculateCoverage(new AbstractSet<Integer>() {
                 @Override
+                @SuppressWarnings("all")
                 public Iterator<Integer> iterator() {
                     return null;
                 }
