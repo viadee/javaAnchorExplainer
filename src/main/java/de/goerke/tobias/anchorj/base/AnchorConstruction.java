@@ -145,6 +145,7 @@ public class AnchorConstruction<T extends DataInstance<?>> {
      */
     private List<AnchorCandidate> generateCandidateSet(final List<AnchorCandidate> previousBest, final int featureCount,
                                                        final double minCoverage) {
+        // FIXME this method returned the same candidate twice! Check reason and write test
         final List<AnchorCandidate> result = new ArrayList<>();
         final Set<AnchorCandidate> intermediateResult = new HashSet<>();
         // Loop over every available features
@@ -153,7 +154,7 @@ public class AnchorConstruction<T extends DataInstance<?>> {
             // and our current feature is a candidate
             if (previousBest == null || previousBest.isEmpty()) {
                 AnchorCandidate candidate = new AnchorCandidate(
-                        new LinkedHashSet<>(Arrays.asList(additionalFeature)),
+                        new LinkedHashSet<>(Collections.singletonList(additionalFeature)),
                         null);
                 intermediateResult.add(candidate);
                 continue;
