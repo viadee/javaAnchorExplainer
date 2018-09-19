@@ -102,6 +102,15 @@ public class AnchorCandidate implements Serializable {
     }
 
     /**
+     * Returns the feature that has been added during the creation of this instance
+     *
+     * @return the added feature
+     */
+    public Integer getAddedFeature() {
+        return orderedFeatures.get(orderedFeatures.size() - 1);
+    }
+
+    /**
      * Sets the coverage of the anchor.
      * <p>
      * Its coverage may only be set once as it makes no sense of recalculating it.
