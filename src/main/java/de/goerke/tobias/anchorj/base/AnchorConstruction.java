@@ -38,6 +38,7 @@ public class AnchorConstruction<T extends DataInstance<?>> {
     private final double tauDiscrepancy;
     private final int initSampleCount;
     private final boolean lazyCoverageEvaluation;
+    private final boolean allowSuboptimalSteps;
 
     private final AbstractSamplingService samplingService;
 
@@ -68,6 +69,8 @@ public class AnchorConstruction<T extends DataInstance<?>> {
      * @param doBalanceSampling        the do balance sampling
      * @param lazyCoverageEvaluation   if set true, a candidate's coverage will only be determined when needed to, i.e.
      *                                 when extending or returning it
+     * @param allowSuboptimalSteps     if set to false, candidates that are returned by the best arm identification get
+     *                                 removed when their precision is lower than their parent's
      */
     AnchorConstruction(final ClassificationFunction<T> classificationFunction,
                        final PerturbationFunction<T> perturbationFunction,
@@ -76,7 +79,7 @@ public class AnchorConstruction<T extends DataInstance<?>> {
                        final T explainedInstance, final int explainedInstanceLabel, final int maxAnchorSize,
                        final int beamSize, final double delta, final double tau, final double tauDiscrepancy,
                        final int initSampleCount, final int threadCount, final boolean doBalanceSampling,
-                       boolean lazyCoverageEvaluation) {
+                       boolean lazyCoverageEvaluation, boolean allowSuboptimalSteps) {
         if (classificationFunction == null)
             throw new IllegalArgumentException("Classification function" + ParameterValidation.NULL_MESSAGE);
         if (perturbationFunction == null)
@@ -118,6 +121,7 @@ public class AnchorConstruction<T extends DataInstance<?>> {
         this.tauDiscrepancy = tauDiscrepancy;
         this.initSampleCount = initSampleCount;
         this.lazyCoverageEvaluation = lazyCoverageEvaluation;
+        this.allowSuboptimalSteps = allowSuboptimalSteps;
         this.samplingService = AbstractSamplingService.createExecution(this::doSample, threadCount, doBalanceSampling);
     }
 
@@ -348,7 +352,7 @@ public class AnchorConstruction<T extends DataInstance<?>> {
                 if (candidate.getPrecision() <= 0) {
                     LOGGER.warn("Removing candidate {} as its precision is 0", candidate.getOrderedFeatures());
                     iterator.remove();
-                } else if (candidate.getAddedPrecision() <= 0) {
+                } else if (!allowSuboptimalSteps && candidate.getAddedPrecision() <= 0) {
                     LOGGER.warn("Removing candidate {} as it decreases its parent's precision",
                             candidate.getOrderedFeatures());
                     iterator.remove();

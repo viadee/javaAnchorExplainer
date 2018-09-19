@@ -38,6 +38,7 @@ public class AnchorConstructionBuilder<T extends DataInstance<?>> {
     private int threadCount = 1;
     private boolean doBalanceSampling = false;
     private boolean lazyCoverageEvaluation = false;
+    private boolean allowSuboptimalSteps = true;
 
     public AnchorConstructionBuilder() {
     }
@@ -193,11 +194,25 @@ public class AnchorConstructionBuilder<T extends DataInstance<?>> {
      * <p>
      * If set true, a candidate's coverage will only be determined when needed to, i.e. when extending or returning it
      *
-     * @param lazyCoverageEvaluation the coverage identification
+     * @param lazyCoverageEvaluation the lazy coverage evaluation value
      * @return the current {@link AnchorConstructionBuilder} for chaining
      */
     public AnchorConstructionBuilder<T> setLazyCoverageEvaluation(final boolean lazyCoverageEvaluation) {
         this.lazyCoverageEvaluation = lazyCoverageEvaluation;
+        return this;
+    }
+
+    /**
+     * Sets allow suboptimal steps.
+     * <p>
+     * If set to false, candidates that are returned by the best arm identification get
+     * removed when their precision is lower than their parent's
+     *
+     * @param allowSuboptimalSteps the allow suboptimal steps value
+     * @return the current {@link AnchorConstructionBuilder} for chaining
+     */
+    public AnchorConstructionBuilder<T> setAllowSuboptimalSteps(final boolean allowSuboptimalSteps) {
+        this.allowSuboptimalSteps = allowSuboptimalSteps;
         return this;
     }
 
@@ -241,7 +256,7 @@ public class AnchorConstructionBuilder<T extends DataInstance<?>> {
                 explainedInstance, explainedInstanceLabel,
                 (maxAnchorSize == null) ? explainedInstance.getFeatureCount() : maxAnchorSize,
                 beamSize, delta, tau, tauDiscrepancy, initSampleCount,
-                threadCount, doBalanceSampling, lazyCoverageEvaluation);
+                threadCount, doBalanceSampling, lazyCoverageEvaluation, allowSuboptimalSteps);
     }
 
     /**
