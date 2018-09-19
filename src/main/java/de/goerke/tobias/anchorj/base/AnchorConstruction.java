@@ -337,13 +337,25 @@ public class AnchorConstruction<T extends DataInstance<?>> {
                 break;
 
             // Identify this round's best candidates
-            // However, filter candidates that have a precision of 0.
+
             final int bestCandidateCount = Math.min(anchorCandidates.size(), beamSize);
-            final List<AnchorCandidate> bestCandidates = bestCandidate(anchorCandidates, bestCandidateCount)
-                    .stream().filter(c -> c.getPrecision() > 0).collect(Collectors.toList());
+            final List<AnchorCandidate> bestCandidates = bestCandidate(anchorCandidates, bestCandidateCount);
+            // However, filter candidates that have a precision of 0.
+            // Or such that decrease their parents precision
+            final Iterator<AnchorCandidate> iterator = bestCandidates.iterator();
+            while (iterator.hasNext()) {
+                final AnchorCandidate candidate = iterator.next();
+                if (candidate.getPrecision() <= 0) {
+                    LOGGER.warn("Removing candidate {} as its precision is 0", candidate.getOrderedFeatures());
+                    iterator.remove();
+                } else if (candidate.getAddedPrecision() <= 0) {
+                    LOGGER.warn("Removing candidate {} as it decreases its parent's precision",
+                            candidate.getOrderedFeatures());
+                    iterator.remove();
+                }
+            }
             if (bestCandidates.isEmpty()) {
-                LOGGER.warn("No best candidates with a precision > 0 returned by best arm identification, " +
-                        "stopping search.");
+                LOGGER.warn("No valid candidates found during best arm identification. Stopping search.");
                 break;
             }
             bestOfSize.put(currentSize, bestCandidates);
