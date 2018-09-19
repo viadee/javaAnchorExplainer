@@ -1,10 +1,13 @@
 package de.goerke.tobias.anchorj.image;
 
+import de.goerke.tobias.anchorj.base.AnchorCandidate;
+import de.goerke.tobias.anchorj.base.AnchorResult;
 import de.goerke.tobias.anchorj.util.ParameterValidation;
 
 import javax.swing.*;
 import java.awt.*;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -92,34 +95,57 @@ public class ImageInstanceVisualizer {
         return result;
     }
 
+
     /**
      * May be used to visualize an anchor result by highlighting the feature importances
      *
-     * @param featureImportances the feature importances of each label
+     * @param anchorCandidate the anchorCandidate to extract the feature importances from
      * @return the {@link ImageRepresentation} containing the showable image
      */
-    public ImageRepresentation drawImportance(Map<Integer, Double> featureImportances) {
-        for (double featureImportance : featureImportances.values())
+    public ImageRepresentation drawImportance(AnchorCandidate anchorCandidate) {
+        final Map<Integer, Double> importanceMap = new HashMap<>();
+        while (anchorCandidate != null) {
+            importanceMap.put(anchorCandidate.getAddedFeature(), anchorCandidate.getAddedPrecision());
+            anchorCandidate = anchorCandidate.getParentCandidate();
+        }
+        return drawImportance(importanceMap);
+    }
+
+    /**
+     * May be used to visualize an anchor result by highlighting the feature importances
+     *
+     * @param featureImportanceMap the feature importances of each label
+     * @return the {@link ImageRepresentation} containing the showable image
+     */
+    public ImageRepresentation drawImportance(Map<Integer, Double> featureImportanceMap) {
+        for (double featureImportance : featureImportanceMap.values())
             if (featureImportance > 1)
                 throw new IllegalArgumentException("Feature importance is higher than 1");
 
-        final double highestImportance = featureImportances.values().stream().mapToDouble(i -> i).max().orElse(1D);
+        final double highestImportance = featureImportanceMap.values().stream().mapToDouble(i -> i).max().orElse(1D);
 
         final ImageRepresentation result = originalInstance.getInstance().createBlankCanvas();
         for (int i = 0; i < originalInstance.getFeatureCount(); i++) {
             for (int[] pixels : originalInstance.getLabelPixels(i)) {
                 final int x = pixels[0];
                 final int y = pixels[1];
-                final Color c = new Color(originalInstance.getInstance().getPixel(x, y));
-                float[] hsbvals = {0, 0, 0};
-                Color.RGBtoHSB(c.getRed(), c.getBlue(), c.getGreen(), hsbvals);
-                // Normalize so that features with the highest importance don't get darkened at all
-                final Double featureImportance = Math.max(0, featureImportances.getOrDefault(i, 0D) / highestImportance);
-                Color resultColor = new Color(Color.HSBtoRGB(hsbvals[0], hsbvals[1],
-                        (float) (hsbvals[2] * featureImportance)));
-                result.setPixel(x, y, resultColor.getRGB());
+                final int initial = originalInstance.getInstance().getPixel(x, y);
+
+                final Double featureImportance = Math.max(0, featureImportanceMap.getOrDefault(i,
+                        0D) / highestImportance);
+
+                final int adjustedColor = darken(initial, featureImportance);
+
+                result.setPixel(x, y, adjustedColor);
             }
         }
         return result;
+    }
+
+    private static int darken(int color, double factor) {
+        return (color & 0xFF000000) |
+                (Math.min(255, Math.max(0, ((int) (((color >> 16) & 0xFF) * factor)))) << 16) |
+                (Math.min(255, Math.max(0, ((int) (((color >> 8) & 0xFF) * factor)))) << 8) |
+                (Math.min(255, Math.max(0, ((int) (((color) & 0xFF) * factor)))));
     }
 }
