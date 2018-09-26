@@ -260,12 +260,14 @@ public class AnchorConstruction<T extends DataInstance<?>> {
      * Therefore, this method checks whether the candidate meets the precision criteria by repeatedly sampling until it
      * is either assured the candidate is in fact an anchor, or not.
      *
-     * @param candidate the candidate to validate
+     * @param candidate      the candidate to validate
+     * @param actualBeamSize the actual beam size. As the beam size is constrained to be smaller than the actually found
+     *                       candidates there needs to be this adjustment in edge cases
      * @return true, if the candidate adheres to the constraints, false otherwise
      */
-    private boolean isValidCandidate(final AnchorCandidate candidate) {
+    private boolean isValidCandidate(final AnchorCandidate candidate, final int actualBeamSize) {
         // I can choose at most (beamSize - 1) tuples at each step and there are at most featureCount steps
-        final double beta = Math.log(1 / (delta / (1 + (beamSize - 1) * explainedInstance.getFeatureCount())));
+        final double beta = Math.log(1 / (delta / (1 + (actualBeamSize - 1) * explainedInstance.getFeatureCount())));
         double mean = candidate.getPrecision();
 
         double lb = BernoulliUtils.dlowBernoulli(mean, beta / candidate.getSampledSize());
@@ -341,7 +343,6 @@ public class AnchorConstruction<T extends DataInstance<?>> {
                 break;
 
             // Identify this round's best candidates
-
             final int bestCandidateCount = Math.min(anchorCandidates.size(), beamSize);
             final List<AnchorCandidate> bestCandidates = bestCandidate(anchorCandidates, bestCandidateCount);
             // However, filter candidates that have a precision of 0.
@@ -366,7 +367,7 @@ public class AnchorConstruction<T extends DataInstance<?>> {
 
             // For each candidate check whether it
             for (final AnchorCandidate candidate : bestCandidates) {
-                final boolean isValidCandidate = isValidCandidate(candidate);
+                final boolean isValidCandidate = isValidCandidate(candidate, bestCandidateCount);
                 LOGGER.info("Top candidate {} is{} a valid anchor with precision {}",
                         candidate.getCanonicalFeatures(), (isValidCandidate) ? "" : " not", candidate.getPrecision());
                 // The best candidates returned do not necessarily have the right confidence constraints
