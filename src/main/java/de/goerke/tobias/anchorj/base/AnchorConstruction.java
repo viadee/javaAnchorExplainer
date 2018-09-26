@@ -432,6 +432,7 @@ public class AnchorConstruction<T extends DataInstance<?>> {
      * @throws NoCandidateFoundException if no single candidate with a precision &gt; 0 could be found.
      */
     public AnchorResult<T> constructAnchor() throws NoCandidateFoundException {
+        LOGGER.info("Starting Anchor Construction with "); // TODO put parameters
         return beamSearch();
     }
 }

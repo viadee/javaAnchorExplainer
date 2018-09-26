@@ -40,7 +40,7 @@ public class AnchorConstructionBuilder<T extends DataInstance<?>> {
     private boolean lazyCoverageEvaluation = false;
     private boolean allowSuboptimalSteps = true;
 
-    public AnchorConstructionBuilder() {
+    private AnchorConstructionBuilder() {
     }
 
     /**
@@ -73,6 +73,50 @@ public class AnchorConstructionBuilder<T extends DataInstance<?>> {
         this.perturbationFunction = perturbationFunction;
         this.explainedInstance = explainedInstance;
         this.explainedInstanceLabel = explainedInstanceLabel;
+    }
+
+    /**
+     * Sets the classification function.
+     *
+     * @param classificationFunction the classification function
+     * @return the current {@link AnchorConstructionBuilder} for chaining
+     */
+    public AnchorConstructionBuilder<T> setClassificationFunction(final ClassificationFunction<T> classificationFunction) {
+        this.classificationFunction = classificationFunction;
+        return this;
+    }
+
+    /**
+     * Sets the perturbation function.
+     *
+     * @param perturbationFunction the perturbation function
+     * @return the current {@link AnchorConstructionBuilder} for chaining
+     */
+    public AnchorConstructionBuilder<T> setPerturbationFunction(final PerturbationFunction<T> perturbationFunction) {
+        this.perturbationFunction = perturbationFunction;
+        return this;
+    }
+
+    /**
+     * Sets the explained instance.
+     *
+     * @param explainedInstance the explained instance
+     * @return the current {@link AnchorConstructionBuilder} for chaining
+     */
+    public AnchorConstructionBuilder<T> setExplainedInstance(final T explainedInstance) {
+        this.explainedInstance = explainedInstance;
+        return this;
+    }
+
+    /**
+     * Sets the explained instance label.
+     *
+     * @param explainedInstanceLabel the explained instance label
+     * @return the current {@link AnchorConstructionBuilder} for chaining
+     */
+    public AnchorConstructionBuilder<T> setExplainedInstanceLabel(final int explainedInstanceLabel) {
+        this.explainedInstanceLabel = explainedInstanceLabel;
+        return this;
     }
 
     /**

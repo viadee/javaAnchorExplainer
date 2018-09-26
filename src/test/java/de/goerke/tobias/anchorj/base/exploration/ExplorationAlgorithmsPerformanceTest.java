@@ -111,11 +111,8 @@ public class ExplorationAlgorithmsPerformanceTest {
                 Thread.sleep(5);
             } catch (Exception ignored) {
             }
-            double noised = NoiseGenerator.generateGaussianNoise(candidateToMeanValues.get(candidate), 0.04);
-            if (noised < 0)
-                noised = 0;
-            if (noised > 1)
-                noised = 1;
+            double noised = Math.min(1, Math.max(0,
+                    NoiseGenerator.generateGaussianNoise(candidateToMeanValues.get(candidate), 0.04)));
             candidate.registerSamples(count, (int) (count * noised));
 
             return 0D;
