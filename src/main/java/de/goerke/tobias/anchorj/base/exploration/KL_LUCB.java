@@ -128,6 +128,7 @@ public class KL_LUCB implements BestAnchorIdentification {
         final double beta = BernoulliUtils.computeBeta(candidates.size(), t, delta);
         final int[] j = Arrays.copyOfRange(sortedMeans, means.length - topN, means.length);
         final int[] not_j = Arrays.copyOfRange(sortedMeans, 0, means.length - topN);
+        // FIXME dupBernoulli introduces MASSIVE overhead, up to 2/3 of TOTAL Anchors runtime
         for (int f : not_j) {
             ub[f] = BernoulliUtils.dupBernoulli(means[f], beta / candidates.get(f).getSampledSize());
         }
