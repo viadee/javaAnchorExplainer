@@ -16,12 +16,11 @@ import java.util.stream.Collectors;
  */
 public class ParallelSamplingService extends AbstractSamplingService {
     private static final Logger LOGGER = LoggerFactory.getLogger(ParallelSamplingService.class);
-
-    private final ExecutorService executor;
     final int threadCount;
+    private final ExecutorService executor;
 
     ParallelSamplingService(final BiFunction<AnchorCandidate, Integer, Double> sampleFunction,
-                                   final int threadCount) {
+                            final int threadCount) {
         super(sampleFunction);
         this.executor = Executors.newFixedThreadPool(Math.min(threadCount, 1));
         this.threadCount = threadCount;

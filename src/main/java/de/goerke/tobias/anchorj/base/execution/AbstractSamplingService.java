@@ -19,6 +19,12 @@ public abstract class AbstractSamplingService {
     final BiFunction<AnchorCandidate, Integer, Double> sampleFunction;
 
     /**
+     * Used to record the total time spend sampling.
+     * As the service takes multiple samples at once, recording this time should not become a performance issue
+     */
+    private double timeSpentSampling;
+
+    /**
      * Instantiated the sampling service
      *
      * @param sampleFunction the function used for sampling
@@ -43,6 +49,15 @@ public abstract class AbstractSamplingService {
         if (!doBalance)
             return new ParallelSamplingService(sampleFunction, threadCount);
         return new BalancedParallelSamplingService(sampleFunction, threadCount);
+    }
+
+    /**
+     * Returns the time spent taking samples
+     *
+     * @return the time spent taking samples in milliseconds
+     */
+    public double getTimeSpentSampling() {
+        return timeSpentSampling;
     }
 
     /**
@@ -100,11 +115,13 @@ public abstract class AbstractSamplingService {
          * Executes the requested samples
          */
         public void run() {
-            final double start = System.currentTimeMillis();
+            double time = System.currentTimeMillis();
             execute();
+            time = System.currentTimeMillis() - time;
+            timeSpentSampling += time;
             LOGGER.debug("Evaluated a total of {} samples for {} candidates in {}ms",
                     samplingCountMap.values().stream().mapToInt(i -> i).sum(),
-                    samplingCountMap.entrySet().size(), (System.currentTimeMillis() - start));
+                    samplingCountMap.entrySet().size(), time);
         }
 
         /**

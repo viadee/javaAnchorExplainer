@@ -231,6 +231,7 @@ public class AnchorConstruction<T extends DataInstance<?>> {
      * @return the result of the algorithm, i.e. the list of best candidates
      */
     private List<AnchorCandidate> bestCandidate(final List<AnchorCandidate> candidates, final int topN) {
+        // Ensure all candidates have initSampleCount taken
         AbstractSamplingService.AbstractSession session = samplingService.createSession();
         for (final AnchorCandidate candidate : candidates) {
             if (candidate.getSampledSize() >= initSampleCount)
@@ -413,8 +414,10 @@ public class AnchorConstruction<T extends DataInstance<?>> {
             LOGGER.warn("No anchor found, returning best candidate");
         }
 
-        LOGGER.info("Found result {} in {}ms", bestCandidate, (System.currentTimeMillis() - startTime));
-        return new AnchorResult<>(bestCandidate, explainedInstance, explainedInstanceLabel, isAnchor);
+        final double timeSpent = System.currentTimeMillis() - startTime;
+        LOGGER.info("Found result {} in {}ms", bestCandidate, timeSpent);
+        return new AnchorResult<>(bestCandidate, explainedInstance, explainedInstanceLabel, isAnchor,
+                timeSpent, samplingService.getTimeSpentSampling());
     }
 
     /**

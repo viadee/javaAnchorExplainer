@@ -19,7 +19,6 @@ public class LinearSamplingService extends AbstractSamplingService {
         return new LinearSession();
     }
 
-
     private class LinearSession extends AbstractSamplingService.AbstractSession {
         @Override
         public void execute() {

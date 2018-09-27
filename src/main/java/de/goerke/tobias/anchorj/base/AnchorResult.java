@@ -9,22 +9,29 @@ public class AnchorResult<T extends DataInstance<?>> extends AnchorCandidate {
     private final T instance;
     private final int label;
     private final boolean isAnchor;
+    private final double timeSpent;
+    private final double timeSpentSampling;
 
     /**
      * Constructs the instance
      *
-     * @param candidate the {@link AnchorCandidate}
-     * @param instance  the instance described
-     * @param label     the instance's label
-     * @param isAnchor  if true, marks the result is an anchor and adheres to the set constraints
+     * @param candidate         the {@link AnchorCandidate}
+     * @param instance          the instance described
+     * @param label             the instance's label
+     * @param isAnchor          if true, marks the result is an anchor and adheres to the set constraints
+     * @param timeSpent         the total time spent constructing the result
+     * @param timeSpentSampling the total time spent sampling and evaluating candidates
      */
-    AnchorResult(AnchorCandidate candidate, T instance, int label, boolean isAnchor) {
+    AnchorResult(AnchorCandidate candidate, T instance, int label, boolean isAnchor, double timeSpent,
+                 double timeSpentSampling) {
         super(candidate.getOrderedFeatures(), candidate.getParentCandidate());
         super.setCoverage(candidate.getCoverage());
         this.registerSamples(candidate.getSampledSize(), candidate.getPositiveSamples());
         this.instance = instance;
         this.label = label;
         this.isAnchor = isAnchor;
+        this.timeSpent = timeSpent;
+        this.timeSpentSampling = timeSpentSampling;
     }
 
     /**
@@ -47,5 +54,19 @@ public class AnchorResult<T extends DataInstance<?>> extends AnchorCandidate {
      */
     public boolean isAnchor() {
         return isAnchor;
+    }
+
+    /**
+     * @return the total time spent constructing the result in milliseconds
+     */
+    public double getTimeSpent() {
+        return timeSpent;
+    }
+
+    /**
+     * @return the total time spent sampling and evaluating candidates in milliseconds
+     */
+    public double getTimeSpentSampling() {
+        return timeSpentSampling;
     }
 }
