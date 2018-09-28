@@ -3,7 +3,7 @@ package de.goerke.tobias.anchorj.base;
 import de.goerke.tobias.anchorj.base.coverage.CoverageIdentification;
 import de.goerke.tobias.anchorj.base.execution.AbstractSamplingService;
 import de.goerke.tobias.anchorj.base.exploration.BestAnchorIdentification;
-import de.goerke.tobias.anchorj.util.BernoulliUtils;
+import de.goerke.tobias.anchorj.util.KLBernoulliUtils;
 import de.goerke.tobias.anchorj.util.ParameterValidation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -271,8 +271,8 @@ public class AnchorConstruction<T extends DataInstance<?>> {
         final double beta = Math.log(1 / (delta / (1 + (actualBeamSize - 1) * explainedInstance.getFeatureCount())));
         double mean = candidate.getPrecision();
 
-        double lb = BernoulliUtils.dlowBernoulli(mean, beta / candidate.getSampledSize());
-        double ub = BernoulliUtils.dupBernoulli(mean, beta / candidate.getSampledSize());
+        double lb = KLBernoulliUtils.dlowBernoulli(mean, beta / candidate.getSampledSize());
+        double ub = KLBernoulliUtils.dupBernoulli(mean, beta / candidate.getSampledSize());
 
         // If prec_lb(A) < tau but prec_ub(A) > tau it needs to be sampled ...
         while ((mean >= tau && lb < tau - tauDiscrepancy) ||
@@ -281,8 +281,8 @@ public class AnchorConstruction<T extends DataInstance<?>> {
                     candidate.getCanonicalFeatures());
             samplingService.createSession().registerCandidateEvaluation(candidate, initSampleCount).run();
             mean = candidate.getPrecision();
-            lb = BernoulliUtils.dlowBernoulli(mean, beta / candidate.getSampledSize());
-            ub = BernoulliUtils.dupBernoulli(mean, beta / candidate.getSampledSize());
+            lb = KLBernoulliUtils.dlowBernoulli(mean, beta / candidate.getSampledSize());
+            ub = KLBernoulliUtils.dupBernoulli(mean, beta / candidate.getSampledSize());
         }
 
         // ... until we are either confident A is
