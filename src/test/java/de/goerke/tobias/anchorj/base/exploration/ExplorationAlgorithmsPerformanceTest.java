@@ -89,6 +89,11 @@ public class ExplorationAlgorithmsPerformanceTest {
     }
 
     @Test
+    void medianElimination() {
+        startTest(new MedianElimination());
+    }
+
+    @Test
     void KL_LUCB() {
         startTest(new KL_LUCB(100));
     }

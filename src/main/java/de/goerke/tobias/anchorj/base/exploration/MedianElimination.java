@@ -3,9 +3,7 @@ package de.goerke.tobias.anchorj.base.exploration;
 import de.goerke.tobias.anchorj.base.AnchorCandidate;
 import de.goerke.tobias.anchorj.base.execution.AbstractSamplingService;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 /**
  * This class implements the Median Elimination algorithm as proposed by Even-Dar et. al in
@@ -45,8 +43,8 @@ public class MedianElimination implements BestAnchorIdentification {
      * </pre>
      *
      * @param candidates      the candidates to inspect
-     * @param samplingService an implementation of the {@link AbstractSamplingService}, controlling the evaluation of samples.
-     *                        Allows for threading.
+     * @param samplingService an implementation of the {@link AbstractSamplingService}, controlling the evaluation of
+     *                        samples. Allows for threading.
      * @param delta           the probability of identifying the correct result == confidence
      * @param epsilon         the maximum error == tolerance
      * @return the best candidate satisfying the specified parameters
@@ -56,11 +54,25 @@ public class MedianElimination implements BestAnchorIdentification {
                                                   double epsilon) {
 
         final List<AnchorCandidate> s = new ArrayList<>(candidates);
-        final double epsilon1 = epsilon / 4;
-        final double delta1 = delta / 2;
-        int l = 1;
+        double epsilon1 = epsilon / 4;
+        double delta1 = delta / 2;
         do {
+            final int sampleCount = (int) (1D / Math.pow((epsilon1 / 2D), 2) * Math.log(3D / delta1));
 
+            final AbstractSamplingService.AbstractSession session = samplingService.createSession();
+            for (AnchorCandidate candidate : s) {
+                session.registerCandidateEvaluation(candidate, sampleCount);
+            }
+            session.run();
+
+            s.sort(Comparator.comparingDouble(AnchorCandidate::getPrecision));
+            final ListIterator<AnchorCandidate> iterator = s.listIterator(s.size() / 2);
+            while (iterator.hasPrevious()) {
+                iterator.previous();
+                iterator.remove();
+            }
+            epsilon1 = 3D / 4D * epsilon1;
+            delta1 = delta1 / 2D;
         } while (s.size() > 1);
 
         return s.get(0);
@@ -69,8 +81,15 @@ public class MedianElimination implements BestAnchorIdentification {
     @Override
     public List<AnchorCandidate> identify(List<AnchorCandidate> candidates, AbstractSamplingService samplingService,
                                           double delta, double epsilon, int nrOfResults) {
-        if (nrOfResults != 1)
-            throw new UnsupportedOperationException("Only one candidate can be selected at a time");
-        return Collections.singletonList(identifySingle(candidates, samplingService, delta, epsilon));
+        final List<AnchorCandidate> remainingCandidates = new ArrayList<>(candidates);
+        final List<AnchorCandidate> result = new ArrayList<>();
+
+        while (result.size() != nrOfResults) {
+            final AnchorCandidate currentBest = identifySingle(remainingCandidates, samplingService, delta, epsilon);
+            remainingCandidates.remove(currentBest);
+            result.add(currentBest);
+        }
+
+        return result;
     }
 }
