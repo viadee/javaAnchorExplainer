@@ -18,7 +18,6 @@ import java.util.stream.IntStream;
  * See <a href="http://proceedings.mlr.press/v30/Kaufmann13.pdf">http://proceedings.mlr.press/v30/Kaufmann13.pdf</a>
  */
 public class KL_LUCB implements BestAnchorIdentification {
-    private final double epsilon;
     private final int batchSize;
 
     /**
@@ -29,15 +28,11 @@ public class KL_LUCB implements BestAnchorIdentification {
      * {@code P(prec(A) >= prec(A*) - epsilon) >= 1 - delta}
      *
      * @param batchSize the amount of evaluations to obtain each round
-     * @param epsilon   epsilon
      */
-    public KL_LUCB(int batchSize, double epsilon) {
-        if (!ParameterValidation.isPercentage(epsilon))
-            throw new IllegalArgumentException("Epsilon must be a value between 0 and 1");
+    public KL_LUCB(int batchSize) {
         if (!ParameterValidation.isUnsigned(batchSize))
             throw new IllegalArgumentException("Batch size must not be negative");
 
-        this.epsilon = epsilon;
         this.batchSize = batchSize;
     }
 
@@ -82,7 +77,7 @@ public class KL_LUCB implements BestAnchorIdentification {
     @Override
     public List<AnchorCandidate> identify(final List<AnchorCandidate> candidates,
                                           final AbstractSamplingService samplingService,
-                                          final double delta, final int nrOfResults) {
+                                          final double delta, final double epsilon, final int nrOfResults) {
         final double[] ub = new double[candidates.size()];
         final double[] lb = new double[candidates.size()];
 

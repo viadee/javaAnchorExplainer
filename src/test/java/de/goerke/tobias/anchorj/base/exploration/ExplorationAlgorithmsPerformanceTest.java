@@ -90,12 +90,12 @@ public class ExplorationAlgorithmsPerformanceTest {
 
     @Test
     void KL_LUCB() {
-        startTest(new KL_LUCB(100, 0.1));
+        startTest(new KL_LUCB(100));
     }
 
     private void startTest(BestAnchorIdentification algorithm) {
         final List<AnchorCandidate> result = algorithm.identify(new ArrayList<>(candidateToMeanValues.keySet()),
-                createSamplingService(10, true), 0.15, 5);
+                createSamplingService(10, true), 0.15, 0.1, 5);
         int totalDiff = 0;
         for (int i = 0; i < result.size(); i++) {
             final AnchorCandidate candidate = result.get(i);

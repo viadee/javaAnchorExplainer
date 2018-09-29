@@ -20,7 +20,7 @@ import java.util.stream.IntStream;
  * <p>
  * This algorithm is to be used in a fixed budget setting.
  * <p>
- * This algorithm ignores the delta value.
+ * This algorithm ignores both the delta and epsilon value. Thus using it negates some of Anchors' properties!
  * If the fixed confidence setting is to be used, {@link BatchRacing} may be used.
  */
 public class BatchSAR extends AbstractBRAlgorithm {
@@ -55,7 +55,7 @@ public class BatchSAR extends AbstractBRAlgorithm {
     @Override
     public List<AnchorCandidate> identify(final List<AnchorCandidate> candidates,
                                           final AbstractSamplingService samplingService,
-                                          final double delta, final int nrOfResults) {
+                                          final double delta, final double epsilon, final int nrOfResults) {
         final int n = candidates.size();
         // We do not have n at instantiation, so this cannot be a class field (immutability / thread safety)
         final int c1 = b + (nn * Math.min(r, ceil(b / (double) 2))) + n;

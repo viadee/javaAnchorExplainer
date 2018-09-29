@@ -34,6 +34,7 @@ public class AnchorConstruction<T extends DataInstance<?>> {
     private final int maxAnchorSize;
     private final int beamSize;
     private final double delta;
+    private final double epsilon;
     private final double tau;
     private final double tauDiscrepancy;
     private final int initSampleCount;
@@ -55,6 +56,8 @@ public class AnchorConstruction<T extends DataInstance<?>> {
      * @param maxAnchorSize            max combined features of the resulting anchor
      * @param beamSize                 parameter B: size of the current candidates for beam search
      * @param delta                    The delta value describing the probability of identifying the best arm
+     *                                 == confidence
+     * @param epsilon                  The maximum tolerated error == tolerance
      * @param tau                      The desired precision an anchor needs to achieve.
      *                                 If no candidate achieves at least this precision, the one with the best precision
      *                                 will be returned
@@ -77,7 +80,8 @@ public class AnchorConstruction<T extends DataInstance<?>> {
                        final BestAnchorIdentification bestAnchorIdentification,
                        final CoverageIdentification coverageIdentification,
                        final T explainedInstance, final int explainedInstanceLabel, final int maxAnchorSize,
-                       final int beamSize, final double delta, final double tau, final double tauDiscrepancy,
+                       final int beamSize, final double delta, final double epsilon, final double tau,
+                       final double tauDiscrepancy,
                        final int initSampleCount, final int threadCount, final boolean doBalanceSampling,
                        boolean lazyCoverageEvaluation, boolean allowSuboptimalSteps) {
         if (classificationFunction == null)
@@ -98,6 +102,8 @@ public class AnchorConstruction<T extends DataInstance<?>> {
             throw new IllegalArgumentException("Beam size" + ParameterValidation.NEGATIVE_VALUE_MESSAGE);
         if (!ParameterValidation.isPercentage(delta))
             throw new IllegalArgumentException("Delta value" + ParameterValidation.NOT_PERCENTAGE_MESSAGE);
+        if (!ParameterValidation.isPercentage(epsilon))
+            throw new IllegalArgumentException("Epsilon value" + ParameterValidation.NOT_PERCENTAGE_MESSAGE);
         if (!ParameterValidation.isPercentage(tau))
             throw new IllegalArgumentException("Tau value" + ParameterValidation.NOT_PERCENTAGE_MESSAGE);
         if (!ParameterValidation.isPercentage(tauDiscrepancy))
@@ -117,6 +123,7 @@ public class AnchorConstruction<T extends DataInstance<?>> {
         this.maxAnchorSize = maxAnchorSize;
         this.beamSize = beamSize;
         this.delta = delta;
+        this.epsilon = epsilon;
         this.tau = tau;
         this.tauDiscrepancy = tauDiscrepancy;
         this.initSampleCount = initSampleCount;
@@ -250,7 +257,7 @@ public class AnchorConstruction<T extends DataInstance<?>> {
         LOGGER.debug("Calling {} to identify top {} candidates with a significance level of {}",
                 bestAnchorIdentification.getClass().getSimpleName(), topN, delta);
         // Discard all found candidates that have a precision of 0
-        return bestAnchorIdentification.identify(candidates, samplingService, delta, topN);
+        return bestAnchorIdentification.identify(candidates, samplingService, delta, epsilon, topN);
     }
 
     /**

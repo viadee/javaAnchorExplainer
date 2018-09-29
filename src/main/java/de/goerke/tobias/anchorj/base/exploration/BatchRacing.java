@@ -17,6 +17,8 @@ import java.util.*;
  * <p>
  * This algorithm is to be used in a fixed confidence setting.
  * <p>
+ * This algorithm ignores the epsilon value. Thus using it negates some of Anchors' properties!
+ * <p>
  * If the fixed budget setting is to be used, {@link BatchSAR} may be used.
  */
 public class BatchRacing extends AbstractBRAlgorithm {
@@ -44,11 +46,32 @@ public class BatchRacing extends AbstractBRAlgorithm {
         super(b, r);
     }
 
+    private static double UCB(AnchorCandidate candidate, double delta, int n) {
+        return candidate.getPrecision() + deviation(candidate.getSampledSize(), delta, n);
+    }
+
+    private static double LCB(AnchorCandidate candidate, double delta, int n) {
+        return candidate.getPrecision() - deviation(candidate.getSampledSize(), delta, n);
+    }
+
+    private static double deviation(int tau, double delta, int n) {
+        double omega = Math.sqrt(delta / (6 * n));
+        return deviation(tau, omega);
+    }
+
+    private static double deviation(int tau, double omega) {
+        final double numerator = 4 * Math.log(log2(2 * tau) / omega);
+        return Math.sqrt(numerator / tau);
+    }
+
+    private static double log2(int n) {
+        return (Math.log(n) / Math.log(2));
+    }
 
     @Override
     public List<AnchorCandidate> identify(final List<AnchorCandidate> candidates,
                                           final AbstractSamplingService samplingService,
-                                          final double delta, final int nrOfResults) {
+                                          final double delta, final double epsilon, final int nrOfResults) {
 
         // The algorithm maintains a set of surviving arms that is initialized as S_1 = [n]
         final Set<AnchorCandidate> survivorSet = new HashSet<>(candidates);
@@ -98,28 +121,5 @@ public class BatchRacing extends AbstractBRAlgorithm {
         }
 
         return new ArrayList<>(acceptedSet);
-    }
-
-
-    private static double UCB(AnchorCandidate candidate, double delta, int n) {
-        return candidate.getPrecision() + deviation(candidate.getSampledSize(), delta, n);
-    }
-
-    private static double LCB(AnchorCandidate candidate, double delta, int n) {
-        return candidate.getPrecision() - deviation(candidate.getSampledSize(), delta, n);
-    }
-
-    private static double deviation(int tau, double delta, int n) {
-        double omega = Math.sqrt(delta / (6 * n));
-        return deviation(tau, omega);
-    }
-
-    private static double deviation(int tau, double omega) {
-        final double numerator = 4 * Math.log(log2(2 * tau) / omega);
-        return Math.sqrt(numerator / tau);
-    }
-
-    private static double log2(int n) {
-        return (Math.log(n) / Math.log(2));
     }
 }

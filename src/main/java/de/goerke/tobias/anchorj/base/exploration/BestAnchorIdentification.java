@@ -31,11 +31,12 @@ public interface BestAnchorIdentification {
      * @param candidates      the candidates to inspect
      * @param samplingService an implementation of the {@link AbstractSamplingService}, controlling the evaluation of samples.
      *                        Allows for threading.
-     * @param delta           the probability of identifying the correct result
+     * @param delta           the probability of identifying the correct result == confidence
+     * @param epsilon         the maximum error == tolerance
      * @param nrOfResults     the number of best candidates to return
      * @return the best {@link AnchorCandidate}s out of the specified candidates
      */
     List<AnchorCandidate> identify(final List<AnchorCandidate> candidates,
                                    final AbstractSamplingService samplingService,
-                                   final double delta, final int nrOfResults);
+                                   final double delta, final double epsilon, final int nrOfResults);
 }

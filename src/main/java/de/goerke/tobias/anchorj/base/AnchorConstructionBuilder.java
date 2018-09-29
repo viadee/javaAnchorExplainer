@@ -16,7 +16,6 @@ public class AnchorConstructionBuilder<T extends DataInstance<?>> {
     /*
      * Default values not used for constructing the instance but for instantiating other default classes
      */
-    private static final double DEFAULT_KL_LUCB_EPSILON = 0.05;
     private static final int DEFAULT_KL_LUCB_BATCH_SIZE = 100;
 
     private ClassificationFunction<T> classificationFunction;
@@ -30,6 +29,7 @@ public class AnchorConstructionBuilder<T extends DataInstance<?>> {
      *  Default values
      */
     private double delta = 0.1;
+    private double epsilon = 0.1;
     private Integer maxAnchorSize = null;
     private int beamSize = 2;
     private double tau = 1;
@@ -76,17 +76,6 @@ public class AnchorConstructionBuilder<T extends DataInstance<?>> {
     }
 
     /**
-     * Sets the classification function.
-     *
-     * @param classificationFunction the classification function
-     * @return the current {@link AnchorConstructionBuilder} for chaining
-     */
-    public AnchorConstructionBuilder<T> setClassificationFunction(final ClassificationFunction<T> classificationFunction) {
-        this.classificationFunction = classificationFunction;
-        return this;
-    }
-
-    /**
      * Sets the perturbation function.
      *
      * @param perturbationFunction the perturbation function
@@ -127,6 +116,17 @@ public class AnchorConstructionBuilder<T extends DataInstance<?>> {
      */
     public AnchorConstructionBuilder<T> setDelta(final double delta) {
         this.delta = delta;
+        return this;
+    }
+
+    /**
+     * Sets epsilon.
+     *
+     * @param epsilon the epsilon value
+     * @return the current {@link AnchorConstructionBuilder} for chaining
+     */
+    public AnchorConstructionBuilder<T> setEpsilon(final double epsilon) {
+        this.epsilon = epsilon;
         return this;
     }
 
@@ -260,7 +260,6 @@ public class AnchorConstructionBuilder<T extends DataInstance<?>> {
         return this;
     }
 
-
     /**
      * This method sets up the builder for usage within the {@link SubmodularPick} algorithm.
      * <p>
@@ -284,9 +283,8 @@ public class AnchorConstructionBuilder<T extends DataInstance<?>> {
     }
 
     private BestAnchorIdentification createDefaultBestAnchorIdentification() {
-        return new KL_LUCB(DEFAULT_KL_LUCB_BATCH_SIZE, DEFAULT_KL_LUCB_EPSILON);
+        return new KL_LUCB(DEFAULT_KL_LUCB_BATCH_SIZE);
     }
-
 
     /**
      * Build the instance setting the setBestAnchorIdentification values or their pre-configures default values.
@@ -299,7 +297,7 @@ public class AnchorConstructionBuilder<T extends DataInstance<?>> {
                 (coverageIdentification == null) ? createDefaultCoverageIdentification() : coverageIdentification,
                 explainedInstance, explainedInstanceLabel,
                 (maxAnchorSize == null) ? explainedInstance.getFeatureCount() : maxAnchorSize,
-                beamSize, delta, tau, tauDiscrepancy, initSampleCount,
+                beamSize, delta, epsilon, tau, tauDiscrepancy, initSampleCount,
                 threadCount, doBalanceSampling, lazyCoverageEvaluation, allowSuboptimalSteps);
     }
 
@@ -308,6 +306,17 @@ public class AnchorConstructionBuilder<T extends DataInstance<?>> {
      */
     ClassificationFunction<T> getClassificationFunction() {
         return classificationFunction;
+    }
+
+    /**
+     * Sets the classification function.
+     *
+     * @param classificationFunction the classification function
+     * @return the current {@link AnchorConstructionBuilder} for chaining
+     */
+    public AnchorConstructionBuilder<T> setClassificationFunction(final ClassificationFunction<T> classificationFunction) {
+        this.classificationFunction = classificationFunction;
+        return this;
     }
 
     /**

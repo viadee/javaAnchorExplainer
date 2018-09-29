@@ -77,7 +77,7 @@ public class KL_LUCBTest {
     }
 
     private int[] mockUpdateBounds(int t, int nFeatures, int[] nSamples, double[] means, int topN, double[] ub, double[] lb) {
-        KL_LUCB kl_lucb = new KL_LUCB(100, 0.1);
+        KL_LUCB kl_lucb = new KL_LUCB(100);
         List<AnchorCandidate> candidates = new ArrayList<>();
         for (int i = 0; i < nSamples.length; i++) {
             int positiveSamples = (int) (means[i] * nSamples[i]);
@@ -121,7 +121,7 @@ public class KL_LUCBTest {
                 new Integer[]{5}),
                 new int[]{0, 0, 0, 0, 0, 1},
                 new int[]{0, 0, 0, 0, 0, 0});
-        List<AnchorCandidate> result = new KL_LUCB(100, 0.15).identify(candidates, mockIdentify(new int[]{0, 1, 1, 1, 0, 12, 76, 17, 18, 17, 33}), 0.1, 1);
+        List<AnchorCandidate> result = new KL_LUCB(100).identify(candidates, mockIdentify(new int[]{0, 1, 1, 1, 0, 12, 76, 17, 18, 17, 33}), 0.1, 0.15, 1);
         assertEquals(result.size(), 1);
         assertEquals(result.get(0), candidates.get(3));
         /***/
@@ -133,7 +133,7 @@ public class KL_LUCBTest {
                 new Integer[]{4},
                 new Integer[]{5}),
                 new int[]{13, 10, 24, 5, 6, 101}, new int[]{10, 7, 22, 2, 5, 85});
-        result = new KL_LUCB(100, 0.15).identify(candidates, mockIdentify(new int[]{90, 83, 92, 83, 64, 93, 38, 89, 82, 91, 83, 85}), 0.1, 1);
+        result = new KL_LUCB(100).identify(candidates, mockIdentify(new int[]{90, 83, 92, 83, 64, 93, 38, 89, 82, 91, 83, 85}), 0.1, 0.15, 1);
         assertEquals(result.size(), 1);
         assertEquals(result.get(0), candidates.get(0));
         /***/
@@ -144,7 +144,7 @@ public class KL_LUCBTest {
                 new Integer[]{0, 2},
                 new Integer[]{0, 4}),
                 new int[]{35, 14, 513, 139, 30}, new int[]{29, 10, 460, 128, 29});
-        result = new KL_LUCB(100, 0.15).identify(candidates, mockIdentify(new int[]{51, 92, 77, 90, 95, 88}), 0.1, 1);
+        result = new KL_LUCB(100).identify(candidates, mockIdentify(new int[]{51, 92, 77, 90, 95, 88}), 0.1, 0.15, 1);
         assertEquals(result.size(), 1);
         assertEquals(result.get(0), candidates.get(4));
         /***/
@@ -154,7 +154,7 @@ public class KL_LUCBTest {
                 new Integer[]{0, 2, 4},
                 new Integer[]{0, 1, 4}),
                 new int[]{330, 9, 97, 25}, new int[]{306, 8, 92, 24});
-        result = new KL_LUCB(100, 0.15).identify(candidates, mockIdentify(new int[]{76, 81, 87, 87, 88, 91}), 0.1, 1);
+        result = new KL_LUCB(100).identify(candidates, mockIdentify(new int[]{76, 81, 87, 87, 88, 91}), 0.1, 0.15, 1);
         assertEquals(result.size(), 1);
         assertEquals(result.get(0), candidates.get(0));
         /***/
@@ -163,7 +163,7 @@ public class KL_LUCBTest {
                 new Integer[]{0, 3, 4, 5},
                 new Integer[]{0, 1, 4, 5}),
                 new int[]{150, 15, 41}, new int[]{138, 11, 38});
-        result = new KL_LUCB(100, 0.15).identify(candidates, mockIdentify(new int[]{74, 83, 88, 92}), 0.1, 1);
+        result = new KL_LUCB(100).identify(candidates, mockIdentify(new int[]{74, 83, 88, 92}), 0.1, 0.15, 1);
         assertEquals(result.size(), 1);
         assertEquals(result.get(0), candidates.get(0));
         /***/
@@ -171,7 +171,7 @@ public class KL_LUCBTest {
                 new Integer[]{0, 2, 3, 4, 5},
                 new Integer[]{0, 1, 2, 4, 5}),
                 new int[]{8, 17}, new int[]{5, 16});
-        result = new KL_LUCB(100, 0.15).identify(candidates, mockIdentify(new int[]{81, 86, 81, 84, 86, 92}), 0.1, 1);
+        result = new KL_LUCB(100).identify(candidates, mockIdentify(new int[]{81, 86, 81, 84, 86, 92}), 0.1, 0.15, 1);
         assertEquals(result.size(), 1);
         assertEquals(result.get(0), candidates.get(1));
         /***/
@@ -179,7 +179,7 @@ public class KL_LUCBTest {
         list.add(new Integer[]{0, 1, 2, 3, 4, 5});
         candidates = mockCandidates(list,
                 new int[]{9}, new int[]{9});
-        result = new KL_LUCB(100, 0.15).identify(candidates, mockIdentify(new int[]{}), 0.1, 1);
+        result = new KL_LUCB(100).identify(candidates, mockIdentify(new int[]{}), 0.1, 0.15, 1);
         assertEquals(result.size(), 1);
         assertEquals(result.get(0), candidates.get(0));
     }
