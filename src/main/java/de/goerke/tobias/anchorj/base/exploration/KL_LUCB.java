@@ -2,7 +2,7 @@ package de.goerke.tobias.anchorj.base.exploration;
 
 import de.goerke.tobias.anchorj.base.AnchorCandidate;
 import de.goerke.tobias.anchorj.base.execution.AbstractSamplingService;
-import de.goerke.tobias.anchorj.util.BernoulliUtils;
+import de.goerke.tobias.anchorj.util.KLBernoulliUtils;
 import de.goerke.tobias.anchorj.util.MathUtils;
 import de.goerke.tobias.anchorj.util.ParameterValidation;
 
@@ -120,15 +120,15 @@ public class KL_LUCB implements BestAnchorIdentification {
                               final double[] ub, final double[] lb) {
         final double[] means = getMultipleMeans(candidates);
         final int[] sortedMeans = MathUtils.argSort(means);
-        final double beta = BernoulliUtils.computeBeta(candidates.size(), t, delta);
+        final double beta = KLBernoulliUtils.computeBeta(candidates.size(), t, delta);
         final int[] j = Arrays.copyOfRange(sortedMeans, means.length - topN, means.length);
         final int[] not_j = Arrays.copyOfRange(sortedMeans, 0, means.length - topN);
         // FIXME dupBernoulli introduces MASSIVE overhead, up to 2/3 of TOTAL Anchors runtime
         for (int f : not_j) {
-            ub[f] = BernoulliUtils.dupBernoulli(means[f], beta / candidates.get(f).getSampledSize());
+            ub[f] = KLBernoulliUtils.dupBernoulli(means[f], beta / candidates.get(f).getSampledSize());
         }
         for (int f : j) {
-            lb[f] = BernoulliUtils.dlowBernoulli(means[f], beta / candidates.get(f).getSampledSize());
+            lb[f] = KLBernoulliUtils.dlowBernoulli(means[f], beta / candidates.get(f).getSampledSize());
         }
 
         final int ut = (not_j.length == 0) ? 0 : not_j[MathUtils.argMax(IntStream.of(not_j)

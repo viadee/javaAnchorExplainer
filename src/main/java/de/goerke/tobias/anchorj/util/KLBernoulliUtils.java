@@ -1,22 +1,22 @@
 package de.goerke.tobias.anchorj.util;
 
 /**
- * Providing functions for calculating UCB bounds.
+ * Providing functions for calculating Kullback-Leibler (KL) divergences
  * <p>
- * Used to balance exploration vs. exploitation.
+ * Used for bandits using KL divergences
  */
-public final class BernoulliUtils {
+public final class KLBernoulliUtils {
 
-    private BernoulliUtils() {
+    private KLBernoulliUtils() {
     }
 
     static double klBernoulli(double p, double q) {
         p = Math.min(0.9999999999999999, Math.max(0.0000001, p));
         q = Math.min(0.9999999999999999, Math.max(0.0000001, q));
-        return (p * Math.log((p) / q) + (1 - p) * Math.log((1 - p) / (1 - q)));
+        return (p * Math.log(p / q) + (1 - p) * Math.log((1 - p) / (1 - q)));
     }
 
-    public static double dupBernoulli(double p, double level) {
+    public static double dupBernoulli(final double p, final double level) {
         double lm = p;
         double um = Math.min(Math.min(1, p + Math.sqrt(level / 2)), 1);
         for (int i = 1; i < 17; i++) {
