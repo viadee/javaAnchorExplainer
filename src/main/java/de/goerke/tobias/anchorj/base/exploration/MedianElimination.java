@@ -3,7 +3,10 @@ package de.goerke.tobias.anchorj.base.exploration;
 import de.goerke.tobias.anchorj.base.AnchorCandidate;
 import de.goerke.tobias.anchorj.base.execution.AbstractSamplingService;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.ListIterator;
 
 /**
  * This class implements the Median Elimination algorithm as proposed by Even-Dar et. al in
@@ -52,6 +55,8 @@ public class MedianElimination implements BestAnchorIdentification {
     private static AnchorCandidate identifySingle(List<AnchorCandidate> candidates,
                                                   AbstractSamplingService samplingService, double delta,
                                                   double epsilon) {
+        if (candidates.size() == 1)
+            return candidates.get(0);
 
         final List<AnchorCandidate> s = new ArrayList<>(candidates);
         double epsilon1 = epsilon / 4;

@@ -358,7 +358,9 @@ public class AnchorConstruction<T extends DataInstance<?>> {
             final Iterator<AnchorCandidate> iterator = bestCandidates.iterator();
             while (iterator.hasNext()) {
                 final AnchorCandidate candidate = iterator.next();
-                if (candidate.getPrecision() <= 0) {
+                // If anchorCandidate size <= beam size, then all candidates get returned without being sampled.
+                // Thus, these may not be removed
+                if (anchorCandidates.size() > bestCandidateCount && candidate.getPrecision() <= 0) {
                     LOGGER.warn("Removing candidate {} as its precision is 0", candidate.getOrderedFeatures());
                     iterator.remove();
                 } else if (!allowSuboptimalSteps && candidate.getAddedPrecision() <= 0) {
