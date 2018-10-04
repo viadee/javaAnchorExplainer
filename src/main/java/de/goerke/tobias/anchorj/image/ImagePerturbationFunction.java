@@ -120,7 +120,7 @@ public class ImagePerturbationFunction implements PerturbationFunction<ImageInst
             }
         }
 
-        return new PerturbationResult<>(Stream.of(imageRepresentations)
+        return new PerturbationResultImpl<>(Stream.of(imageRepresentations)
                 .map(b -> new ImageInstance(b, imageInstance.getLabels())).toArray(ImageInstance[]::new), changed);
     }
 }

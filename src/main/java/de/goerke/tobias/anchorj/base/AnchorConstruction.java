@@ -214,7 +214,7 @@ public class AnchorConstruction<T extends DataInstance<?>> {
 
         final PerturbationFunction.PerturbationResult<T> perturbationResult = perturbationFunction.perturb(
                 candidate.getCanonicalFeatures(), samplesToEvaluate);
-        final int[] predictions = classificationFunction.predict(perturbationResult.rawResult);
+        final int[] predictions = classificationFunction.predict(perturbationResult.getRawResult());
 
         final int matchingLabels = Math.toIntExact(IntStream.of(predictions)
                 .filter(p -> p == explainedInstanceLabel).count());

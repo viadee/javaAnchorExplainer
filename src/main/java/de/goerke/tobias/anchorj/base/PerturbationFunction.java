@@ -29,7 +29,7 @@ public interface PerturbationFunction<T extends DataInstance<?>> {
      *
      * @param immutableFeaturesIdx the features not to be perturbed as they are specified by an {@link AnchorCandidate}
      * @param nrPerturbations      the number of perturbations to create
-     * @return the {@link PerturbationResult} containing the perturbed instances
+     * @return the {@link PerturbationResultImpl} containing the perturbed instances
      */
     PerturbationResult<T> perturb(Set<Integer> immutableFeaturesIdx, int nrPerturbations);
 
@@ -38,9 +38,25 @@ public interface PerturbationFunction<T extends DataInstance<?>> {
      *
      * @param <T> the type of the perturbed instance
      */
-    class PerturbationResult<T> {
-        public final T[] rawResult;
-        public final boolean[][] featureChanged;
+    interface PerturbationResult<T> {
+        /**
+         * @return the raw result of type T
+         */
+        T[] getRawResult();
+
+        /**
+         * @return an array mapping each perturbation (dimension 1) and its features (dimension 2) to
+         * whether they have been changed, i.e. are different than in the original instance
+         */
+        boolean[][] getFeatureChanged();
+    }
+
+    /**
+     * Basic implementation of the PerturbationResultImpl
+     */
+    class PerturbationResultImpl<T> implements PerturbationResult<T> {
+        private final T[] rawResult;
+        private final boolean[][] featureChanged;
 
         /**
          * Creates the instance.
@@ -49,11 +65,22 @@ public interface PerturbationFunction<T extends DataInstance<?>> {
          * @param featureChanged an array mapping each perturbation (dimension 1) and its features (dimension 2) to
          *                       whether they have been changed, i.e. are different than in the original instance
          */
-        public PerturbationResult(T[] rawResult, boolean[][] featureChanged) {
+        public PerturbationResultImpl(T[] rawResult, boolean[][] featureChanged) {
             if (rawResult.length != featureChanged.length)
                 throw new IllegalArgumentException("Raw results is of different size than changed features size");
             this.rawResult = rawResult;
             this.featureChanged = featureChanged;
+        }
+
+
+        @Override
+        public T[] getRawResult() {
+            return rawResult;
+        }
+
+        @Override
+        public boolean[][] getFeatureChanged() {
+            return featureChanged;
         }
     }
 }

@@ -102,7 +102,7 @@ public class TextPerturbationFunction implements PerturbationFunction<TextInstan
             rawResult[i] = new TextInstance(tokens);
         }
 
-        return new PerturbationResult<>(rawResult, result);
+        return new PerturbationResultImpl<>(rawResult, result);
     }
 
     /**

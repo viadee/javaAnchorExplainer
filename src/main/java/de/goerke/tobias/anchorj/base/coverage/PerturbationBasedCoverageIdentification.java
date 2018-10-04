@@ -45,7 +45,7 @@ public class PerturbationBasedCoverageIdentification implements CoverageIdentifi
             throw new IllegalArgumentException("Coverage data" + ParameterValidation.NULL_MESSAGE);
 
         return new PerturbationBasedCoverageIdentification(
-                perturbationFunction.perturb(Collections.emptySet(), coverageSampleCount).featureChanged);
+                perturbationFunction.perturb(Collections.emptySet(), coverageSampleCount).getFeatureChanged());
     }
 
     @Override

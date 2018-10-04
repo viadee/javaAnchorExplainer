@@ -38,7 +38,7 @@ public class TabularInstanceVisualizer {
         for (Integer featureNr : anchorResult.getOrderedFeatures()) {
             explanation[index++] = text[featureNr];
         }
-        return "IF (" + String.join(" AND ", explanation) + ") THEN PREDICT " + getLabelMapping().get(anchorResult.getLabel());
+        return "IF (" + String.join(" AND " + System.lineSeparator(), explanation) + ") THEN PREDICT " + getLabelMapping().get(anchorResult.getLabel());
     }
 
     /**

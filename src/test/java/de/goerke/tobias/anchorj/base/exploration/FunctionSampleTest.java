@@ -103,7 +103,7 @@ public class FunctionSampleTest {
                 featureChanged[1] = rawResult[i].y != explainedInstance.y;
                 featuresChanged[i] = featureChanged;
             }
-            return new PerturbationFunction.PerturbationResult<>(rawResult, featuresChanged);
+            return new PerturbationFunction.PerturbationResultImpl<>(rawResult, featuresChanged);
         };
     }
 

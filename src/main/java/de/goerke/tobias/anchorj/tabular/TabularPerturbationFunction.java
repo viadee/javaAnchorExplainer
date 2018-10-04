@@ -60,7 +60,7 @@ public class TabularPerturbationFunction implements PerturbationFunction<Tabular
             featuresChanged.add(tempFeatureChanged);
         }
 
-        return new PerturbationResult<>(rawResult.toArray(new TabularInstance[0]),
+        return new PerturbationResultImpl<>(rawResult.toArray(new TabularInstance[0]),
                 featuresChanged.toArray(new boolean[0][]));
     }
 
