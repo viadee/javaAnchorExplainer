@@ -22,7 +22,7 @@ public class ParallelSamplingService extends AbstractSamplingService {
     ParallelSamplingService(final BiFunction<AnchorCandidate, Integer, Double> sampleFunction,
                             final int threadCount) {
         super(sampleFunction);
-        this.executor = Executors.newFixedThreadPool(Math.min(threadCount, 1));
+        this.executor = Executors.newFixedThreadPool(Math.max(threadCount, 1));
         this.threadCount = threadCount;
     }
 
