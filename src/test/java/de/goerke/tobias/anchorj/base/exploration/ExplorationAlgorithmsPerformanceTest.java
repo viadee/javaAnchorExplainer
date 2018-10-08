@@ -2,6 +2,7 @@ package de.goerke.tobias.anchorj.base.exploration;
 
 import de.goerke.tobias.anchorj.base.AnchorCandidate;
 import de.goerke.tobias.anchorj.base.execution.AbstractSamplingService;
+import de.goerke.tobias.anchorj.base.execution.SamplingService;
 import de.goerke.tobias.anchorj.util.NoiseGenerator;
 import org.junit.jupiter.api.*;
 
@@ -110,7 +111,7 @@ public class ExplorationAlgorithmsPerformanceTest {
     }
 
 
-    private AbstractSamplingService createSamplingService(final int threadCount, final boolean doBalance) {
+    private SamplingService createSamplingService(final int threadCount, final boolean doBalance) {
         final BiFunction<AnchorCandidate, Integer, Double> function = (candidate, count) -> {
             try {
                 Thread.sleep(5);
@@ -123,6 +124,6 @@ public class ExplorationAlgorithmsPerformanceTest {
             return 0D;
         };
 
-        return AbstractSamplingService.createExecution(function, threadCount, true);
+        return SamplingService.createDefaultExecution(function, threadCount, true);
     }
 }

@@ -2,6 +2,8 @@ package de.goerke.tobias.anchorj.base;
 
 import de.goerke.tobias.anchorj.base.coverage.CoverageIdentification;
 import de.goerke.tobias.anchorj.base.execution.AbstractSamplingService;
+import de.goerke.tobias.anchorj.base.execution.SamplingService;
+import de.goerke.tobias.anchorj.base.execution.SamplingSession;
 import de.goerke.tobias.anchorj.base.exploration.BestAnchorIdentification;
 import de.goerke.tobias.anchorj.util.KLBernoulliUtils;
 import de.goerke.tobias.anchorj.util.ParameterValidation;
@@ -41,7 +43,7 @@ public class AnchorConstruction<T extends DataInstance<?>> {
     private final boolean lazyCoverageEvaluation;
     private final boolean allowSuboptimalSteps;
 
-    private final AbstractSamplingService samplingService;
+    private final SamplingService samplingService;
 
     /**
      * Constructs the instance setting all required parameters
@@ -129,7 +131,7 @@ public class AnchorConstruction<T extends DataInstance<?>> {
         this.initSampleCount = initSampleCount;
         this.lazyCoverageEvaluation = lazyCoverageEvaluation;
         this.allowSuboptimalSteps = allowSuboptimalSteps;
-        this.samplingService = AbstractSamplingService.createExecution(this::doSample, threadCount, doBalanceSampling);
+        this.samplingService = SamplingService.createDefaultExecution(this::doSample, threadCount, doBalanceSampling);
     }
 
 
@@ -239,7 +241,7 @@ public class AnchorConstruction<T extends DataInstance<?>> {
      */
     private List<AnchorCandidate> bestCandidate(final List<AnchorCandidate> candidates, final int topN) {
         // Ensure all candidates have initSampleCount taken
-        AbstractSamplingService.AbstractSession session = samplingService.createSession();
+        SamplingSession session = samplingService.createSession();
         for (final AnchorCandidate candidate : candidates) {
             if (candidate.getSampledSize() >= initSampleCount)
                 continue;

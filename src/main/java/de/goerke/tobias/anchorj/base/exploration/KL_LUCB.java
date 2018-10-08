@@ -1,7 +1,7 @@
 package de.goerke.tobias.anchorj.base.exploration;
 
 import de.goerke.tobias.anchorj.base.AnchorCandidate;
-import de.goerke.tobias.anchorj.base.execution.AbstractSamplingService;
+import de.goerke.tobias.anchorj.base.execution.SamplingService;
 import de.goerke.tobias.anchorj.util.KLBernoulliUtils;
 import de.goerke.tobias.anchorj.util.MathUtils;
 import de.goerke.tobias.anchorj.util.ParameterValidation;
@@ -34,6 +34,45 @@ public class KL_LUCB implements BestAnchorIdentification {
             throw new IllegalArgumentException("Batch size must not be negative");
 
         this.batchSize = batchSize;
+    }
+
+    /**
+     * Part of the KL-LUCB algorithm updating the bounds
+     *
+     * @param t          iteration number
+     * @param candidates current candidates
+     * @param delta      delta value
+     * @param topN       number of candidates to choose
+     * @param ub         current upper bounds
+     * @param lb         current lower bounds
+     * @return an array with the new upper and lower bounds
+     */
+    static int[] updateBounds(int t, final List<AnchorCandidate> candidates, final double delta, final int topN,
+                              final double[] ub, final double[] lb) {
+        final double[] means = getMultipleMeans(candidates);
+        final int[] sortedMeans = MathUtils.argSort(means);
+        final double beta = KLBernoulliUtils.computeBeta(candidates.size(), t, delta);
+        final int[] j = Arrays.copyOfRange(sortedMeans, means.length - topN, means.length);
+        final int[] not_j = Arrays.copyOfRange(sortedMeans, 0, means.length - topN);
+        for (int f : not_j) {
+            ub[f] = KLBernoulliUtils.dupBernoulli(means[f], beta / candidates.get(f).getSampledSize());
+        }
+        for (int f : j) {
+            lb[f] = KLBernoulliUtils.dlowBernoulli(means[f], beta / candidates.get(f).getSampledSize());
+        }
+
+        final int ut = (not_j.length == 0) ? 0 : not_j[MathUtils.argMax(IntStream.of(not_j)
+                .mapToDouble(localnotj -> ub[localnotj]).toArray())];
+        final int lt = j[MathUtils.argMin(IntStream.of(j).mapToDouble(localj -> lb[localj]).toArray())];
+
+        return new int[]{ut, lt};
+    }
+
+    private static double[] getMultipleMeans(final List<AnchorCandidate> anchorCandidates) {
+        final double[] means = new double[anchorCandidates.size()];
+        for (int i = 0; i < means.length; i++)
+            means[i] = anchorCandidates.get(i).getPrecision();
+        return means;
     }
 
     /*
@@ -76,7 +115,7 @@ public class KL_LUCB implements BestAnchorIdentification {
      */
     @Override
     public List<AnchorCandidate> identify(final List<AnchorCandidate> candidates,
-                                          final AbstractSamplingService samplingService,
+                                          final SamplingService samplingService,
                                           final double delta, final double epsilon, final int nrOfResults) {
         final double[] ub = new double[candidates.size()];
         final double[] lb = new double[candidates.size()];
@@ -103,45 +142,5 @@ public class KL_LUCB implements BestAnchorIdentification {
         final int[] sortedMeans = MathUtils.argSort(means);
         final int[] topCandidateIndices = Arrays.copyOfRange(sortedMeans, means.length - nrOfResults, means.length);
         return Arrays.stream(topCandidateIndices).mapToObj(candidates::get).collect(Collectors.toList());
-    }
-
-    /**
-     * Part of the KL-LUCB algorithm updating the bounds
-     *
-     * @param t          iteration number
-     * @param candidates current candidates
-     * @param delta      delta value
-     * @param topN       number of candidates to choose
-     * @param ub         current upper bounds
-     * @param lb         current lower bounds
-     * @return an array with the new upper and lower bounds
-     */
-    static int[] updateBounds(int t, final List<AnchorCandidate> candidates, final double delta, final int topN,
-                              final double[] ub, final double[] lb) {
-        final double[] means = getMultipleMeans(candidates);
-        final int[] sortedMeans = MathUtils.argSort(means);
-        final double beta = KLBernoulliUtils.computeBeta(candidates.size(), t, delta);
-        final int[] j = Arrays.copyOfRange(sortedMeans, means.length - topN, means.length);
-        final int[] not_j = Arrays.copyOfRange(sortedMeans, 0, means.length - topN);
-        // FIXME dupBernoulli introduces MASSIVE overhead, up to 2/3 of TOTAL Anchors runtime
-        for (int f : not_j) {
-            ub[f] = KLBernoulliUtils.dupBernoulli(means[f], beta / candidates.get(f).getSampledSize());
-        }
-        for (int f : j) {
-            lb[f] = KLBernoulliUtils.dlowBernoulli(means[f], beta / candidates.get(f).getSampledSize());
-        }
-
-        final int ut = (not_j.length == 0) ? 0 : not_j[MathUtils.argMax(IntStream.of(not_j)
-                .mapToDouble(localnotj -> ub[localnotj]).toArray())];
-        final int lt = j[MathUtils.argMin(IntStream.of(j).mapToDouble(localj -> lb[localj]).toArray())];
-
-        return new int[]{ut, lt};
-    }
-
-    private static double[] getMultipleMeans(final List<AnchorCandidate> anchorCandidates) {
-        final double[] means = new double[anchorCandidates.size()];
-        for (int i = 0; i < means.length; i++)
-            means[i] = anchorCandidates.get(i).getPrecision();
-        return means;
     }
 }

@@ -2,6 +2,7 @@ package de.goerke.tobias.anchorj.base.exploration;
 
 import de.goerke.tobias.anchorj.base.AnchorCandidate;
 import de.goerke.tobias.anchorj.base.execution.AbstractSamplingService;
+import de.goerke.tobias.anchorj.base.execution.SamplingService;
 import de.goerke.tobias.anchorj.util.ParameterValidation;
 
 import java.util.*;
@@ -54,7 +55,7 @@ public class BatchSAR extends AbstractBRAlgorithm {
 
     @Override
     public List<AnchorCandidate> identify(final List<AnchorCandidate> candidates,
-                                          final AbstractSamplingService samplingService,
+                                          final SamplingService samplingService,
                                           final double delta, final double epsilon, final int nrOfResults) {
         final int n = candidates.size();
         // We do not have n at instantiation, so this cannot be a class field (immutability / thread safety)

@@ -1,7 +1,7 @@
 package de.goerke.tobias.anchorj.base.exploration;
 
 import de.goerke.tobias.anchorj.base.AnchorCandidate;
-import de.goerke.tobias.anchorj.base.execution.AbstractSamplingService;
+import de.goerke.tobias.anchorj.base.execution.SamplingService;
 
 import java.util.List;
 
@@ -29,7 +29,7 @@ public interface BestAnchorIdentification {
      * The anchors algorithm will later enforce all required constraints.
      *
      * @param candidates      the candidates to inspect
-     * @param samplingService an implementation of the {@link AbstractSamplingService}, controlling the evaluation of samples.
+     * @param samplingService an implementation of the {@link SamplingService}, controlling the evaluation of samples.
      *                        Allows for threading.
      * @param delta           the probability of identifying the correct result == confidence
      * @param epsilon         the maximum error == tolerance
@@ -37,6 +37,6 @@ public interface BestAnchorIdentification {
      * @return the best {@link AnchorCandidate}s out of the specified candidates
      */
     List<AnchorCandidate> identify(final List<AnchorCandidate> candidates,
-                                   final AbstractSamplingService samplingService,
+                                   final SamplingService samplingService,
                                    final double delta, final double epsilon, final int nrOfResults);
 }

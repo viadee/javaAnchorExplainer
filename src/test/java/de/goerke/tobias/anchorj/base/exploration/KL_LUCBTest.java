@@ -2,6 +2,7 @@ package de.goerke.tobias.anchorj.base.exploration;
 
 import de.goerke.tobias.anchorj.base.AnchorCandidate;
 import de.goerke.tobias.anchorj.base.execution.AbstractSamplingService;
+import de.goerke.tobias.anchorj.base.execution.SamplingService;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -17,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * This test compares results with these of the original Anchor implementation
  */
 public class KL_LUCBTest {
-    private static AbstractSamplingService mockIdentify(int[] predictionsToReturn) {
+    private static SamplingService mockIdentify(int[] predictionsToReturn) {
         AtomicInteger currentIndex = new AtomicInteger(0);
         BiFunction<AnchorCandidate, Integer, Double> function = (a, b) -> {
             int prediction = predictionsToReturn[currentIndex.getAndIncrement()];
@@ -29,11 +30,11 @@ public class KL_LUCBTest {
 
         return new AbstractSamplingService(function) {
             @Override
-            public AbstractSession createSession() {
-                return new AbstractSession() {
+            public AbstractSamplingSession createSession() {
+                return new AbstractSamplingSession() {
 
                     @Override
-                    public AbstractSession registerCandidateEvaluation(AnchorCandidate candidate, int count) {
+                    public AbstractSamplingSession registerCandidateEvaluation(AnchorCandidate candidate, int count) {
                         function.apply(candidate, count);
                         return this;
                     }

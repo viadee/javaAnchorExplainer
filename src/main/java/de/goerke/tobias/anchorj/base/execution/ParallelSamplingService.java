@@ -27,11 +27,11 @@ public class ParallelSamplingService extends AbstractSamplingService {
     }
 
     @Override
-    public AbstractSession createSession() {
+    public AbstractSamplingSession createSession() {
         return new ParallelSession();
     }
 
-    protected class ParallelSession extends AbstractSamplingService.AbstractSession {
+    protected class ParallelSession extends AbstractSamplingSession {
 
         protected Collection<Callable<Object>> createCallables() {
             return samplingCountMap.entrySet().stream().map(entry ->

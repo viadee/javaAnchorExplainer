@@ -1,7 +1,7 @@
 package de.goerke.tobias.anchorj.base.exploration;
 
 import de.goerke.tobias.anchorj.base.AnchorCandidate;
-import de.goerke.tobias.anchorj.base.execution.AbstractSamplingService;
+import de.goerke.tobias.anchorj.base.execution.SamplingService;
 
 import java.util.*;
 
@@ -70,7 +70,7 @@ public class BatchRacing extends AbstractBRAlgorithm {
 
     @Override
     public List<AnchorCandidate> identify(final List<AnchorCandidate> candidates,
-                                          final AbstractSamplingService samplingService,
+                                          final SamplingService samplingService,
                                           final double delta, final double epsilon, final int nrOfResults) {
 
         // The algorithm maintains a set of surviving arms that is initialized as S_1 = [n]

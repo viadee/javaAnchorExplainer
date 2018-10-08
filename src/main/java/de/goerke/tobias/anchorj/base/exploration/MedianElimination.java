@@ -2,6 +2,8 @@ package de.goerke.tobias.anchorj.base.exploration;
 
 import de.goerke.tobias.anchorj.base.AnchorCandidate;
 import de.goerke.tobias.anchorj.base.execution.AbstractSamplingService;
+import de.goerke.tobias.anchorj.base.execution.SamplingService;
+import de.goerke.tobias.anchorj.base.execution.SamplingSession;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -53,7 +55,7 @@ public class MedianElimination implements BestAnchorIdentification {
      * @return the best candidate satisfying the specified parameters
      */
     private static AnchorCandidate identifySingle(List<AnchorCandidate> candidates,
-                                                  AbstractSamplingService samplingService, double delta,
+                                                  SamplingService samplingService, double delta,
                                                   double epsilon) {
         if (candidates.size() == 1)
             return candidates.get(0);
@@ -64,7 +66,7 @@ public class MedianElimination implements BestAnchorIdentification {
         do {
             final int sampleCount = (int) (1D / Math.pow((epsilon1 / 2D), 2) * Math.log(3D / delta1));
 
-            final AbstractSamplingService.AbstractSession session = samplingService.createSession();
+            final SamplingSession session = samplingService.createSession();
             for (AnchorCandidate candidate : s) {
                 session.registerCandidateEvaluation(candidate, sampleCount);
             }
@@ -84,7 +86,7 @@ public class MedianElimination implements BestAnchorIdentification {
     }
 
     @Override
-    public List<AnchorCandidate> identify(List<AnchorCandidate> candidates, AbstractSamplingService samplingService,
+    public List<AnchorCandidate> identify(List<AnchorCandidate> candidates, SamplingService samplingService,
                                           double delta, double epsilon, int nrOfResults) {
         final List<AnchorCandidate> remainingCandidates = new ArrayList<>(candidates);
         final List<AnchorCandidate> result = new ArrayList<>();

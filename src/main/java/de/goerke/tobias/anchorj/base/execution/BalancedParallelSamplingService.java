@@ -21,7 +21,7 @@ public class BalancedParallelSamplingService extends ParallelSamplingService {
     }
 
     @Override
-    public AbstractSession createSession() {
+    public AbstractSamplingSession createSession() {
         return new BalancedParallelSession();
     }
 

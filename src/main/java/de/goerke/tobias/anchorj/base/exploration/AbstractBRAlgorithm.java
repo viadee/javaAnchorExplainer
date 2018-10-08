@@ -1,7 +1,7 @@
 package de.goerke.tobias.anchorj.base.exploration;
 
 import de.goerke.tobias.anchorj.base.AnchorCandidate;
-import de.goerke.tobias.anchorj.base.execution.AbstractSamplingService;
+import de.goerke.tobias.anchorj.base.execution.SamplingService;
 import de.goerke.tobias.anchorj.util.ParameterValidation;
 
 import java.util.*;
@@ -55,7 +55,7 @@ abstract class AbstractBRAlgorithm implements BestAnchorIdentification {
      * @param samplingService the service evaluation samples
      */
     void batchSample(final Set<AnchorCandidate> candidates,
-                     final AbstractSamplingService samplingService) {
+                     final SamplingService samplingService) {
         final Map<AnchorCandidate, Integer> pullCountMap = new HashMap<>();
         List<AnchorCandidate> sortedBySampleSize = new ArrayList<>(candidates);
         sortedBySampleSize.sort(Comparator.comparingInt(AnchorCandidate::getSampledSize));
@@ -79,15 +79,14 @@ abstract class AbstractBRAlgorithm implements BestAnchorIdentification {
      * @param minCountEach    the minimum count every arm has to be pulled
      */
     void batchSample(final Set<AnchorCandidate> candidates,
-                     final AbstractSamplingService samplingService, final int minCountEach) {
+                     final SamplingService samplingService, final int minCountEach) {
         final LinkedHashMap<AnchorCandidate, Integer> pullCountMap = new LinkedHashMap<>();
         candidates.stream().sorted(Comparator.comparingInt(AnchorCandidate::getSampledSize))
                 .forEach(c -> pullCountMap.put(c, 0));
 
         Iterator<AnchorCandidate> iterator = new CyclicIterator<>(new ArrayList<>(pullCountMap.keySet())).iterator();
 
-        // The first element always has fewest pu
-
+        // The first element always has fewest
         while (pullCountMap.entrySet().stream().min(Comparator.comparingInt(Map.Entry::getValue))
                 .orElseThrow(IllegalArgumentException::new).getValue() < minCountEach) {
             for (int i = 0; i < Math.min(b, candidates.size() * r); i++) {

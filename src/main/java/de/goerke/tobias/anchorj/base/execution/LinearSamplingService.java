@@ -15,11 +15,11 @@ public class LinearSamplingService extends AbstractSamplingService {
     }
 
     @Override
-    public AbstractSamplingService.AbstractSession createSession() {
+    public AbstractSamplingSession createSession() {
         return new LinearSession();
     }
 
-    private class LinearSession extends AbstractSamplingService.AbstractSession {
+    private class LinearSession extends AbstractSamplingSession {
         @Override
         public void execute() {
             for (Map.Entry<AnchorCandidate, Integer> entry : samplingCountMap.entrySet())

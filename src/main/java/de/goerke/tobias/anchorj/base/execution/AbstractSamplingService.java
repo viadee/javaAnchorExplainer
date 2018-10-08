@@ -13,7 +13,7 @@ import java.util.function.BiFunction;
  * <p>
  * Its subclasses mainly enable different kinds of parallelization.
  */
-public abstract class AbstractSamplingService {
+public abstract class AbstractSamplingService implements SamplingService {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractSamplingService.class);
 
     final BiFunction<AnchorCandidate, Integer, Double> sampleFunction;
@@ -33,63 +33,27 @@ public abstract class AbstractSamplingService {
         this.sampleFunction = sampleFunction;
     }
 
-    /**
-     * Instantiates and returns an appropriate implementation.
-     *
-     * @param sampleFunction the sampling function
-     * @param threadCount    number of threads to use
-     * @param doBalance      if true, the work will be equally split among all threads
-     * @return the appropriate service. Either {@link LinearSamplingService}, {@link ParallelSamplingService} or
-     * {@link BalancedParallelSamplingService}
-     */
-    public static AbstractSamplingService createExecution(final BiFunction<AnchorCandidate, Integer, Double> sampleFunction,
-                                                          final int threadCount, final boolean doBalance) {
-        if (threadCount <= 1)
-            return new LinearSamplingService(sampleFunction);
-        if (!doBalance)
-            return new ParallelSamplingService(sampleFunction, threadCount);
-        return new BalancedParallelSamplingService(sampleFunction, threadCount);
-    }
 
-    /**
-     * Returns the time spent taking samples
-     *
-     * @return the time spent taking samples in milliseconds
-     */
+    @Override
     public double getTimeSpentSampling() {
         return timeSpentSampling;
     }
 
     /**
-     * Creates a session that has to be used in order to obtain samples.
-     *
-     * @return an {@link AbstractSession} instance.
-     */
-    public abstract AbstractSession createSession();
-
-    /**
      * Session object
      */
-    public abstract class AbstractSession {
+    public abstract class AbstractSamplingSession implements SamplingSession {
         // Retain order
         final Map<AnchorCandidate, Integer> samplingCountMap = new LinkedHashMap<>();
 
         /**
          * Creates an instance.
          */
-        protected AbstractSession() {
+        protected AbstractSamplingSession() {
         }
 
-        /**
-         * Registers a candidate to be evaluated.
-         * <p>
-         * If the candidate is already contained, the number of new executions will be added.
-         *
-         * @param candidate the candidate to evaluate
-         * @param count     the number of samples to obtain
-         * @return this session object which can be executed
-         */
-        public AbstractSession registerCandidateEvaluation(final AnchorCandidate candidate, int count) {
+        @Override
+        public AbstractSamplingSession registerCandidateEvaluation(final AnchorCandidate candidate, int count) {
             if (samplingCountMap.containsKey(candidate))
                 count += samplingCountMap.get(candidate);
             samplingCountMap.put(candidate, count);
@@ -97,23 +61,8 @@ public abstract class AbstractSamplingService {
             return this;
         }
 
-        /**
-         * Delegates a map of sample executions to
-         * {@link AbstractSession#registerCandidateEvaluation(AnchorCandidate, int)}.
-         *
-         * @param map the mapping of candidates to execution counts
-         * @return this session object which can be executed
-         */
-        public AbstractSession registerCandidateEvaluation(final Map<AnchorCandidate, Integer> map) {
-            for (Map.Entry<AnchorCandidate, Integer> entry : map.entrySet())
-                registerCandidateEvaluation(entry.getKey(), entry.getValue());
 
-            return this;
-        }
-
-        /**
-         * Executes the requested samples
-         */
+        @Override
         public void run() {
             double time = System.currentTimeMillis();
             execute();
