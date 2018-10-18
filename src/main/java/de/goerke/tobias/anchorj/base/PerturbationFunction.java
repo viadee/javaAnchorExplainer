@@ -10,19 +10,6 @@ import java.util.Set;
 public interface PerturbationFunction<T extends DataInstance<?>> {
 
     /**
-     * Initializes the class to create perturbations for another instance.
-     * As perturbations are usually immutable, a new instance may be returned.
-     * <p>
-     * Only needed when using the SP-algorithm
-     *
-     * @param instance the instance to initialize the function for
-     * @return an instance of the {@link PerturbationFunction}
-     */
-    default PerturbationFunction<T> createForInstance(T instance) {
-        throw new UnsupportedOperationException("createForInstance must be implemented to use SubmodularPick.");
-    }
-
-    /**
      * Perturbs an instance to create a possibly similar instance.
      * <p>
      * How an instance gets perturbed is highly application-specific.

@@ -1,6 +1,7 @@
 package de.goerke.tobias.anchorj.tabular;
 
 import de.goerke.tobias.anchorj.base.PerturbationFunction;
+import de.goerke.tobias.anchorj.base.global.ReconfigurablePerturbationFunction;
 
 import java.util.*;
 
@@ -11,7 +12,7 @@ import java.util.*;
  * <p>
  * Creating a custom tabular perturbation function is highly application specific.
  */
-public class TabularPerturbationFunction implements PerturbationFunction<TabularInstance> {
+public class TabularPerturbationFunction implements ReconfigurablePerturbationFunction<TabularInstance> {
 
     private final TabularInstance instance;
     private final TabularInstance[] perturbationData;

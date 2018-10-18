@@ -4,6 +4,8 @@ import de.goerke.tobias.anchorj.base.coverage.CoverageIdentification;
 import de.goerke.tobias.anchorj.base.coverage.PerturbationBasedCoverageIdentification;
 import de.goerke.tobias.anchorj.base.exploration.BestAnchorIdentification;
 import de.goerke.tobias.anchorj.base.exploration.KL_LUCB;
+import de.goerke.tobias.anchorj.base.global.ReconfigurablePerturbationFunction;
+import de.goerke.tobias.anchorj.base.global.SubmodularPick;
 
 /**
  * Builder class used to configure an {@link AnchorConstruction} instance easily.
@@ -271,9 +273,15 @@ public class AnchorConstructionBuilder<T extends DataInstance<?>> {
      * @return the builder ready to be built for usage within the SP algorithm
      */
     public AnchorConstructionBuilder<T> setupForSP(final T explainedInstance, final int explainedInstanceLabel) {
+        if (!(this.perturbationFunction instanceof ReconfigurablePerturbationFunction)) {
+            throw new IllegalArgumentException("For using the SP-algorithm, the perturbation function needs to " +
+                    "be reconfigurable for foreign instances. Please implement the ReconfigurablePerturbationFunction");
+        }
+
         this.explainedInstance = explainedInstance;
         this.explainedInstanceLabel = explainedInstanceLabel;
-        this.perturbationFunction = this.perturbationFunction.createForInstance(explainedInstance);
+        this.perturbationFunction = ((ReconfigurablePerturbationFunction<T>) this.perturbationFunction)
+                .createForInstance(explainedInstance);
         return this;
     }
 
@@ -304,7 +312,7 @@ public class AnchorConstructionBuilder<T extends DataInstance<?>> {
     /**
      * @return the {@link ClassificationFunction} to be obtained by the {@link SubmodularPick} algorithm
      */
-    ClassificationFunction<T> getClassificationFunction() {
+    public ClassificationFunction<T> getClassificationFunction() {
         return classificationFunction;
     }
 
@@ -322,7 +330,7 @@ public class AnchorConstructionBuilder<T extends DataInstance<?>> {
     /**
      * @return the max thread count to be obtained by the {@link SubmodularPick} algorithm
      */
-    int getMaxThreadCount() {
+    public int getMaxThreadCount() {
         return Math.min(1, threadCount);
     }
 }

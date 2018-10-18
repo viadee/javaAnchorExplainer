@@ -112,6 +112,16 @@ public final class ArrayUtils {
     }
 
     /**
+     * Unboxes an array
+     *
+     * @param array the array
+     * @return the "unboxed" array
+     */
+    public static double[] toPrimitiveArray(Double[] array) {
+        return Stream.of(array).mapToDouble(i -> i).toArray();
+    }
+
+    /**
      * Boxes an array
      *
      * @param array the array
@@ -119,6 +129,22 @@ public final class ArrayUtils {
      */
     public static Integer[] toBoxedArray(int[] array) {
         return IntStream.of(array).boxed().toArray(Integer[]::new);
+    }
+
+    /**
+     * Boxes an array
+     *
+     * @param array the array
+     * @return the "boxed" array
+     */
+    public static Double[][] toBoxedArray(double[][] array) {
+        Double[][] result = new Double[array.length][];
+        for (int i = 0; i < array.length; i++) {
+            result[i] = new Double[array[i].length];
+            for (int j = 0; j < array[i].length; j++)
+                result[i][j] = array[i][j];
+        }
+        return result;
     }
 
     @SuppressWarnings("unchecked")

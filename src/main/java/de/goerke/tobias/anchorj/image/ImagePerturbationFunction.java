@@ -1,6 +1,7 @@
 package de.goerke.tobias.anchorj.image;
 
 import de.goerke.tobias.anchorj.base.PerturbationFunction;
+import de.goerke.tobias.anchorj.base.global.ReconfigurablePerturbationFunction;
 import de.goerke.tobias.anchorj.util.ParameterValidation;
 
 import java.util.Collections;
@@ -15,7 +16,7 @@ import java.util.stream.Stream;
  * By randomly showing/hiding non-fixed features it will create different images.
  * As proposed by Ribeiro, instead of hiding superpixels, these may be superimposed by other images.
  */
-public class ImagePerturbationFunction implements PerturbationFunction<ImageInstance> {
+public class ImagePerturbationFunction implements ReconfigurablePerturbationFunction<ImageInstance> {
     private final ImageInstance imageInstance;
     private final List<ImageRepresentation> backgroundImageInstances;
     private final double superpixelChangeChance;
@@ -73,7 +74,7 @@ public class ImagePerturbationFunction implements PerturbationFunction<ImageInst
 
     @Override
     public PerturbationFunction<ImageInstance> createForInstance(ImageInstance instance) {
-        return new ImagePerturbationFunction(imageInstance, superpixelChangeChance);
+        return new ImagePerturbationFunction(imageInstance, backgroundImageInstances, superpixelChangeChance);
     }
 
     @Override

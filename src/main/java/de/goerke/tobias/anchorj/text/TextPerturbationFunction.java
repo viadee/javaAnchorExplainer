@@ -1,6 +1,7 @@
 package de.goerke.tobias.anchorj.text;
 
 import de.goerke.tobias.anchorj.base.PerturbationFunction;
+import de.goerke.tobias.anchorj.base.global.ReconfigurablePerturbationFunction;
 import de.goerke.tobias.anchorj.util.ParameterValidation;
 
 import java.util.List;
@@ -16,7 +17,7 @@ import java.util.Set;
  * This class does not provide a real implementation as no third party libraries are included in the core algorithm.
  * In order to perturb text, please implement e.g. a Word2Vec model providing the alternatives needed.
  */
-public class TextPerturbationFunction implements PerturbationFunction<TextInstance> {
+public class TextPerturbationFunction implements ReconfigurablePerturbationFunction<TextInstance> {
     private final TextInstance textInstance;
     private final double tokenChangeProbability;
     private final List<List<String>> alternatives;
