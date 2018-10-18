@@ -2,10 +2,7 @@ package de.goerke.tobias.anchorj.tabular;
 
 import de.goerke.tobias.anchorj.base.AnchorResult;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * May be used to visualize an instance of the algorithms result for the user.
@@ -38,7 +35,8 @@ public class TabularInstanceVisualizer {
         for (Integer featureNr : anchorResult.getOrderedFeatures()) {
             explanation[index++] = text[featureNr];
         }
-        return "IF (" + String.join(" AND " + System.lineSeparator(), explanation) + ") THEN PREDICT " + getLabelMapping().get(anchorResult.getLabel());
+        return "IF (" + String.join(" AND " + System.lineSeparator(), explanation) + ") THEN PREDICT " +
+                getLabelMapping().getOrDefault(anchorResult.getLabel(), anchorResult.getLabel());
     }
 
     /**
@@ -61,6 +59,8 @@ public class TabularInstanceVisualizer {
                 break;
             Object value = entry.getValue().get(explainedInstance.getInstance()[i]);
             String tmp = (value instanceof String) ? (String) value : String.valueOf(value);
+            if (value == null)
+                tmp = String.valueOf(explainedInstance.getInstance()[i]);
             result.add(entry.getKey().getName() + " = " + tmp);
             i++;
         }
@@ -69,7 +69,7 @@ public class TabularInstanceVisualizer {
 
     private Map<Integer, Object> getLabelMapping() {
         return invertedMappings.entrySet().stream().filter(e -> e.getKey().isTargetFeature()).map(Map.Entry::getValue)
-                .findFirst().orElseThrow(IllegalArgumentException::new);
+                .findFirst().orElse(Collections.emptyMap());
     }
 
     private static <K, V> Map<V, K> invertMap(Map<K, V> toInvert) {

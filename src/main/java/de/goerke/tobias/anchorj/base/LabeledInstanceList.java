@@ -26,7 +26,7 @@ public abstract class LabeledInstanceList<T extends DataInstance<?>> extends Abs
     public LabeledInstanceList(final T[] dataInstances, final int[] labels) {
         if (dataInstances.length < 1)
             throw new IllegalArgumentException("The list must at least contain one element");
-        if (labels.length != dataInstances.length)
+        if (labels != null && labels.length != dataInstances.length)
             throw new IllegalArgumentException("There must be a label for each instance");
         // Not all instances must have the same feature length. Look at e.g. text instances where each
         // instance is a text of variable length. Therefore, no validation here.
@@ -46,6 +46,8 @@ public abstract class LabeledInstanceList<T extends DataInstance<?>> extends Abs
      * @return an UnmodifiableList of the contained labels
      */
     public List<Integer> getLabels() {
+        if (labels == null)
+            return Collections.emptyList();
         return IntStream.of(labels).boxed().collect(Collectors.collectingAndThen(
                 Collectors.toList(), Collections::unmodifiableList));
     }
@@ -74,6 +76,8 @@ public abstract class LabeledInstanceList<T extends DataInstance<?>> extends Abs
      * @return the accuracy
      */
     public double calculatePredictionAccuracy(final ClassificationFunction<T> classificationFunction) {
+        if (labels == null)
+            throw new IllegalArgumentException("Labels need to be included in order to compute accuracy.");
         int correctCount = 0;
         for (int i = 0; i < labels.length; i++) {
             final int prediction = classificationFunction.predict(dataInstances[i]);

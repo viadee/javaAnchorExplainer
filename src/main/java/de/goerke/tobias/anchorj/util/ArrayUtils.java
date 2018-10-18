@@ -50,6 +50,21 @@ public final class ArrayUtils {
     }
 
     /**
+     * Reads all values from a specific table column
+     *
+     * @param values the table
+     * @param column index of the column to be read
+     * @return the column extracted
+     */
+    public static Integer[] extractIntegerColumn(Object[][] values, int column) {
+        Integer[] result = new Integer[values.length];
+        for (int i = 0; i < values.length; i++) {
+            result[i] = (Integer) values[i][column];
+        }
+        return result;
+    }
+
+    /**
      * Removes a specific column index from a table
      *
      * @param values the table
@@ -77,13 +92,13 @@ public final class ArrayUtils {
      * Tries to convert an object table containing integer values only to an integer table
      *
      * @param values the object table
-     * @return the {@link Integer} table
+     * @return the {@link Object} table
      */
-    public static Integer[][] toIntArray(Object[][] values) {
-        Integer[][] result = new Integer[values.length][];
+    public static Object[][] tryToIntArray(Object[][] values) {
+        Object[][] result = new Object[values.length][];
         for (int i = 0; i < values.length; i++) {
             Object[] row = values[i];
-            Integer[] intRow = new Integer[row.length];
+            Object[] intRow = new Object[row.length];
             for (int j = 0; j < row.length; j++) {
                 Object cell = row[j];
                 if (cell instanceof Integer)
@@ -92,7 +107,9 @@ public final class ArrayUtils {
                     try {
                         intRow[j] = Integer.valueOf((String) cell);
                     } catch (Exception e) {
-                        throw new IllegalArgumentException("Cell is not convertable");
+                        // Just store the string
+                        intRow[j] = cell;
+                        //throw new IllegalArgumentException("Cell is not convertable");
                     }
                 }
             }

@@ -33,12 +33,12 @@ public class TabularInstanceList extends LabeledInstanceList<TabularInstance> {
     /**
      * Constructs the instance.
      *
-     * @param table    an integer table to be converted to the array of {@link TabularInstance}s
+     * @param table    an object table to be converted to the array of {@link TabularInstance}s
      * @param labels   the labels, one for each {@link TabularInstance}
      * @param features the features. One for each column.
      */
-    public TabularInstanceList(Integer[][] table, int[] labels, TabularFeature[] features) {
-        this(Stream.of(toIntArray(table)).map(TabularInstance::new).toArray(TabularInstance[]::new), labels, features);
+    public TabularInstanceList(Object[][] table, int[] labels, TabularFeature[] features) {
+        this(Stream.of(tryToIntArray(table)).map(TabularInstance::new).toArray(TabularInstance[]::new), labels, features);
     }
 
     /**
@@ -50,13 +50,13 @@ public class TabularInstanceList extends LabeledInstanceList<TabularInstance> {
         this(copyList.dataInstances, copyList.labels, copyList.features);
     }
 
-    private static Integer[][] balanceDataset(Integer[][] values, Integer[] labels) {
-        Map<Integer, List<Integer[]>> labelToRow = new HashMap<>();
+    private static Object[][] balanceDataset(Object[][] values, Integer[] labels) {
+        Map<Integer, List<Object[]>> labelToRow = new HashMap<>();
         Map<Integer, Integer> labelDistribution = new HashMap<>();
         for (int i = 0; i < labels.length; i++) {
             int label = labels[i];
             int count;
-            List<Integer[]> rows;
+            List<Object[]> rows;
             if (labelDistribution.containsKey(label)) {
                 count = labelDistribution.get(label);
                 rows = labelToRow.get(label);
@@ -69,15 +69,15 @@ public class TabularInstanceList extends LabeledInstanceList<TabularInstance> {
             labelToRow.put(label, rows);
         }
 
-        List<Integer[]> rearranged = new ArrayList<>();
+        List<Object[]> rearranged = new ArrayList<>();
         int rarestLabelCount = labelDistribution.entrySet().stream().min(Comparator.comparingInt(Map.Entry::getValue))
                 .orElseThrow(IllegalArgumentException::new).getValue();
         for (int uniqueLabel : labelDistribution.keySet()) {
-            List<Integer[]> applicableRows = labelToRow.get(uniqueLabel);
+            List<Object[]> applicableRows = labelToRow.get(uniqueLabel);
             rearranged.addAll(applicableRows.stream().limit(rarestLabelCount).collect(Collectors.toList()));
         }
         Collections.shuffle(rearranged);
-        return rearranged.toArray(new Integer[rearranged.size()][]);
+        return rearranged.toArray(new Object[rearranged.size()][]);
     }
 
     /**
@@ -88,11 +88,11 @@ public class TabularInstanceList extends LabeledInstanceList<TabularInstance> {
     TabularInstanceList balance() {
         // Balancing = for each label have the same amount of entries
         // We reattach the labels as balancing shuffles the table, which would lead to our labels being faulty
-        Integer[][] table = asArray();
+        Object[][] table = asArray();
         table = appendColumn(table, toBoxedArray(labels));
         table = balanceDataset(table, toBoxedArray(labels));
         // Split labels off again
-        int[] newLabels = toPrimitiveArray(extractColumn(table, table[0].length - 1));
+        int[] newLabels = toPrimitiveArray(extractIntegerColumn(table, table[0].length - 1));
         table = removeColumn(table, table[0].length - 1);
         return new TabularInstanceList(Stream.of(table).map(TabularInstance::new).toArray(TabularInstance[]::new),
                 newLabels, features);
@@ -105,8 +105,8 @@ public class TabularInstanceList extends LabeledInstanceList<TabularInstance> {
         return Collections.unmodifiableList(Arrays.asList(features));
     }
 
-    private Integer[][] asArray() {
-        return Stream.of(dataInstances).map(TabularInstance::getInstance).toArray(Integer[][]::new);
+    private Object[][] asArray() {
+        return Stream.of(dataInstances).map(TabularInstance::getInstance).toArray(Object[][]::new);
     }
 
     /**
@@ -121,15 +121,15 @@ public class TabularInstanceList extends LabeledInstanceList<TabularInstance> {
         if (!ParameterValidation.isPercentage(percentageSize))
             throw new IllegalArgumentException("Percentage size" + ParameterValidation.NOT_PERCENTAGE_MESSAGE);
 
-        Integer[][] array = asArray();
+        Object[][] array = asArray();
         array = appendColumn(array, toBoxedArray(labels));
-        List<Integer[]> shuffledList = Arrays.asList(array);
+        List<Object[]> shuffledList = Arrays.asList(array);
         Collections.shuffle(shuffledList);
         final int splitIndex = shuffledList.size() - (int) (shuffledList.size() * percentageSize) - 1;
-        Integer[][] beforeSplitArray = shuffledList.subList(0, splitIndex).toArray(new Integer[0][]);
-        Integer[][] afterSplitArray = shuffledList.subList(splitIndex, shuffledList.size()).toArray(new Integer[0][]);
-        int[] beforeSplitLabels = toPrimitiveArray(extractColumn(beforeSplitArray, featureCount));
-        int[] afterSplitLabels = toPrimitiveArray(extractColumn(afterSplitArray, featureCount));
+        Object[][] beforeSplitArray = shuffledList.subList(0, splitIndex).toArray(new Object[0][]);
+        Object[][] afterSplitArray = shuffledList.subList(splitIndex, shuffledList.size()).toArray(new Object[0][]);
+        int[] beforeSplitLabels = toPrimitiveArray(extractIntegerColumn(beforeSplitArray, featureCount));
+        int[] afterSplitLabels = toPrimitiveArray(extractIntegerColumn(afterSplitArray, featureCount));
         beforeSplitArray = removeColumn(beforeSplitArray, featureCount);
         afterSplitArray = removeColumn(afterSplitArray, featureCount);
 

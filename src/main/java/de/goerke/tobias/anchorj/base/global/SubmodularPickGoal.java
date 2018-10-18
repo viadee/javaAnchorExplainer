@@ -9,6 +9,9 @@ import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
+/**
+ * Defines the optimization goal of the {@link SubmodularPick} algorithm
+ */
 public enum SubmodularPickGoal {
 
     FEATURE_PRECISION(

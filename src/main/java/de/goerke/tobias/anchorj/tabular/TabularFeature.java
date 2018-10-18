@@ -46,6 +46,6 @@ public class TabularFeature {
      * Represents the type of a column - whether the contained data is categorical or nominal
      */
     public enum ColumnType {
-        CATEGORICAL, NOMINAL,
+        CATEGORICAL, NOMINAL, NATIVE
     }
 }

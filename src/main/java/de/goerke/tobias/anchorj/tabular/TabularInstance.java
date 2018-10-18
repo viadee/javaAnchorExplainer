@@ -5,15 +5,15 @@ import de.goerke.tobias.anchorj.base.DataInstance;
 /**
  * Represents an instance (i.e. row) of a data table
  */
-public class TabularInstance implements DataInstance<Integer[]> {
-    private final Integer[] instance;
+public class TabularInstance implements DataInstance<Object[]> {
+    private final Object[] instance;
 
     /**
      * Constructs the instance
      *
      * @param instance the instance array containing one element for each column
      */
-    public TabularInstance(Integer[] instance) {
+    public TabularInstance(Object[] instance) {
         this.instance = instance;
     }
 
@@ -23,13 +23,13 @@ public class TabularInstance implements DataInstance<Integer[]> {
      * @param instance the instance to be copied
      */
     TabularInstance(TabularInstance instance) {
-        Integer[] copy = new Integer[instance.getInstance().length];
+        Object[] copy = new Object[instance.getInstance().length];
         System.arraycopy(instance.getInstance(), 0, copy, 0, instance.getInstance().length);
         this.instance = copy;
     }
 
     @Override
-    public Integer[] getInstance() {
+    public Object[] getInstance() {
         return instance;
     }
 
