@@ -168,7 +168,8 @@ public class SubmodularPick<T extends DataInstance<?>> {
         final List<AnchorResult<T>> result = new ArrayList<>();
         for (Integer idx : selectedIndices)
             result.add(anchorResults[idx]);
-        return result.stream().sorted(Comparator.comparingDouble(AnchorCandidate::getCoverage).reversed())
+        return result.stream()
+                //.sorted(Comparator.comparingDouble(AnchorCandidate::getCoverage).reversed())
                 .collect(Collectors.toList());
     }
 

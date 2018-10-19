@@ -45,7 +45,7 @@ public enum SubmodularPickGoal {
                     List<Integer> orderedFeatures = current.getOrderedFeatures();
                     Integer addedElement = orderedFeatures.get(orderedFeatures.size() - 1);
                     if (addedElement.equals(feature))
-                        return Math.max(0, Math.min(1, current.getAddedCoverage()));
+                        return 1 - Math.abs(Math.max(-1, Math.min(0, current.getAddedCoverageInPercent())));
                     current = current.getParentCandidate();
                 } while (current != null);
 
@@ -96,6 +96,7 @@ public enum SubmodularPickGoal {
      *
      * @param anchorResult the {@link AnchorResult} the feature is taken out of
      * @param feature      the feature being examined
+     * @param <T>          the type of the data instance
      * @return an importance value
      */
     public <T extends DataInstance<?>> double computeFeatureImportance(AnchorResult<T> anchorResult, int feature) {

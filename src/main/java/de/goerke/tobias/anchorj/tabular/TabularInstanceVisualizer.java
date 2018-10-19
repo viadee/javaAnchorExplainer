@@ -1,7 +1,11 @@
 package de.goerke.tobias.anchorj.tabular;
 
+import de.goerke.tobias.anchorj.base.AnchorCandidate;
 import de.goerke.tobias.anchorj.base.AnchorResult;
 
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.*;
 
 /**
@@ -22,6 +26,24 @@ public class TabularInstanceVisualizer {
         }
     }
 
+    private static AnchorCandidate getCandidateForFeatureNr(AnchorResult<?> result, Integer featureNr) {
+        AnchorCandidate current = result;
+        while (current != null) {
+            if (current.getAddedFeature().equals(featureNr))
+                return current;
+            current = current.getParentCandidate();
+        }
+        throw new RuntimeException("Illegal result hierarchy");
+    }
+
+    private static <K, V> Map<V, K> invertMap(Map<K, V> toInvert) {
+        final Map<V, K> result = new LinkedHashMap<>();
+        for (Map.Entry<K, V> entry : toInvert.entrySet()) {
+            result.put(entry.getValue(), entry.getKey());
+        }
+        return result;
+    }
+
     /**
      * Formats the result readable to the user.
      *
@@ -32,10 +54,16 @@ public class TabularInstanceVisualizer {
         final String[] text = instanceToText(anchorResult.getInstance());
         final String[] explanation = new String[anchorResult.getOrderedFeatures().size()];
         int index = 0;
+        final DecimalFormat df = new DecimalFormat("#.##");
+        df.setRoundingMode(RoundingMode.CEILING);
+        df.setDecimalFormatSymbols(DecimalFormatSymbols.getInstance(Locale.US));
         for (Integer featureNr : anchorResult.getOrderedFeatures()) {
-            explanation[index++] = text[featureNr];
+            AnchorCandidate candidate = getCandidateForFeatureNr(anchorResult, featureNr);
+            explanation[index++] = text[featureNr] + " [" + df.format(candidate.getAddedPrecision()) + ","
+                    + df.format(candidate.getAddedCoverage()) + "]";
         }
-        return "IF (" + String.join(" AND " + System.lineSeparator(), explanation) + ") THEN PREDICT " +
+        return "IF ( " + String.join(" AND " + System.lineSeparator(), explanation) + ")"
+                + System.lineSeparator() + "THEN PREDICT " +
                 getLabelMapping().getOrDefault(anchorResult.getLabel(), anchorResult.getLabel());
     }
 
@@ -70,13 +98,5 @@ public class TabularInstanceVisualizer {
     private Map<Integer, Object> getLabelMapping() {
         return invertedMappings.entrySet().stream().filter(e -> e.getKey().isTargetFeature()).map(Map.Entry::getValue)
                 .findFirst().orElse(Collections.emptyMap());
-    }
-
-    private static <K, V> Map<V, K> invertMap(Map<K, V> toInvert) {
-        final Map<V, K> result = new LinkedHashMap<>();
-        for (Map.Entry<K, V> entry : toInvert.entrySet()) {
-            result.put(entry.getValue(), entry.getKey());
-        }
-        return result;
     }
 }

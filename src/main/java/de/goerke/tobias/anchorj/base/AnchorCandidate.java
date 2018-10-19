@@ -172,7 +172,7 @@ public class AnchorCandidate implements Serializable {
      * @return the increased precision value this candidate provides over his parent.
      */
     public double getAddedPrecision() {
-        double parentPrecision = (parentCandidate == null) ? 0 : parentCandidate.getPrecision();
+        final double parentPrecision = (parentCandidate == null) ? 0 : parentCandidate.getPrecision();
         return precision - parentPrecision;
     }
 
@@ -184,7 +184,7 @@ public class AnchorCandidate implements Serializable {
      * @return the reduced coverage in comparison to this candidate's parent
      */
     public double getAddedCoverage() {
-        double parentCoverage = (parentCandidate == null) ? 1 : parentCandidate.getCoverage();
+        final double parentCoverage = (parentCandidate == null) ? 1 : parentCandidate.getCoverage();
         return coverage - parentCoverage;
     }
 
@@ -198,8 +198,8 @@ public class AnchorCandidate implements Serializable {
      * @return the reduced coverage in comparison to this candidate's parent
      */
     public double getAddedCoverageInPercent() {
-        double parentCoverage = (parentCandidate == null) ? 1 : parentCandidate.getCoverage();
-        return coverage / parentCoverage;
+        final double parentCoverage = (parentCandidate == null) ? 1 : parentCandidate.getCoverage();
+        return (coverage - parentCoverage) / parentCoverage;
     }
 
     @Override
