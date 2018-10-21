@@ -53,4 +53,9 @@ public class TextInstance implements DataInstance<String[]> {
     public int getFeatureCount() {
         return tokens.length;
     }
+
+    @Override
+    public Object getFeature(int featureId) {
+        return tokens[featureId];
+    }
 }

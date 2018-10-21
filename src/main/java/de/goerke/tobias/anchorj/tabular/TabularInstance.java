@@ -33,6 +33,11 @@ public class TabularInstance implements DataInstance<Object[]> {
         return instance;
     }
 
+//    @Override
+//    public Object getFeature(int featureId) {
+//        return instance[featureId];
+//    }
+
     @Override
     public int getFeatureCount() {
         return instance.length;

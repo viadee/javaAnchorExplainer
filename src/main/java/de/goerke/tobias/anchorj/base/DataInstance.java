@@ -11,9 +11,26 @@ import java.io.Serializable;
  */
 public interface DataInstance<T> extends Serializable {
     /**
-     * @return the instance being described
+     * @return the instance being described.
      */
     T getInstance();
+
+    /**
+     * Gets a feature contained in the instance.
+     * <p>
+     * May throw an {@link UnsupportedOperationException} if not supported by the instance, as e.g. for images where
+     * it is undefined as to what a feature refers to data-wise
+     *
+     * @param featureId the featureId
+     * @return the feature
+     */
+    default Object getFeature(int featureId) throws UnsupportedOperationException {
+        T instance = getInstance();
+        if (instance != null && instance.getClass().isArray()) {
+            return ((Object[]) instance)[featureId];
+        }
+        throw new UnsupportedOperationException("Default method cannot auto-extract the feature");
+    }
 
     /**
      * @return the amount of features contained in the instance

@@ -16,12 +16,9 @@ import java.util.stream.Collectors;
  * In the showcase example this class gets extended and enabled to be used in conjunction with Apache Spark.
  * Due to this projects dependency-less design, it is not included in the core project.
  */
-public class SubmodularPick<T extends DataInstance<?>> {
+public class SubmodularPick<T extends DataInstance<?>> extends AbstractAnchorsAggregator<T> {
     private static final Logger LOGGER = LoggerFactory.getLogger(SubmodularPick.class);
-    private final AnchorConstructionBuilder<T> anchorConstructionBuilder;
-    private final int maxThreads;
-    private final ExecutorService executorService;
-    private final SubmodularPickGoal optimizationGoal;
+    final SubmodularPickGoal optimizationGoal;
 
     /**
      * Creates an instance of the {@link SubmodularPick}.
@@ -29,82 +26,14 @@ public class SubmodularPick<T extends DataInstance<?>> {
      * @param maxThreads                the number of threads to obtainAnchors in parallel.
      *                                  Note: if threading is enabled in the anchorConstructionBuilder, the actual
      *                                  thread count multiplies.
-     * @param goal                      the optimization goal
      * @param anchorConstructionBuilder the builder used to create instances of the {@link AnchorConstruction}
      *                                  when running the algorithm.
+     * @param optimizationGoal          the optimization goal
      */
-    public SubmodularPick(final int maxThreads, final SubmodularPickGoal goal,
-                          final AnchorConstructionBuilder<T> anchorConstructionBuilder) {
-        if (maxThreads > 1 && anchorConstructionBuilder.getMaxThreadCount() > 1)
-            LOGGER.warn("AnchorConstruction threading enables. Threads will multiply to max: {} threads",
-                    anchorConstructionBuilder.getMaxThreadCount() * maxThreads);
-        this.maxThreads = maxThreads;
-        this.optimizationGoal = goal;
-        this.executorService = Executors.newFixedThreadPool(maxThreads);
-        this.anchorConstructionBuilder = anchorConstructionBuilder;
-    }
-
-    /**
-     * Produces explanations for all instances and thus delegates to the {@link AnchorConstruction}.
-     * <p>
-     * Is protected to be overriden by distributing services, e.g. Spark
-     *
-     * @param instances the instances
-     * @return the explanation results
-     */
-    protected AnchorResult<T>[] obtainAnchors(List<T> instances) {
-        final List<List<T>> splitLists = SubmodularPickUtils.splitList(instances, instances.size() / maxThreads);
-        final Collection<AnchorResult<T>> threadResults = Collections.synchronizedCollection(new ArrayList<>());
-        for (final List<T> list : splitLists) {
-            executorService.submit(() -> {
-                LOGGER.info("Thread started");
-                for (final T instance : list) {
-                    ClassificationFunction<T> classificationFunction = anchorConstructionBuilder.getClassificationFunction();
-                    final int label = classificationFunction.predict(instance);
-                    AnchorResult<T> result = obtainAnchor(anchorConstructionBuilder, instance, label);
-                    if (result != null)
-                        threadResults.add(result);
-                }
-            });
-        }
-        executorService.shutdown();
-        try {
-            executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
-        } catch (InterruptedException e) {
-            LOGGER.warn("Thread interrupted", e);
-            Thread.currentThread().interrupt();
-        }
-        @SuppressWarnings("unchecked")
-        AnchorResult<T>[] result = threadResults.toArray((AnchorResult<T>[]) new AnchorResult[0]);
-        return result;
-    }
-
-    /**
-     * Explains a specified instance.
-     * <p>
-     * For this, the builder is modified to setup and reconfigure all required functions. E.g. the perturbation function
-     * usually perturbs one fixed instance that needs to be changed beforehand
-     *
-     * @param anchorConstructionBuilder the builder
-     * @param instance                  the instance to be explained
-     * @param label                     the explained instance's label
-     * @return the explanation result
-     */
-    private AnchorResult<T> obtainAnchor(final AnchorConstructionBuilder<T> anchorConstructionBuilder,
-                                         final T instance, final int label) {
-        try {
-            final AnchorResult<T> anchorResult = anchorConstructionBuilder.setupForSP(instance, label)
-                    .build().constructAnchor();
-            if (!anchorResult.isAnchor()) {
-                LOGGER.debug("Could not find an anchor for instance {}. Discarding best candidate.",
-                        instance);
-                return null;
-            }
-            return anchorResult;
-        } catch (NoCandidateFoundException e) {
-            LOGGER.warn("Could not find a candidate for instance {}", instance);
-            return null;
-        }
+    public SubmodularPick(int maxThreads, AnchorConstructionBuilder<T> anchorConstructionBuilder,
+                          SubmodularPickGoal optimizationGoal) {
+        super(maxThreads, anchorConstructionBuilder);
+        this.optimizationGoal = optimizationGoal;
     }
 
     /**
@@ -117,11 +46,23 @@ public class SubmodularPick<T extends DataInstance<?>> {
      * @return a {@link List} of {@link AnchorResult}s
      */
     public List<AnchorResult<T>> run(final List<T> instances, final int nrOfExplanationsDesired) {
+        if (instances == null || instances.isEmpty())
+            return Collections.emptyList();
+
         final double startTime = System.currentTimeMillis();
         // 1. Obtain the anchors - explanation matrix W
         final AnchorResult<T>[] anchorResults = obtainAnchors(instances);
         LOGGER.info("Took {} ms for gathering all explanations", (System.currentTimeMillis() - startTime));
 
+        final double[][] importanceMatrix = createImportanceMatrix(anchorResults);
+
+        // 4. Flatten matrix to see how important each column is. Results in importance matrix I
+        final double[] columnImportance = optimizationGoal.computeColumnImportance(importanceMatrix);
+
+        return greedyPick(nrOfExplanationsDesired, anchorResults, importanceMatrix, columnImportance);
+    }
+
+    protected double[][] createImportanceMatrix(final AnchorResult<T>[] anchorResults) {
         // Build matrix
         // 2. Assign a unique column index to each feature
         final Map<Integer, Integer> featureToColumnMap = new HashMap<>();
@@ -139,10 +80,11 @@ public class SubmodularPick<T extends DataInstance<?>> {
                         .computeFeatureImportance(anchorResults[i], feature);
             }
         }
+        return importanceMatrix;
+    }
 
-        // 4. Flatten matrix to see how important each column is. Results in importance matrix I
-        final double[] columnImportance = optimizationGoal.computeColumnImportance(importanceMatrix);
-
+    private List<AnchorResult<T>> greedyPick(final int nrOfExplanationsDesired, final AnchorResult<T>[] anchorResults,
+                                             final double[][] importanceMatrix, final double[] columnImportance) {
         // 5. Greedy SP algorithm
         final Set<Integer> selectedIndices = new LinkedHashSet<>();
         final Set<AnchorResult> remainingResults = new HashSet<>(Arrays.asList(anchorResults));
@@ -150,10 +92,10 @@ public class SubmodularPick<T extends DataInstance<?>> {
             double bestCoverage = 0;
             Integer bestIndex = null;
             for (AnchorResult anchorResult : remainingResults) {
-                int anchorResultIndex = Arrays.asList(anchorResults).indexOf(anchorResult);
-                double[] colSums = SubmodularPickUtils.colSum(importanceMatrix, selectedIndices, anchorResultIndex);
-                double coverage = SubmodularPickUtils.multiply(colSums, columnImportance);
-                if (coverage >= bestCoverage) {
+                final int anchorResultIndex = Arrays.asList(anchorResults).indexOf(anchorResult);
+                final double[] colSums = SubmodularPickUtils.colSum(importanceMatrix, selectedIndices, anchorResultIndex);
+                final double coverage = SubmodularPickUtils.multiply(colSums, columnImportance);
+                if (coverage > bestCoverage) {
                     bestIndex = anchorResultIndex;
                     bestCoverage = coverage;
                 }
@@ -166,17 +108,8 @@ public class SubmodularPick<T extends DataInstance<?>> {
         }
 
         final List<AnchorResult<T>> result = new ArrayList<>();
-        for (Integer idx : selectedIndices)
+        for (final Integer idx : selectedIndices)
             result.add(anchorResults[idx]);
-        return result.stream()
-                //.sorted(Comparator.comparingDouble(AnchorCandidate::getCoverage).reversed())
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * @return the construction builder for subclasses to extract info
-     */
-    protected AnchorConstructionBuilder<T> getAnchorConstructionBuilder() {
-        return anchorConstructionBuilder;
+        return result;
     }
 }
