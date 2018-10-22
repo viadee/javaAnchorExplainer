@@ -19,8 +19,8 @@ public enum SubmodularPickGoal {
                 // Searches for the parent in which the features has been added and extracts its added feature value
                 AnchorCandidate current = anchorResult;
                 do {
-                    List<Integer> orderedFeatures = current.getOrderedFeatures();
-                    Integer addedElement = orderedFeatures.get(orderedFeatures.size() - 1);
+                    final List<Integer> orderedFeatures = current.getOrderedFeatures();
+                    final Integer addedElement = orderedFeatures.get(orderedFeatures.size() - 1);
                     if (addedElement.equals(feature))
                         return Math.max(0, Math.min(1, current.getAddedPrecision()));
                     current = current.getParentCandidate();
@@ -30,34 +30,37 @@ public enum SubmodularPickGoal {
             },
             importanceMatrix -> {
                 final Double[] columnImportances = new Double[importanceMatrix[0].length];
-                for (final Double[] row : importanceMatrix)
-                    for (int j = 0; j < row.length; j++)
-                        columnImportances[j] = (columnImportances[j] == null) ? row[j] : (columnImportances[j] + row[j]);
+                for (int i = 0; i < importanceMatrix[0].length; i++) {
+                    int counter = 0;
+                    double currentImportance = 0;
+                    for (final Double[] row : importanceMatrix) {
+                        if (row[i] > 0) {
+                            currentImportance += row[i];
+                            counter++;
+                        }
+                    }
+                    columnImportances[i] = currentImportance / counter;
+                }
                 return columnImportances;
             }
     ),
 
-    FEATURE_COVERAGE(
+    FEATURE_PRECISION_WEIGHTED_COVERAGE(
             (anchorResult, feature) -> {
                 // Searches for the parent in which the features has been added and extracts its added feature value
                 AnchorCandidate current = anchorResult;
                 do {
-                    List<Integer> orderedFeatures = current.getOrderedFeatures();
-                    Integer addedElement = orderedFeatures.get(orderedFeatures.size() - 1);
+                    final List<Integer> orderedFeatures = current.getOrderedFeatures();
+                    final Integer addedElement = orderedFeatures.get(orderedFeatures.size() - 1);
+                    final double currentAddedCoverage = Math.abs(current.getAddedCoverageInPercent());
                     if (addedElement.equals(feature))
-                        return 1 - Math.abs(Math.max(-1, Math.min(0, current.getAddedCoverageInPercent())));
+                        return Math.max(0, Math.min(1, current.getAddedPrecision() * (1 - currentAddedCoverage)));
                     current = current.getParentCandidate();
                 } while (current != null);
 
                 throw new RuntimeException("Inconsistent candidate inheritance");
             },
-            importanceMatrix -> {
-                final Double[] columnImportances = new Double[importanceMatrix[0].length];
-                for (final Double[] row : importanceMatrix)
-                    for (int j = 0; j < row.length; j++)
-                        columnImportances[j] = (columnImportances[j] == null) ? row[j] : (columnImportances[j] + row[j]);
-                return columnImportances;
-            }
+            FEATURE_PRECISION.columnImportance
     ),
 
     /**

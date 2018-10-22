@@ -98,9 +98,7 @@ public class AnchorTabular {
                     mapping.put(range, entry.getKey());
                 }
                 mappings.put(finalFeatures[i], mapping);
-            }
-
-            else {
+            } else {
                 mappings.put(finalFeatures[i], Collections.emptyMap());
             }
         }
@@ -331,7 +329,17 @@ public class AnchorTabular {
          * @return the current {@link TabularPreprocessorBuilder}'s instance
          */
         public TabularPreprocessorBuilder addIgnoredColumn() {
-            this.internalColumns.add(new InternalColumn(null, null, false, false, null, null));
+            return addIgnoredColumn(null);
+        }
+
+        /**
+         * Adds a column that will be ignored.
+         * Useful if processing a e.g. CSV file where some columns shall be disregarded
+         *
+         * @return the current {@link TabularPreprocessorBuilder}'s instance
+         */
+        public TabularPreprocessorBuilder addIgnoredColumn(String name) {
+            this.internalColumns.add(new InternalColumn(null, name, false, false, null, null));
             return this;
         }
 
