@@ -19,21 +19,33 @@ import java.util.stream.Collectors;
  * Due to this projects dependency-less design, it is not included in the core project.
  */
 public class ModifiedSubmodularPick<T extends DataInstance<?>> extends SubmodularPick<T> {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ModifiedSubmodularPick.class);
 
     /**
-     * Creates an instance of the {@link ModifiedSubmodularPick}.
+     * Creates an instance of the {@link SubmodularPick}.
      *
-     * @param maxThreads                the number of threads to obtainAnchors in parallel.
-     *                                  Note: if threading is enabled in the anchorConstructionBuilder, the actual
-     *                                  thread count multiplies.
-     * @param anchorConstructionBuilder the builder used to create instances of the {@link AnchorConstruction}
-     *                                  when running the algorithm.
-     * @param optimizationGoal          the optimization goal
+     * @param constructionBuilder the builder used to create instances of the {@link AnchorConstruction}
+     *                            when running the algorithm.
+     * @param optimizationGoal    the optimization goal
+     * @param maxThreads          the number of threads to obtainAnchors in parallel.
+     *                            Note: if threading is enabled in the anchorConstructionBuilder, the actual
+     *                            thread count multiplies.
      */
-    public ModifiedSubmodularPick(int maxThreads, AnchorConstructionBuilder<T> anchorConstructionBuilder,
+    public ModifiedSubmodularPick(AnchorConstructionBuilder<T> constructionBuilder, SubmodularPickGoal optimizationGoal,
+                                  int maxThreads) {
+        super(constructionBuilder, optimizationGoal, maxThreads);
+    }
+
+    /**
+     * Creates an instance of the {@link SubmodularPick}.
+     *
+     * @param batchExplainer      the {@link BatchExplainer} to be used to obtain multiple explanations
+     * @param constructionBuilder the builder used to create instances of the {@link AnchorConstruction}
+     *                            when running the algorithm.
+     * @param optimizationGoal    the optimization goal
+     */
+    public ModifiedSubmodularPick(BatchExplainer<T> batchExplainer, AnchorConstructionBuilder<T> constructionBuilder,
                                   SubmodularPickGoal optimizationGoal) {
-        super(maxThreads, anchorConstructionBuilder, optimizationGoal);
+        super(batchExplainer, constructionBuilder, optimizationGoal);
     }
 
     @Override
@@ -56,7 +68,7 @@ public class ModifiedSubmodularPick<T extends DataInstance<?>> extends Submodula
             for (final int feature : anchorResults[i].getOrderedFeatures()) {
                 Integer colIndex = featureValueIndexMap.get(feature)
                         .get(anchorResults[i].getInstance().getFeature(feature));
-                importanceMatrix[i][colIndex] = optimizationGoal.computeFeatureImportance(anchorResults[i], feature);
+                importanceMatrix[i][colIndex] = getOptimizationGoal().computeFeatureImportance(anchorResults[i], feature);
             }
         }
         return importanceMatrix;

@@ -1,14 +1,13 @@
 package de.goerke.tobias.anchorj.base.global;
 
-import de.goerke.tobias.anchorj.base.*;
+import de.goerke.tobias.anchorj.base.AnchorConstruction;
+import de.goerke.tobias.anchorj.base.AnchorConstructionBuilder;
+import de.goerke.tobias.anchorj.base.AnchorResult;
+import de.goerke.tobias.anchorj.base.DataInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 /**
  * Class implementing the Submodular Pick (SP) algorithm proposed by Ribeiro (2016).
@@ -16,23 +15,43 @@ import java.util.stream.Collectors;
  * In the showcase example this class gets extended and enabled to be used in conjunction with Apache Spark.
  * Due to this projects dependency-less design, it is not included in the core project.
  */
-public class SubmodularPick<T extends DataInstance<?>> extends AbstractAnchorsAggregator<T> {
+public class SubmodularPick<T extends DataInstance<?>> {
     private static final Logger LOGGER = LoggerFactory.getLogger(SubmodularPick.class);
-    final SubmodularPickGoal optimizationGoal;
+
+    private final BatchExplainer<T> batchExplainer;
+    private final AnchorConstructionBuilder<T> constructionBuilder;
+    private final SubmodularPickGoal optimizationGoal;
 
     /**
      * Creates an instance of the {@link SubmodularPick}.
      *
-     * @param maxThreads                the number of threads to obtainAnchors in parallel.
-     *                                  Note: if threading is enabled in the anchorConstructionBuilder, the actual
-     *                                  thread count multiplies.
-     * @param anchorConstructionBuilder the builder used to create instances of the {@link AnchorConstruction}
-     *                                  when running the algorithm.
-     * @param optimizationGoal          the optimization goal
+     * @param constructionBuilder the builder used to create instances of the {@link AnchorConstruction}
+     *                            when running the algorithm.
+     * @param optimizationGoal    the optimization goal
+     * @param maxThreads          the number of threads to obtainAnchors in parallel.
+     *                            Note: if threading is enabled in the anchorConstructionBuilder, the actual
+     *                            thread count multiplies.
      */
-    public SubmodularPick(int maxThreads, AnchorConstructionBuilder<T> anchorConstructionBuilder,
+    public SubmodularPick(AnchorConstructionBuilder<T> constructionBuilder,
+                          SubmodularPickGoal optimizationGoal, int maxThreads) {
+        this(new ThreadedBatchExplainer<>(maxThreads), constructionBuilder, optimizationGoal);
+        if (maxThreads > 1 && constructionBuilder.getMaxThreadCount() > 1)
+            LOGGER.warn("AnchorConstruction threading enables. Threads will multiply to max: {} threads",
+                    constructionBuilder.getMaxThreadCount() * maxThreads);
+    }
+
+    /**
+     * Creates an instance of the {@link SubmodularPick}.
+     *
+     * @param batchExplainer      the {@link BatchExplainer} to be used to obtain multiple explanations
+     * @param constructionBuilder the builder used to create instances of the {@link AnchorConstruction}
+     *                            when running the algorithm.
+     * @param optimizationGoal    the optimization goal
+     */
+    public SubmodularPick(BatchExplainer<T> batchExplainer, AnchorConstructionBuilder<T> constructionBuilder,
                           SubmodularPickGoal optimizationGoal) {
-        super(maxThreads, anchorConstructionBuilder);
+        this.batchExplainer = batchExplainer;
+        this.constructionBuilder = constructionBuilder;
         this.optimizationGoal = optimizationGoal;
     }
 
@@ -51,7 +70,7 @@ public class SubmodularPick<T extends DataInstance<?>> extends AbstractAnchorsAg
 
         final double startTime = System.currentTimeMillis();
         // 1. Obtain the anchors - explanation matrix W
-        final AnchorResult<T>[] anchorResults = obtainAnchors(instances);
+        final AnchorResult<T>[] anchorResults = batchExplainer.obtainAnchors(constructionBuilder, instances);
         LOGGER.info("Took {} ms for gathering all explanations", (System.currentTimeMillis() - startTime));
 
         final double[][] importanceMatrix = createImportanceMatrix(anchorResults);
@@ -111,5 +130,12 @@ public class SubmodularPick<T extends DataInstance<?>> extends AbstractAnchorsAg
         for (final Integer idx : selectedIndices)
             result.add(anchorResults[idx]);
         return result;
+    }
+
+    /**
+     * @return the optimization goal
+     */
+    SubmodularPickGoal getOptimizationGoal() {
+        return optimizationGoal;
     }
 }
