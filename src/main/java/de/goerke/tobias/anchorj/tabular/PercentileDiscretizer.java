@@ -4,6 +4,9 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+/**
+ * Discretizer partitioning data into n specified classes using their mean values as a class label
+ */
 public class PercentileDiscretizer implements Function<Number[], Integer[]> {
 
     private final int classCount;

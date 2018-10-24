@@ -42,6 +42,14 @@ public class TabularFeature {
         return isTargetFeature;
     }
 
+    @Override
+    public String toString() {
+        return "TabularFeature{" +
+                "columnType=" + columnType +
+                ", name='" + name + '\'' +
+                '}';
+    }
+
     /**
      * Represents the type of a column - whether the contained data is categorical or nominal
      */

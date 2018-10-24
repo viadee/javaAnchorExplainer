@@ -26,6 +26,7 @@ public interface BatchExplainer<T extends DataInstance<?>> {
      * @param anchorConstructionBuilder the builder used to create instances of the {@link AnchorConstruction}
      *                                  when running the algorithm.
      * @param instances                 the instances to be explained
+     * @return the resulting explanations
      */
     AnchorResult<T>[] obtainAnchors(AnchorConstructionBuilder<T> anchorConstructionBuilder, List<T> instances);
 }
