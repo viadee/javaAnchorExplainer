@@ -38,7 +38,7 @@ public class TabularInstanceList extends LabeledInstanceList<TabularInstance> {
      * @param features the features. One for each column.
      */
     public TabularInstanceList(Object[][] table, int[] labels, TabularFeature[] features) {
-        this(Stream.of(tryToIntArray(table)).map(TabularInstance::new).toArray(TabularInstance[]::new), labels, features);
+        this(Stream.of(transformToIntArray(table)).map(TabularInstance::new).toArray(TabularInstance[]::new), labels, features);
     }
 
     /**

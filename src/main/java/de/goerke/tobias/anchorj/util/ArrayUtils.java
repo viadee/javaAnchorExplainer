@@ -94,7 +94,7 @@ public final class ArrayUtils {
      * @param values the object table
      * @return the {@link Object} table
      */
-    public static Object[][] tryToIntArray(Object[][] values) {
+    public static Object[][] transformToIntArray(Object[][] values) {
         Object[][] result = new Object[values.length][];
         for (int i = 0; i < values.length; i++) {
             Object[] row = values[i];
