@@ -212,22 +212,12 @@ public class AnchorTabular {
         if (data.size() < 1 || data.stream().mapToInt(d -> d.length).distinct().count() != 1)
             throw new RuntimeException("No data submitted or rows are differently sized");
 
-        int colCount = data.iterator().next().length;
-        Object[][] rows = new Object[data.size()][colCount];
-        Iterator<String[]> iter = data.iterator();
-        for (int i = 0; i < rows.length; i++) {
-            String[] row = iter.next();
-            Object[] columns = new Object[colCount];
-            for (int j = 0; j < colCount; j++) {
-                String cell = row[j];
-                // This reader includes spacings after comma --> delete if present
-                if (cell.charAt(0) == ' ')
-                    cell = cell.substring(1);
-                columns[j] = cell;
-            }
-            rows[i] = columns;
+        Object[][] convertedData = new Object[data.size()][data.iterator().next().length];
+        Iterator<String[]> dataIter = data.iterator();
+        for (int i = 0; i < data.size(); i++) {
+            convertedData[i] = dataIter.next();
         }
-        return rows;
+        return convertedData;
     }
 
     /**

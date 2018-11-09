@@ -102,7 +102,7 @@ public final class ArrayUtils {
             for (int j = 0; j < row.length; j++) {
                 Object cell = row[j];
                 if (cell instanceof Integer)
-                    intRow[j] = (Integer) cell;
+                    intRow[j] = cell;
                 else {
                     try {
                         intRow[j] = Integer.valueOf((String) cell);
