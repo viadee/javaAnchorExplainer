@@ -56,6 +56,7 @@ public class BatchSAR extends AbstractBRAlgorithm {
     @Override
     public List<AnchorCandidate> identify(final List<AnchorCandidate> candidates,
                                           final SamplingService samplingService,
+                                          final int explainedInstanceLabel,
                                           final double delta, final double epsilon, final int nrOfResults) {
         final int n = candidates.size();
         // We do not have n at instantiation, so this cannot be a class field (immutability / thread safety)
@@ -69,7 +70,7 @@ public class BatchSAR extends AbstractBRAlgorithm {
             // Pull every arm until it has been pulled at least ms times
             // while (survivingSet.stream().min(Comparator.comparingInt(AnchorCandidate::getSampledSize)).orElseThrow()
             //         .getSampledSize() < ms) {
-            batchSample(survivingSet, samplingService, ms);
+            batchSample(survivingSet, samplingService, explainedInstanceLabel, ms);
             // }
 
             final int remainingK = nrOfResults - acceptedSet.size();

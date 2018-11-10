@@ -71,6 +71,7 @@ public class BatchRacing extends AbstractBRAlgorithm {
     @Override
     public List<AnchorCandidate> identify(final List<AnchorCandidate> candidates,
                                           final SamplingService samplingService,
+                                          final int explainedInstanceLabel,
                                           final double delta, final double epsilon, final int nrOfResults) {
 
         // The algorithm maintains a set of surviving arms that is initialized as S_1 = [n]
@@ -84,7 +85,7 @@ public class BatchRacing extends AbstractBRAlgorithm {
         while (!survivorSet.isEmpty() && acceptedSet.size() < nrOfResults) {
             // At round t, the algorithm calls RoundRobin to choose b arm pulls that keeps the pull count of each arm in
             // the surviving set S_t as uniform as possible
-            batchSample(survivorSet, samplingService);
+            batchSample(survivorSet, samplingService, explainedInstanceLabel);
 
             // Caching the UCB/LCBs to avoid recalculations
             final Map<AnchorCandidate, Double> UCBMap = new HashMap<>();

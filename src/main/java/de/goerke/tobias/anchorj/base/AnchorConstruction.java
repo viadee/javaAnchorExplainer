@@ -27,8 +27,6 @@ public class AnchorConstruction<T extends DataInstance<?>> {
     /*
      * For an explanation of these parameters, please see class constructor
      */
-    private final ClassificationFunction<T> classificationFunction;
-    private final PerturbationFunction<T> perturbationFunction;
     private final BestAnchorIdentification bestAnchorIdentification;
     private final CoverageIdentification coverageIdentification;
     private final T explainedInstance;
@@ -48,11 +46,9 @@ public class AnchorConstruction<T extends DataInstance<?>> {
     /**
      * Constructs the instance setting all required parameters
      *
-     * @param classificationFunction   Function used to classify any instance of type T
-     * @param perturbationFunction     Function used to create perturbations of the
-     *                                 {@link AnchorConstruction#explainedInstance}
      * @param bestAnchorIdentification Best-Arm identification algorithm
      * @param coverageIdentification   The function used to determine a candidate's coverage.
+     * @param samplingService          the used sampling service
      * @param explainedInstance        The instance that is currently being explained
      * @param explainedInstanceLabel   Label of the instance that is being explained, i.e. what was its prediction?
      * @param maxAnchorSize            max combined features of the resulting anchor
@@ -70,30 +66,25 @@ public class AnchorConstruction<T extends DataInstance<?>> {
      *                                 the best arm identification algorithm. While theoretically, a guarantee that no
      *                                 candidates get discarded due to too few samples is provided by delta, using this
      *                                 argument has practical advantages.
-     * @param threadCount              the thread count
-     * @param doBalanceSampling        the do balance sampling
      * @param lazyCoverageEvaluation   if set true, a candidate's coverage will only be determined when needed to, i.e.
      *                                 when extending or returning it
      * @param allowSuboptimalSteps     if set to false, candidates that are returned by the best arm identification get
      *                                 removed when their precision is lower than their parent's
      */
-    AnchorConstruction(final ClassificationFunction<T> classificationFunction,
-                       final PerturbationFunction<T> perturbationFunction,
-                       final BestAnchorIdentification bestAnchorIdentification,
+    AnchorConstruction(final BestAnchorIdentification bestAnchorIdentification,
                        final CoverageIdentification coverageIdentification,
+                       final SamplingService samplingService,
                        final T explainedInstance, final int explainedInstanceLabel, final int maxAnchorSize,
                        final int beamSize, final double delta, final double epsilon, final double tau,
                        final double tauDiscrepancy,
-                       final int initSampleCount, final int threadCount, final boolean doBalanceSampling,
+                       final int initSampleCount,
                        boolean lazyCoverageEvaluation, boolean allowSuboptimalSteps) {
-        if (classificationFunction == null)
-            throw new IllegalArgumentException("Classification function" + ParameterValidation.NULL_MESSAGE);
-        if (perturbationFunction == null)
-            throw new IllegalArgumentException("Perturbation function" + ParameterValidation.NULL_MESSAGE);
         if (bestAnchorIdentification == null)
             throw new IllegalArgumentException("Best anchor identification" + ParameterValidation.NULL_MESSAGE);
         if (coverageIdentification == null)
             throw new IllegalArgumentException("Coverage identification" + ParameterValidation.NULL_MESSAGE);
+        if (samplingService == null)
+            throw new IllegalArgumentException("Sampling service" + ParameterValidation.NULL_MESSAGE);
         if (explainedInstance == null)
             throw new IllegalArgumentException("Explained instance" + ParameterValidation.NULL_MESSAGE);
         if (!ParameterValidation.isUnsigned(explainedInstanceLabel))
@@ -112,12 +103,8 @@ public class AnchorConstruction<T extends DataInstance<?>> {
             throw new IllegalArgumentException("Tau discrepancy value" + ParameterValidation.NOT_PERCENTAGE_MESSAGE);
         if (!ParameterValidation.isUnsigned(initSampleCount))
             throw new IllegalArgumentException("Initialization sample count" + ParameterValidation.NEGATIVE_VALUE_MESSAGE);
-        if (!ParameterValidation.isUnsigned(threadCount))
-            throw new IllegalArgumentException("Thread count" + ParameterValidation.NEGATIVE_VALUE_MESSAGE);
 
 
-        this.classificationFunction = classificationFunction;
-        this.perturbationFunction = perturbationFunction;
         this.bestAnchorIdentification = bestAnchorIdentification;
         this.coverageIdentification = coverageIdentification;
         this.explainedInstance = explainedInstance;
@@ -131,7 +118,7 @@ public class AnchorConstruction<T extends DataInstance<?>> {
         this.initSampleCount = initSampleCount;
         this.lazyCoverageEvaluation = lazyCoverageEvaluation;
         this.allowSuboptimalSteps = allowSuboptimalSteps;
-        this.samplingService = SamplingService.createDefaultExecution(this::doSample, threadCount, doBalanceSampling);
+        this.samplingService = samplingService;
     }
 
 
@@ -204,32 +191,6 @@ public class AnchorConstruction<T extends DataInstance<?>> {
 
 
     /**
-     * Generate perturbations and evaluates a candidate by fetching the perturbed instances' predictions.
-     *
-     * @param candidate         the {@link AnchorCandidate} to evaluate
-     * @param samplesToEvaluate the number of samples to take
-     * @return the precision computed in this sampling run
-     */
-    private double doSample(final AnchorCandidate candidate, final int samplesToEvaluate) {
-        if (samplesToEvaluate < 1)
-            return 0;
-
-        final PerturbationFunction.PerturbationResult<T> perturbationResult = perturbationFunction.perturb(
-                candidate.getCanonicalFeatures(), samplesToEvaluate);
-        final int[] predictions = classificationFunction.predict(perturbationResult.getRawResult());
-
-        final int matchingLabels = Math.toIntExact(IntStream.of(predictions)
-                .filter(p -> p == explainedInstanceLabel).count());
-
-        candidate.registerSamples(samplesToEvaluate, matchingLabels);
-
-        double precision = matchingLabels / (double) predictions.length;
-        LOGGER.trace("Sampling {} perturbations of {} has resulted in {} correct predictions, thus a precision of {}",
-                samplesToEvaluate, candidate.getCanonicalFeatures(), matchingLabels, precision);
-        return precision;
-    }
-
-    /**
      * Finding best candidates may be formulated as an optimization problem
      * (considered a "pure-exploration bandit-problem").
      * <p>
@@ -241,7 +202,7 @@ public class AnchorConstruction<T extends DataInstance<?>> {
      */
     private List<AnchorCandidate> bestCandidate(final List<AnchorCandidate> candidates, final int topN) {
         // Ensure all candidates have initSampleCount taken
-        SamplingSession session = samplingService.createSession();
+        SamplingSession session = samplingService.createSession(explainedInstanceLabel);
         for (final AnchorCandidate candidate : candidates) {
             if (candidate.getSampledSize() >= initSampleCount)
                 continue;
@@ -259,7 +220,7 @@ public class AnchorConstruction<T extends DataInstance<?>> {
         LOGGER.debug("Calling {} to identify top {} candidates with a significance level of {}",
                 bestAnchorIdentification.getClass().getSimpleName(), topN, delta);
         // Discard all found candidates that have a precision of 0
-        return bestAnchorIdentification.identify(candidates, samplingService, delta, epsilon, topN);
+        return bestAnchorIdentification.identify(candidates, samplingService, explainedInstanceLabel, delta, epsilon, topN);
     }
 
     /**
@@ -288,7 +249,8 @@ public class AnchorConstruction<T extends DataInstance<?>> {
                 (mean < tau && ub >= tau + tauDiscrepancy)) {
             LOGGER.debug("Cannot confirm or reject {} is an anchor. Taking more samples.",
                     candidate.getCanonicalFeatures());
-            samplingService.createSession().registerCandidateEvaluation(candidate, initSampleCount).run();
+            samplingService.createSession(explainedInstanceLabel)
+                    .registerCandidateEvaluation(candidate, initSampleCount).run();
             mean = candidate.getPrecision();
             lb = KLBernoulliUtils.dlowBernoulli(mean, beta / candidate.getSampledSize());
             ub = KLBernoulliUtils.dupBernoulli(mean, beta / candidate.getSampledSize());

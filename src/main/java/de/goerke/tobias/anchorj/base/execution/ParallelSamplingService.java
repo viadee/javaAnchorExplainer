@@ -1,6 +1,6 @@
 package de.goerke.tobias.anchorj.base.execution;
 
-import de.goerke.tobias.anchorj.base.AnchorCandidate;
+import de.goerke.tobias.anchorj.base.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,29 +13,49 @@ import java.util.stream.Collectors;
 
 /**
  * Implementation of the {@link AbstractSamplingService} that gathers samples in a multiple threads.
+ *
+ * @param <T> Type of the sampled instance
  */
-public class ParallelSamplingService extends AbstractSamplingService {
+public class ParallelSamplingService<T extends DataInstance<?>> extends AbstractSamplingService<T> {
     private static final Logger LOGGER = LoggerFactory.getLogger(ParallelSamplingService.class);
     final int threadCount;
     private final ExecutorService executor;
 
-    ParallelSamplingService(final BiFunction<AnchorCandidate, Integer, Double> sampleFunction,
-                            final int threadCount) {
-        super(sampleFunction);
+    /**
+     * Creates the sampling service.
+     * <p>
+     * Requires both a perturbation and classification function to evaluate candidates
+     *
+     * @param classificationFunction Function used to classify any instance of type
+     * @param perturbationFunction   Function used to create perturbations of the explained instance
+     * @param threadCount            the number of threads to use
+     */
+    public ParallelSamplingService(ClassificationFunction<T> classificationFunction,
+                                   PerturbationFunction<T> perturbationFunction, int threadCount) {
+        super(classificationFunction, perturbationFunction);
         this.executor = Executors.newFixedThreadPool(Math.max(threadCount, 1));
         this.threadCount = threadCount;
     }
 
     @Override
-    public AbstractSamplingSession createSession() {
-        return new ParallelSession();
+    public SamplingSession createSession(int explainedInstanceLabel) {
+        return new ParallelSession(explainedInstanceLabel);
     }
 
     protected class ParallelSession extends AbstractSamplingSession {
 
+        /**
+         * Creates an instance.
+         *
+         * @param explainedInstanceLabel the label being explained
+         */
+        ParallelSession(int explainedInstanceLabel) {
+            super(explainedInstanceLabel);
+        }
+
         protected Collection<Callable<Object>> createCallables() {
             return samplingCountMap.entrySet().stream().map(entry ->
-                    (Callable<Object>) () -> sampleFunction.apply(entry.getKey(), entry.getValue()))
+                    (Callable<Object>) () -> doSample(entry.getKey(), entry.getValue()))
                     .collect(Collectors.toList());
         }
 

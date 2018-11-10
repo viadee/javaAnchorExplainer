@@ -116,6 +116,7 @@ public class KL_LUCB implements BestAnchorIdentification {
     @Override
     public List<AnchorCandidate> identify(final List<AnchorCandidate> candidates,
                                           final SamplingService samplingService,
+                                          final int explainedInstanceLabel,
                                           final double delta, final double epsilon, final int nrOfResults) {
         final double[] ub = new double[candidates.size()];
         final double[] lb = new double[candidates.size()];
@@ -128,7 +129,7 @@ public class KL_LUCB implements BestAnchorIdentification {
         double b = ub[ut] - lb[lt];
 
         while (b > epsilon) {
-            samplingService.createSession()
+            samplingService.createSession(explainedInstanceLabel)
                     .registerCandidateEvaluation(candidates.get(ut), batchSize)
                     .registerCandidateEvaluation(candidates.get(lt), batchSize)
                     .run();

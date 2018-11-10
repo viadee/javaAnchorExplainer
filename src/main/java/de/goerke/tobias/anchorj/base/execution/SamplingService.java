@@ -10,24 +10,6 @@ import java.util.function.BiFunction;
 public interface SamplingService {
 
     /**
-     * Instantiates and returns an appropriate implementation.
-     *
-     * @param sampleFunction the sampling function
-     * @param threadCount    number of threads to use
-     * @param doBalance      if true, the work will be equally split among all threads
-     * @return the appropriate service. Either {@link LinearSamplingService}, {@link ParallelSamplingService} or
-     * {@link BalancedParallelSamplingService}
-     */
-    static SamplingService createDefaultExecution(BiFunction<AnchorCandidate, Integer, Double> sampleFunction,
-                                                  int threadCount, boolean doBalance) {
-        if (threadCount <= 1)
-            return new LinearSamplingService(sampleFunction);
-        if (!doBalance)
-            return new ParallelSamplingService(sampleFunction, threadCount);
-        return new BalancedParallelSamplingService(sampleFunction, threadCount);
-    }
-
-    /**
      * Returns the time spent taking samples
      *
      * @return the time spent taking samples in milliseconds
@@ -37,7 +19,8 @@ public interface SamplingService {
     /**
      * Creates a session that has to be used in order to obtain samples.
      *
+     * @param explainedInstanceLabel the explained instance label
      * @return an {@link SamplingSession} instance.
      */
-    SamplingSession createSession();
+    SamplingSession createSession(final int explainedInstanceLabel);
 }

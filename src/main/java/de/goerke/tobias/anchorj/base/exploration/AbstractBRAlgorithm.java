@@ -51,11 +51,13 @@ abstract class AbstractBRAlgorithm implements BestAnchorIdentification {
     /**
      * Implementation of RoundRobin evaluating the specified candidates.
      *
-     * @param candidates      the candidates to evaluate
-     * @param samplingService the service evaluation samples
+     * @param candidates             the candidates to evaluate
+     * @param samplingService        the service evaluation samples
+     * @param explainedInstanceLabel the label that is being explained
      */
     void batchSample(final Set<AnchorCandidate> candidates,
-                     final SamplingService samplingService) {
+                     final SamplingService samplingService,
+                     final int explainedInstanceLabel) {
         final Map<AnchorCandidate, Integer> pullCountMap = new HashMap<>();
         List<AnchorCandidate> sortedBySampleSize = new ArrayList<>(candidates);
         sortedBySampleSize.sort(Comparator.comparingInt(AnchorCandidate::getSampledSize));
@@ -66,7 +68,7 @@ abstract class AbstractBRAlgorithm implements BestAnchorIdentification {
             int currentCount = pullCountMap.getOrDefault(next, 0);
             pullCountMap.put(next, currentCount + 1);
         }
-        samplingService.createSession().registerCandidateEvaluation(pullCountMap).run();
+        samplingService.createSession(explainedInstanceLabel).registerCandidateEvaluation(pullCountMap).run();
     }
 
     /**
@@ -74,12 +76,14 @@ abstract class AbstractBRAlgorithm implements BestAnchorIdentification {
      * <p>
      * Assigns pulls repeatedly until the required min count per arm is reached
      *
-     * @param candidates      the candidates to evaluate
-     * @param samplingService the service evaluation samples
-     * @param minCountEach    the minimum count every arm has to be pulled
+     * @param candidates             the candidates to evaluate
+     * @param samplingService        the service evaluation samples
+     * @param explainedInstanceLabel the label that is being explained
+     * @param minCountEach           the minimum count every arm has to be pulled
      */
     void batchSample(final Set<AnchorCandidate> candidates,
-                     final SamplingService samplingService, final int minCountEach) {
+                     final SamplingService samplingService, final int explainedInstanceLabel,
+                     final int minCountEach) {
         final LinkedHashMap<AnchorCandidate, Integer> pullCountMap = new LinkedHashMap<>();
         candidates.stream().sorted(Comparator.comparingInt(AnchorCandidate::getSampledSize))
                 .forEach(c -> pullCountMap.put(c, 0));
@@ -95,7 +99,7 @@ abstract class AbstractBRAlgorithm implements BestAnchorIdentification {
                 pullCountMap.put(next, currentCount + 1);
             }
         }
-        samplingService.createSession().registerCandidateEvaluation(pullCountMap).run();
+        samplingService.createSession(explainedInstanceLabel).registerCandidateEvaluation(pullCountMap).run();
     }
 
 

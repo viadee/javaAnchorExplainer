@@ -1,22 +1,23 @@
 package de.goerke.tobias.anchorj.base.execution;
 
-import de.goerke.tobias.anchorj.base.AnchorCandidate;
+import de.goerke.tobias.anchorj.base.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.function.BiFunction;
+import java.util.stream.IntStream;
 
 /**
  * Abstract service supervising the evaluation of candidates by sampling.
  * <p>
  * Its subclasses mainly enable different kinds of parallelization.
  */
-public abstract class AbstractSamplingService implements SamplingService {
+public abstract class AbstractSamplingService<T extends DataInstance<?>> implements SamplingService {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractSamplingService.class);
 
-    final BiFunction<AnchorCandidate, Integer, Double> sampleFunction;
+    private final ClassificationFunction<T> classificationFunction;
+    private final PerturbationFunction<T> perturbationFunction;
 
     /**
      * Used to record the total time spend sampling.
@@ -25,14 +26,47 @@ public abstract class AbstractSamplingService implements SamplingService {
     private double timeSpentSampling;
 
     /**
-     * Instantiated the sampling service
+     * Creates the sampling service.
+     * <p>
+     * Requires both a perturbation and classification function to evaluate candidates
      *
-     * @param sampleFunction the function used for sampling
+     * @param classificationFunction Function used to classify any instance of type
+     * @param perturbationFunction   Function used to create perturbations of the
+     *                               {@link AnchorConstruction#explainedInstance}
      */
-    protected AbstractSamplingService(final BiFunction<AnchorCandidate, Integer, Double> sampleFunction) {
-        this.sampleFunction = sampleFunction;
+    protected AbstractSamplingService(ClassificationFunction<T> classificationFunction,
+                                      PerturbationFunction<T> perturbationFunction) {
+        this.classificationFunction = classificationFunction;
+        this.perturbationFunction = perturbationFunction;
     }
 
+    /**
+     * Generate perturbations and evaluates a candidate by fetching the perturbed instances' predictions.
+     *
+     * @param candidate              the {@link AnchorCandidate} to evaluate
+     * @param samplesToEvaluate      the number of samples to take
+     * @param explainedInstanceLabel the explained instance label
+     * @return the precision computed in this sampling run
+     */
+    private double doSample(final AnchorCandidate candidate, final int samplesToEvaluate,
+                            final int explainedInstanceLabel) {
+        if (samplesToEvaluate < 1)
+            return 0;
+
+        final PerturbationFunction.PerturbationResult<T> perturbationResult = perturbationFunction.perturb(
+                candidate.getCanonicalFeatures(), samplesToEvaluate);
+        final int[] predictions = classificationFunction.predict(perturbationResult.getRawResult());
+
+        final int matchingLabels = Math.toIntExact(IntStream.of(predictions)
+                .filter(p -> p == explainedInstanceLabel).count());
+
+        candidate.registerSamples(samplesToEvaluate, matchingLabels);
+
+        double precision = matchingLabels / (double) predictions.length;
+        LOGGER.trace("Sampling {} perturbations of {} has resulted in {} correct predictions, thus a precision of {}",
+                samplesToEvaluate, candidate.getCanonicalFeatures(), matchingLabels, precision);
+        return precision;
+    }
 
     @Override
     public double getTimeSpentSampling() {
@@ -43,13 +77,18 @@ public abstract class AbstractSamplingService implements SamplingService {
      * Session object
      */
     public abstract class AbstractSamplingSession implements SamplingSession {
+        private final int explainedInstanceLabel;
+
         // Retain order
-        final Map<AnchorCandidate, Integer> samplingCountMap = new LinkedHashMap<>();
+        protected final Map<AnchorCandidate, Integer> samplingCountMap = new LinkedHashMap<>();
 
         /**
          * Creates an instance.
+         *
+         * @param explainedInstanceLabel the instance label being explained
          */
-        protected AbstractSamplingSession() {
+        protected AbstractSamplingSession(int explainedInstanceLabel) {
+            this.explainedInstanceLabel = explainedInstanceLabel;
         }
 
         @Override
@@ -71,6 +110,17 @@ public abstract class AbstractSamplingService implements SamplingService {
             LOGGER.debug("Evaluated a total of {} samples for {} candidates in {}ms",
                     samplingCountMap.values().stream().mapToInt(i -> i).sum(),
                     samplingCountMap.entrySet().size(), time);
+        }
+
+        /**
+         * Generate perturbations and evaluates a candidate by fetching the perturbed instances' predictions.
+         *
+         * @param candidate         the {@link AnchorCandidate} to evaluate
+         * @param samplesToEvaluate the number of samples to take
+         * @return the precision computed in this sampling run
+         */
+        protected double doSample(final AnchorCandidate candidate, final int samplesToEvaluate) {
+            return AbstractSamplingService.this.doSample(candidate, samplesToEvaluate, explainedInstanceLabel);
         }
 
         /**
