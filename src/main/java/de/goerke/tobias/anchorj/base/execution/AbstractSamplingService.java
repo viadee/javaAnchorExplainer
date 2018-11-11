@@ -48,7 +48,7 @@ public abstract class AbstractSamplingService<T extends DataInstance<?>> impleme
      * @param explainedInstanceLabel the explained instance label
      * @return the precision computed in this sampling run
      */
-    private double doSample(final AnchorCandidate candidate, final int samplesToEvaluate,
+    protected double doSample(final AnchorCandidate candidate, final int samplesToEvaluate,
                             final int explainedInstanceLabel) {
         if (samplesToEvaluate < 1)
             return 0;

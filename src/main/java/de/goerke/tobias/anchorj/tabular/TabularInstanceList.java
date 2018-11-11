@@ -118,13 +118,26 @@ public class TabularInstanceList extends LabeledInstanceList<TabularInstance> {
      * @return the split lists
      */
     public List<TabularInstanceList> shuffleSplitList(double percentageSize) {
+        return shuffleSplitList(percentageSize, new Random());
+    }
+
+    /**
+     * Shuffles and splits this list into two.
+     * <p>
+     * Useful e.g. if splitting test and validation lists
+     *
+     * @param percentageSize the percentage of entries the first list will contain
+     * @param rnd            the Random to be used
+     * @return the split lists
+     */
+    public List<TabularInstanceList> shuffleSplitList(double percentageSize, Random rnd) {
         if (!ParameterValidation.isPercentage(percentageSize))
             throw new IllegalArgumentException("Percentage size" + ParameterValidation.NOT_PERCENTAGE_MESSAGE);
 
         Object[][] array = asArray();
         array = appendColumn(array, toBoxedArray(labels));
         List<Object[]> shuffledList = Arrays.asList(array);
-        Collections.shuffle(shuffledList);
+        Collections.shuffle(shuffledList, rnd);
         final int splitIndex = shuffledList.size() - (int) (shuffledList.size() * percentageSize) - 1;
         Object[][] beforeSplitArray = shuffledList.subList(0, splitIndex).toArray(new Object[0][]);
         Object[][] afterSplitArray = shuffledList.subList(splitIndex, shuffledList.size()).toArray(new Object[0][]);

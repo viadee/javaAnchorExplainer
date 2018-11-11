@@ -50,6 +50,26 @@ public class AnchorCandidate implements Serializable {
     }
 
     /**
+     * Constructs the candidate and sets its immutable features and coverage.
+     * <p>
+     * Does not check for correctly added parents.
+     *
+     * @param features the features the candidate comprises
+     */
+    public AnchorCandidate(final Collection<Integer> features) {
+        this(features, fakeParent(features));
+    }
+
+    private static AnchorCandidate fakeParent(final Collection<Integer> features) {
+        if (features.size() == 1)
+            return null;
+        else {
+            final Collection<Integer> parentFeatures = new ArrayList<>(features).subList(0, features.size() - 1);
+            return new AnchorCandidate(parentFeatures, fakeParent(parentFeatures));
+        }
+    }
+
+    /**
      * Updates the precision of the candidate when new samples were taken.
      * <p>
      * Synchronized access to mutable variables!
