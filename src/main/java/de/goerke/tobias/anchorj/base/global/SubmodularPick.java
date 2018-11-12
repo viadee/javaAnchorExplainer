@@ -35,9 +35,9 @@ public class SubmodularPick<T extends DataInstance<?>> {
     public SubmodularPick(AnchorConstructionBuilder<T> constructionBuilder,
                           SubmodularPickGoal optimizationGoal, int maxThreads) {
         this(new ThreadedBatchExplainer<>(maxThreads), constructionBuilder, optimizationGoal);
-        if (maxThreads > 1 && constructionBuilder.getMaxThreadCount() > 1)
-            LOGGER.warn("AnchorConstruction threading enables. Threads will multiply to max: {} threads",
-                    constructionBuilder.getMaxThreadCount() * maxThreads);
+        //if (maxThreads > 1 && constructionBuilder.getMaxThreadCount() > 1)
+        //    LOGGER.warn("AnchorConstruction threading enables. Threads will multiply to max: {} threads",
+        //            constructionBuilder.getMaxThreadCount() * maxThreads);
     }
 
     /**

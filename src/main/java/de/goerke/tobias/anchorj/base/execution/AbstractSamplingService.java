@@ -1,22 +1,23 @@
 package de.goerke.tobias.anchorj.base.execution;
 
-import de.goerke.tobias.anchorj.base.AnchorCandidate;
+import de.goerke.tobias.anchorj.base.*;
+import de.goerke.tobias.anchorj.base.execution.sampling.DefaultSamplingFunction;
+import de.goerke.tobias.anchorj.base.execution.sampling.SamplingFunction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.function.BiFunction;
 
 /**
  * Abstract service supervising the evaluation of candidates by sampling.
  * <p>
  * Its subclasses mainly enable different kinds of parallelization.
  */
-public abstract class AbstractSamplingService implements SamplingService {
+public abstract class AbstractSamplingService<T extends DataInstance<?>> implements SamplingService {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractSamplingService.class);
 
-    final BiFunction<AnchorCandidate, Integer, Double> sampleFunction;
+    private final SamplingFunction samplingFunction;
 
     /**
      * Used to record the total time spend sampling.
@@ -25,14 +26,27 @@ public abstract class AbstractSamplingService implements SamplingService {
     private double timeSpentSampling;
 
     /**
-     * Instantiated the sampling service
+     * Creates the sampling service using the {@link DefaultSamplingFunction}
+     * <p>
+     * Requires both a perturbation and classification function to evaluate candidates
      *
-     * @param sampleFunction the function used for sampling
+     * @param classificationFunction Function used to classify any instance of type
+     * @param perturbationFunction   Function used to create perturbations of the
+     *                               {@link AnchorConstruction#explainedInstance}
      */
-    protected AbstractSamplingService(final BiFunction<AnchorCandidate, Integer, Double> sampleFunction) {
-        this.sampleFunction = sampleFunction;
+    protected AbstractSamplingService(ClassificationFunction<T> classificationFunction,
+                                      PerturbationFunction<T> perturbationFunction) {
+        this(new DefaultSamplingFunction<>(classificationFunction, perturbationFunction));
     }
 
+    /**
+     * Creates the sampling service.
+     *
+     * @param samplingFunction the sampling function to be used
+     */
+    protected AbstractSamplingService(SamplingFunction samplingFunction) {
+        this.samplingFunction = samplingFunction;
+    }
 
     @Override
     public double getTimeSpentSampling() {
@@ -44,12 +58,16 @@ public abstract class AbstractSamplingService implements SamplingService {
      */
     public abstract class AbstractSamplingSession implements SamplingSession {
         // Retain order
-        final Map<AnchorCandidate, Integer> samplingCountMap = new LinkedHashMap<>();
+        protected final Map<AnchorCandidate, Integer> samplingCountMap = new LinkedHashMap<>();
+        private final int explainedInstanceLabel;
 
         /**
          * Creates an instance.
+         *
+         * @param explainedInstanceLabel the instance label being explained
          */
-        protected AbstractSamplingSession() {
+        protected AbstractSamplingSession(int explainedInstanceLabel) {
+            this.explainedInstanceLabel = explainedInstanceLabel;
         }
 
         @Override
@@ -71,6 +89,17 @@ public abstract class AbstractSamplingService implements SamplingService {
             LOGGER.debug("Evaluated a total of {} samples for {} candidates in {}ms",
                     samplingCountMap.values().stream().mapToInt(i -> i).sum(),
                     samplingCountMap.entrySet().size(), time);
+        }
+
+        /**
+         * Generate perturbations and evaluates a candidate by fetching the perturbed instances' predictions.
+         *
+         * @param candidate         the {@link AnchorCandidate} to evaluate
+         * @param samplesToEvaluate the number of samples to take
+         * @return the precision computed in this sampling run
+         */
+        protected double doSample(final AnchorCandidate candidate, final int samplesToEvaluate) {
+            return samplingFunction.evaluate(candidate, samplesToEvaluate, explainedInstanceLabel);
         }
 
         /**

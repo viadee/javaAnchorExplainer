@@ -2,6 +2,10 @@ package de.goerke.tobias.anchorj.base;
 
 import de.goerke.tobias.anchorj.base.coverage.CoverageIdentification;
 import de.goerke.tobias.anchorj.base.coverage.PerturbationBasedCoverageIdentification;
+import de.goerke.tobias.anchorj.base.execution.BalancedParallelSamplingService;
+import de.goerke.tobias.anchorj.base.execution.LinearSamplingService;
+import de.goerke.tobias.anchorj.base.execution.ParallelSamplingService;
+import de.goerke.tobias.anchorj.base.execution.SamplingService;
 import de.goerke.tobias.anchorj.base.exploration.BestAnchorIdentification;
 import de.goerke.tobias.anchorj.base.exploration.KL_LUCB;
 import de.goerke.tobias.anchorj.base.global.ReconfigurablePerturbationFunction;
@@ -24,6 +28,7 @@ public class AnchorConstructionBuilder<T extends DataInstance<?>> {
     private PerturbationFunction<T> perturbationFunction;
     private BestAnchorIdentification bestAnchorIdentification;
     private CoverageIdentification coverageIdentification;
+    private SamplingService samplingService;
     private T explainedInstance;
     private int explainedInstanceLabel;
 
@@ -37,8 +42,6 @@ public class AnchorConstructionBuilder<T extends DataInstance<?>> {
     private double tau = 1;
     private double tauDiscrepancy = 0.05;
     private int initSampleCount = 1;
-    private int threadCount = 1;
-    private boolean doBalanceSampling = false;
     private boolean lazyCoverageEvaluation = false;
     private boolean allowSuboptimalSteps = true;
 
@@ -204,8 +207,12 @@ public class AnchorConstructionBuilder<T extends DataInstance<?>> {
      * @return the current {@link AnchorConstructionBuilder} for chaining
      */
     public AnchorConstructionBuilder<T> enableThreading(final int threadCount, final boolean doBalanceSampling) {
-        this.threadCount = threadCount;
-        this.doBalanceSampling = doBalanceSampling;
+        if (threadCount <= 1)
+            this.samplingService = new LinearSamplingService<>(classificationFunction, perturbationFunction);
+        if (!doBalanceSampling)
+            this.samplingService = new ParallelSamplingService<>(classificationFunction, perturbationFunction, threadCount);
+        this.samplingService = new BalancedParallelSamplingService<>(classificationFunction, perturbationFunction, threadCount);
+
         return this;
     }
 
@@ -232,6 +239,20 @@ public class AnchorConstructionBuilder<T extends DataInstance<?>> {
      */
     public AnchorConstructionBuilder<T> setCoverageIdentification(final CoverageIdentification coverageIdentification) {
         this.coverageIdentification = coverageIdentification;
+        return this;
+    }
+
+    /**
+     * Sets the sampling service
+     * <p>
+     * If setBestAnchorIdentification to null, the default
+     * {@link de.goerke.tobias.anchorj.base.execution.LinearSamplingService} is used
+     *
+     * @param samplingService the sampling service
+     * @return the current {@link AnchorConstructionBuilder} for chaining
+     */
+    public AnchorConstructionBuilder<T> setSamplingService(final SamplingService samplingService) {
+        this.samplingService = samplingService;
         return this;
     }
 
@@ -278,6 +299,7 @@ public class AnchorConstructionBuilder<T extends DataInstance<?>> {
                     "be reconfigurable for foreign instances. Please implement the ReconfigurablePerturbationFunction");
         }
 
+        // FIXME perturbation function needs to be set in sampling function
         this.explainedInstance = explainedInstance;
         this.explainedInstanceLabel = explainedInstanceLabel;
         this.perturbationFunction = ((ReconfigurablePerturbationFunction<T>) this.perturbationFunction)
@@ -300,13 +322,14 @@ public class AnchorConstructionBuilder<T extends DataInstance<?>> {
      * @return the anchor construction
      */
     public AnchorConstruction<T> build() {
-        return new AnchorConstruction<>(classificationFunction, perturbationFunction,
+        return new AnchorConstruction<>(
                 (bestAnchorIdentification == null) ? createDefaultBestAnchorIdentification() : bestAnchorIdentification,
                 (coverageIdentification == null) ? createDefaultCoverageIdentification() : coverageIdentification,
+                (samplingService == null) ? new LinearSamplingService<>(classificationFunction, perturbationFunction) : samplingService,
                 explainedInstance, explainedInstanceLabel,
                 (maxAnchorSize == null) ? explainedInstance.getFeatureCount() : maxAnchorSize,
                 beamSize, delta, epsilon, tau, tauDiscrepancy, initSampleCount,
-                threadCount, doBalanceSampling, lazyCoverageEvaluation, allowSuboptimalSteps);
+                lazyCoverageEvaluation, allowSuboptimalSteps);
     }
 
     /**
@@ -327,10 +350,4 @@ public class AnchorConstructionBuilder<T extends DataInstance<?>> {
         return this;
     }
 
-    /**
-     * @return the max thread count to be obtained by the {@link SubmodularPick} algorithm
-     */
-    public int getMaxThreadCount() {
-        return Math.min(1, threadCount);
-    }
 }

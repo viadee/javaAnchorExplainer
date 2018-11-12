@@ -1,5 +1,6 @@
 package de.goerke.tobias.anchorj.base;
 
+import java.io.Serializable;
 import java.util.AbstractList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -12,7 +13,7 @@ import java.util.stream.IntStream;
  *
  * @param <T> Type of the hold {@link DataInstance}
  */
-public abstract class LabeledInstanceList<T extends DataInstance<?>> extends AbstractList<T> {
+public abstract class LabeledInstanceList<T extends DataInstance<?>> extends AbstractList<T> implements Serializable {
     protected final T[] dataInstances;
     protected final int[] labels;
     protected final int featureCount;

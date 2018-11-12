@@ -1,11 +1,14 @@
 package de.goerke.tobias.anchorj.base.execution;
 
 import de.goerke.tobias.anchorj.base.AnchorCandidate;
+import de.goerke.tobias.anchorj.base.ClassificationFunction;
+import de.goerke.tobias.anchorj.base.DataInstance;
+import de.goerke.tobias.anchorj.base.PerturbationFunction;
+import de.goerke.tobias.anchorj.base.execution.sampling.SamplingFunction;
 
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
-import java.util.function.BiFunction;
 
 /**
  * Implementation of the {@link AbstractSamplingService} and extension of {@link ParallelSamplingService}.
@@ -13,19 +16,51 @@ import java.util.function.BiFunction;
  * Equally distributes the amount of samples to be obtained among all threads.
  * <p>
  * Hence, a single thread may obtain predictions for different candidates in one batch.
+ *
+ * @param <T> Type of the sampled instance
  */
-public class BalancedParallelSamplingService extends ParallelSamplingService {
-    BalancedParallelSamplingService(final BiFunction<AnchorCandidate, Integer, Double> sampleFunction,
-                                    final int threadCount) {
-        super(sampleFunction, threadCount);
+public class BalancedParallelSamplingService<T extends DataInstance<?>> extends ParallelSamplingService<T> {
+
+    /**
+     * Creates the sampling service.
+     * <p>
+     * Requires both a perturbation and classification function to evaluate candidates
+     *
+     * @param classificationFunction Function used to classify any instance of type
+     * @param perturbationFunction   Function used to create perturbations of the explained instance
+     * @param threadCount            the number of threads to use
+     */
+    public BalancedParallelSamplingService(ClassificationFunction<T> classificationFunction,
+                                           PerturbationFunction<T> perturbationFunction, int threadCount) {
+        super(classificationFunction, perturbationFunction, threadCount);
+    }
+
+    /**
+     * Creates the sampling service.
+     *
+     * @param samplingFunction the sampling function to be used
+     * @param threadCount      the number of threads to use
+     */
+    public BalancedParallelSamplingService(SamplingFunction samplingFunction, int threadCount) {
+        super(samplingFunction, threadCount);
     }
 
     @Override
-    public AbstractSamplingSession createSession() {
-        return new BalancedParallelSession();
+    public SamplingSession createSession(int explainedInstanceLabel) {
+        return new BalancedParallelSession(explainedInstanceLabel);
     }
 
     private class BalancedParallelSession extends ParallelSession {
+
+        /**
+         * Creates an instance.
+         *
+         * @param explainedInstanceLabel the label being explained
+         */
+        private BalancedParallelSession(int explainedInstanceLabel) {
+            super(explainedInstanceLabel);
+        }
+
         @Override
         protected Collection<Callable<Object>> createCallables() {
             Collection<Callable<Object>> result = new ArrayList<>();
@@ -55,7 +90,7 @@ public class BalancedParallelSamplingService extends ParallelSamplingService {
                     final AnchorCandidate candidate = current.getKey();
                     currentLeft -= sampleCount;
                     threadRemainingCount -= sampleCount;
-                    subRunnables.add(() -> sampleFunction.apply(candidate, sampleCount));
+                    subRunnables.add(() -> doSample(candidate, sampleCount));
                     if (currentLeft < 1) {
                         // Check if we reached the end
                         if (!iterator.hasNext())

@@ -55,8 +55,8 @@ public class MedianElimination implements BestAnchorIdentification {
      * @return the best candidate satisfying the specified parameters
      */
     private static AnchorCandidate identifySingle(List<AnchorCandidate> candidates,
-                                                  SamplingService samplingService, double delta,
-                                                  double epsilon) {
+                                                  SamplingService samplingService,
+                                                  int explainedInstanceLabel, double delta, double epsilon) {
         if (candidates.size() == 1)
             return candidates.get(0);
 
@@ -66,7 +66,7 @@ public class MedianElimination implements BestAnchorIdentification {
         do {
             final int sampleCount = (int) (1D / Math.pow((epsilon1 / 2D), 2) * Math.log(3D / delta1));
 
-            final SamplingSession session = samplingService.createSession();
+            final SamplingSession session = samplingService.createSession(explainedInstanceLabel);
             for (AnchorCandidate candidate : s) {
                 session.registerCandidateEvaluation(candidate, sampleCount);
             }
@@ -87,12 +87,14 @@ public class MedianElimination implements BestAnchorIdentification {
 
     @Override
     public List<AnchorCandidate> identify(List<AnchorCandidate> candidates, SamplingService samplingService,
+                                          int explainedInstanceLabel,
                                           double delta, double epsilon, int nrOfResults) {
         final List<AnchorCandidate> remainingCandidates = new ArrayList<>(candidates);
         final List<AnchorCandidate> result = new ArrayList<>();
 
         while (result.size() != nrOfResults) {
-            final AnchorCandidate currentBest = identifySingle(remainingCandidates, samplingService, delta, epsilon);
+            final AnchorCandidate currentBest = identifySingle(remainingCandidates, samplingService,
+                    explainedInstanceLabel, delta, epsilon);
             remainingCandidates.remove(currentBest);
             result.add(currentBest);
         }

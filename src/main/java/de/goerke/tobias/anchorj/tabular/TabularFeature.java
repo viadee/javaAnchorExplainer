@@ -1,9 +1,11 @@
 package de.goerke.tobias.anchorj.tabular;
 
+import java.io.Serializable;
+
 /**
  * Represents a tabular feature, i.e. a column
  */
-public class TabularFeature {
+public class TabularFeature implements Serializable {
     private final ColumnType columnType;
     private final String name;
     private final boolean isTargetFeature;
