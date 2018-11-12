@@ -54,7 +54,7 @@ public class AnchorTabular {
         applyTransformations(data, usedColumns);
 
         // Store the mappings that were conducted in order to be able to reverse them later on
-        Map<TabularFeature, Map<Object, Integer>> mappings = createReverseTransformationMapping(data, usedColumns, tabularFeatures);
+        Map<TabularFeature, Map<Object, Integer>> mappings = transformDataAndCreateReverseTransformationMapping(data, usedColumns, tabularFeatures);
 
         // Convert to int array
         Object[][] dataAsInt = transformToIntArray(data);
@@ -87,7 +87,7 @@ public class AnchorTabular {
         return new AnchorTabular(instances, tabularFeatures, mappings, tabularInstanceVisualizer);
     }
 
-    private static Map<TabularFeature, Map<Object, Integer>> createReverseTransformationMapping(Object[][] data, List<InternalColumn> usedColumns, TabularFeature[] finalFeatures) {
+    private static Map<TabularFeature, Map<Object, Integer>> transformDataAndCreateReverseTransformationMapping(Object[][] data, List<InternalColumn> usedColumns, TabularFeature[] finalFeatures) {
         Map<TabularFeature, Map<Object, Integer>> mappings = new LinkedHashMap<>();
 
         // Transform categorical features to be in a range of 0..(distinct values)
@@ -287,34 +287,13 @@ public class AnchorTabular {
      * The addColumn operations must be called as many times as there are columns in the submitted dataset.
      */
     public static class TabularPreprocessorBuilder {
-        private final Collection<String[]> fileContents;
         private final List<InternalColumn> internalColumns = new ArrayList<>();
         private boolean doBalance = false;
 
         /**
          * Constructs the builder
-         *
-         * @param fileContents the file contents. Each element represents an instance, i.e. a set of features
          */
-        public TabularPreprocessorBuilder(Collection<String[]> fileContents) {
-            this(false, fileContents);
-        }
-
-        /**
-         * Constructs the builder
-         *
-         * @param excludeFirst if set true, the first row will be removed. Useful, if the header contains column names
-         * @param fileContents the file contents. Each element represents an instance, i.e. a set of features
-         */
-        public TabularPreprocessorBuilder(boolean excludeFirst, Collection<String[]> fileContents) {
-            if (fileContents.size() < 1)
-                throw new IllegalArgumentException("No rows available");
-            final Iterator<String[]> iterator = fileContents.iterator();
-            if (excludeFirst) {
-                iterator.next();
-                iterator.remove();
-            }
-            this.fileContents = fileContents;
+        public TabularPreprocessorBuilder() {
         }
 
         /**
@@ -322,14 +301,14 @@ public class AnchorTabular {
          *
          * @return the {@link AnchorTabular} instance
          */
-        public AnchorTabular build() {
+        public AnchorTabular build(Collection<String[]> dataCollection) {
             //if (internalColumns.stream().noneMatch(c -> c.isTargetFeature))
             //    throw new IllegalArgumentException("Not target feature specified");
-            for (String[] fileContent : fileContents)
+            for (String[] fileContent : dataCollection)
                 if (fileContent.length != internalColumns.size())
                     throw new IllegalArgumentException("InternalColumn count does not match loaded data's features. " +
                             fileContent.length + " vs " + internalColumns.size());
-            return AnchorTabular.preprocess(fileContents, internalColumns, doBalance);
+            return AnchorTabular.preprocess(dataCollection, internalColumns, doBalance);
         }
 
         /**
