@@ -1,11 +1,14 @@
 package de.goerke.tobias.anchorj.base.execution;
 
-import de.goerke.tobias.anchorj.base.*;
+import de.goerke.tobias.anchorj.base.AnchorCandidate;
+import de.goerke.tobias.anchorj.base.ClassificationFunction;
+import de.goerke.tobias.anchorj.base.DataInstance;
+import de.goerke.tobias.anchorj.base.PerturbationFunction;
+import de.goerke.tobias.anchorj.base.execution.sampling.SamplingFunction;
 
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
-import java.util.function.BiFunction;
 
 /**
  * Implementation of the {@link AbstractSamplingService} and extension of {@link ParallelSamplingService}.
@@ -30,6 +33,16 @@ public class BalancedParallelSamplingService<T extends DataInstance<?>> extends 
     public BalancedParallelSamplingService(ClassificationFunction<T> classificationFunction,
                                            PerturbationFunction<T> perturbationFunction, int threadCount) {
         super(classificationFunction, perturbationFunction, threadCount);
+    }
+
+    /**
+     * Creates the sampling service.
+     *
+     * @param samplingFunction the sampling function to be used
+     * @param threadCount      the number of threads to use
+     */
+    public BalancedParallelSamplingService(SamplingFunction samplingFunction, int threadCount) {
+        super(samplingFunction, threadCount);
     }
 
     @Override

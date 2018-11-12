@@ -1,6 +1,9 @@
 package de.goerke.tobias.anchorj.base.execution;
 
-import de.goerke.tobias.anchorj.base.*;
+import de.goerke.tobias.anchorj.base.ClassificationFunction;
+import de.goerke.tobias.anchorj.base.DataInstance;
+import de.goerke.tobias.anchorj.base.PerturbationFunction;
+import de.goerke.tobias.anchorj.base.execution.sampling.SamplingFunction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -8,7 +11,6 @@ import java.util.Collection;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
 /**
@@ -33,6 +35,18 @@ public class ParallelSamplingService<T extends DataInstance<?>> extends Abstract
     public ParallelSamplingService(ClassificationFunction<T> classificationFunction,
                                    PerturbationFunction<T> perturbationFunction, int threadCount) {
         super(classificationFunction, perturbationFunction);
+        this.executor = Executors.newFixedThreadPool(Math.max(threadCount, 1));
+        this.threadCount = threadCount;
+    }
+
+    /**
+     * Creates the sampling service.
+     *
+     * @param samplingFunction the sampling function to be used
+     * @param threadCount      the number of threads to use
+     */
+    public ParallelSamplingService(SamplingFunction samplingFunction, int threadCount) {
+        super(samplingFunction);
         this.executor = Executors.newFixedThreadPool(Math.max(threadCount, 1));
         this.threadCount = threadCount;
     }

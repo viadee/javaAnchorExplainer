@@ -16,6 +16,8 @@ public interface SamplingService {
      */
     double getTimeSpentSampling();
 
+    // TODO make methods default and add total samples taken
+
     /**
      * Creates a session that has to be used in order to obtain samples.
      *

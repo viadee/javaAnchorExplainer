@@ -4,6 +4,7 @@ import de.goerke.tobias.anchorj.base.AnchorCandidate;
 import de.goerke.tobias.anchorj.base.ClassificationFunction;
 import de.goerke.tobias.anchorj.base.DataInstance;
 import de.goerke.tobias.anchorj.base.PerturbationFunction;
+import de.goerke.tobias.anchorj.base.execution.sampling.SamplingFunction;
 
 import java.util.Map;
 import java.util.function.BiFunction;
@@ -26,6 +27,15 @@ public class LinearSamplingService<T extends DataInstance<?>> extends AbstractSa
     public LinearSamplingService(ClassificationFunction<T> classificationFunction,
                                  PerturbationFunction<T> perturbationFunction) {
         super(classificationFunction, perturbationFunction);
+    }
+
+    /**
+     * Creates the sampling service.
+     *
+     * @param samplingFunction the sampling function to be used
+     */
+    public LinearSamplingService(SamplingFunction samplingFunction) {
+        super(samplingFunction);
     }
 
     @Override

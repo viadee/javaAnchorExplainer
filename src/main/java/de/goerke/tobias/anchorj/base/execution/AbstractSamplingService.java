@@ -1,12 +1,13 @@
 package de.goerke.tobias.anchorj.base.execution;
 
 import de.goerke.tobias.anchorj.base.*;
+import de.goerke.tobias.anchorj.base.execution.sampling.DefaultSamplingFunction;
+import de.goerke.tobias.anchorj.base.execution.sampling.SamplingFunction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.stream.IntStream;
 
 /**
  * Abstract service supervising the evaluation of candidates by sampling.
@@ -16,8 +17,7 @@ import java.util.stream.IntStream;
 public abstract class AbstractSamplingService<T extends DataInstance<?>> implements SamplingService {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractSamplingService.class);
 
-    private final ClassificationFunction<T> classificationFunction;
-    private final PerturbationFunction<T> perturbationFunction;
+    private final SamplingFunction samplingFunction;
 
     /**
      * Used to record the total time spend sampling.
@@ -26,7 +26,7 @@ public abstract class AbstractSamplingService<T extends DataInstance<?>> impleme
     private double timeSpentSampling;
 
     /**
-     * Creates the sampling service.
+     * Creates the sampling service using the {@link DefaultSamplingFunction}
      * <p>
      * Requires both a perturbation and classification function to evaluate candidates
      *
@@ -36,36 +36,16 @@ public abstract class AbstractSamplingService<T extends DataInstance<?>> impleme
      */
     protected AbstractSamplingService(ClassificationFunction<T> classificationFunction,
                                       PerturbationFunction<T> perturbationFunction) {
-        this.classificationFunction = classificationFunction;
-        this.perturbationFunction = perturbationFunction;
+        this(new DefaultSamplingFunction<>(classificationFunction, perturbationFunction));
     }
 
     /**
-     * Generate perturbations and evaluates a candidate by fetching the perturbed instances' predictions.
+     * Creates the sampling service.
      *
-     * @param candidate              the {@link AnchorCandidate} to evaluate
-     * @param samplesToEvaluate      the number of samples to take
-     * @param explainedInstanceLabel the explained instance label
-     * @return the precision computed in this sampling run
+     * @param samplingFunction the sampling function to be used
      */
-    protected double doSample(final AnchorCandidate candidate, final int samplesToEvaluate,
-                            final int explainedInstanceLabel) {
-        if (samplesToEvaluate < 1)
-            return 0;
-
-        final PerturbationFunction.PerturbationResult<T> perturbationResult = perturbationFunction.perturb(
-                candidate.getCanonicalFeatures(), samplesToEvaluate);
-        final int[] predictions = classificationFunction.predict(perturbationResult.getRawResult());
-
-        final int matchingLabels = Math.toIntExact(IntStream.of(predictions)
-                .filter(p -> p == explainedInstanceLabel).count());
-
-        candidate.registerSamples(samplesToEvaluate, matchingLabels);
-
-        double precision = matchingLabels / (double) predictions.length;
-        LOGGER.trace("Sampling {} perturbations of {} has resulted in {} correct predictions, thus a precision of {}",
-                samplesToEvaluate, candidate.getCanonicalFeatures(), matchingLabels, precision);
-        return precision;
+    protected AbstractSamplingService(SamplingFunction samplingFunction) {
+        this.samplingFunction = samplingFunction;
     }
 
     @Override
@@ -77,10 +57,9 @@ public abstract class AbstractSamplingService<T extends DataInstance<?>> impleme
      * Session object
      */
     public abstract class AbstractSamplingSession implements SamplingSession {
-        private final int explainedInstanceLabel;
-
         // Retain order
         protected final Map<AnchorCandidate, Integer> samplingCountMap = new LinkedHashMap<>();
+        private final int explainedInstanceLabel;
 
         /**
          * Creates an instance.
@@ -120,7 +99,7 @@ public abstract class AbstractSamplingService<T extends DataInstance<?>> impleme
          * @return the precision computed in this sampling run
          */
         protected double doSample(final AnchorCandidate candidate, final int samplesToEvaluate) {
-            return AbstractSamplingService.this.doSample(candidate, samplesToEvaluate, explainedInstanceLabel);
+            return samplingFunction.evaluate(candidate, samplesToEvaluate, explainedInstanceLabel);
         }
 
         /**

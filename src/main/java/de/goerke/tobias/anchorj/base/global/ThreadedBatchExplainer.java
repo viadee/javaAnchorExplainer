@@ -42,7 +42,7 @@ public class ThreadedBatchExplainer<T extends DataInstance<?>> implements BatchE
      * usually perturbs one fixed instance that needs to be changed beforehand
      *
      * @param anchorConstruction the readied builder
-     * @param <T></T>            type of the explained instance
+     * @param <T>                type of the explained instance
      * @return the explanation result
      */
     private static <T extends DataInstance<?>> AnchorResult<T> obtainAnchor(final AnchorConstruction<T> anchorConstruction) {
