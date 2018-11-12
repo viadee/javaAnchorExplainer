@@ -302,12 +302,32 @@ public class AnchorTabular {
          * @return the {@link AnchorTabular} instance
          */
         public AnchorTabular build(Collection<String[]> dataCollection) {
+            return this.build(dataCollection, false);
+        }
+
+        /**
+         * Builds the configured instance
+         *
+         * @param dataCollection the data to be transformed
+         * @param excludeFirst   exclude the first row. Helpful if it is the header row
+         * @return the {@link AnchorTabular} instance
+         */
+        public AnchorTabular build(Collection<String[]> dataCollection, boolean excludeFirst) {
             //if (internalColumns.stream().noneMatch(c -> c.isTargetFeature))
             //    throw new IllegalArgumentException("Not target feature specified");
-            for (String[] fileContent : dataCollection)
-                if (fileContent.length != internalColumns.size())
+            for (String[] fileContent : dataCollection) {
+                if (fileContent.length != internalColumns.size()) {
                     throw new IllegalArgumentException("InternalColumn count does not match loaded data's features. " +
                             fileContent.length + " vs " + internalColumns.size());
+                }
+            }
+
+            if (excludeFirst) {
+                final Iterator<String[]> iterator = dataCollection.iterator();
+                iterator.next();
+                iterator.remove();
+            }
+
             return AnchorTabular.preprocess(dataCollection, internalColumns, doBalance);
         }
 
