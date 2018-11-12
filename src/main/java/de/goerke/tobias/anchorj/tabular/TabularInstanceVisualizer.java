@@ -67,6 +67,18 @@ public class TabularInstanceVisualizer {
                 getLabelMapping().getOrDefault(anchorResult.getLabel(), anchorResult.getLabel());
     }
 
+    public String[] getAnchorAsPredicateList(AnchorResult<TabularInstance> anchorResult) {
+        final String[] text = instanceToText(anchorResult.getInstance());
+        final String[] explanation = new String[anchorResult.getOrderedFeatures().size()];
+        int index = 0;
+
+        for (Integer featureNr : anchorResult.getOrderedFeatures()) {
+            explanation[index++] = text[featureNr];
+        }
+
+        return explanation;
+    }
+
     /**
      * Formats an instance readable to the user.
      *
