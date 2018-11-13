@@ -23,6 +23,13 @@ final class SubmodularPickUtils {
         return partitions;
     }
 
+    /**
+     * Multiplied the column importance and the column sum
+     *
+     * @param colSums          the colSum obtains by {@link SubmodularPickUtils#colSum(double[][], Collection, int)}
+     * @param columnImportance the column importance
+     * @return the result
+     */
     static double multiply(double[] colSums, double[] columnImportance) {
         double result = 0;
         for (int i = 0; i < colSums.length; i++) {
@@ -33,6 +40,14 @@ final class SubmodularPickUtils {
         return result;
     }
 
+    /**
+     * Calculates the column sum
+     *
+     * @param matrix                 the explanation matrix
+     * @param previouslySelectedRows the already selected rows
+     * @param additionalIndex        the index to be considered adding
+     * @return the target array to be multiplied with the column importance
+     */
     static double[] colSum(double[][] matrix, Collection<Integer> previouslySelectedRows, int additionalIndex) {
         final Set<Integer> indices = new HashSet<>(previouslySelectedRows);
         indices.add(additionalIndex);
