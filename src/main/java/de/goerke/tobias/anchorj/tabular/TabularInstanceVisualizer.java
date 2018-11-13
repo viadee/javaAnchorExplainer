@@ -12,16 +12,16 @@ import java.util.*;
  * May be used to visualize an instance of the algorithms result for the user.
  */
 public class TabularInstanceVisualizer {
-    private final Map<TabularFeature, Map<Integer, Object>> invertedMappings;
+    private final Map<TabularFeature, Map<Object, Object>> invertedMappings;
 
     /**
      * Constructs the instance.
      *
      * @param mappings the mappings used for transforming values
      */
-    public TabularInstanceVisualizer(Map<TabularFeature, Map<Object, Integer>> mappings) {
+    public TabularInstanceVisualizer(Map<TabularFeature, Map<Object, Object>> mappings) {
         this.invertedMappings = new LinkedHashMap<>();
-        for (Map.Entry<TabularFeature, Map<Object, Integer>> entry : mappings.entrySet()) {
+        for (Map.Entry<TabularFeature, Map<Object, Object>> entry : mappings.entrySet()) {
             this.invertedMappings.put(entry.getKey(), invertMap(entry.getValue()));
         }
     }
@@ -94,7 +94,7 @@ public class TabularInstanceVisualizer {
     private String[] instanceToText(TabularInstance explainedInstance) {
         final List<String> result = new ArrayList<>();
         int i = 0;
-        for (Map.Entry<TabularFeature, Map<Integer, Object>> entry : invertedMappings.entrySet()) {
+        for (Map.Entry<TabularFeature, Map<Object, Object>> entry : invertedMappings.entrySet()) {
             if (i >= explainedInstance.getFeatureCount())
                 break;
             Object value = entry.getValue().get(explainedInstance.getInstance()[i]);
@@ -107,7 +107,7 @@ public class TabularInstanceVisualizer {
         return result.toArray(new String[0]);
     }
 
-    private Map<Integer, Object> getLabelMapping() {
+    private Map<Object, Object> getLabelMapping() {
         return invertedMappings.entrySet().stream().filter(e -> e.getKey().isTargetFeature()).map(Map.Entry::getValue)
                 .findFirst().orElse(Collections.emptyMap());
     }

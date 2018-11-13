@@ -69,13 +69,12 @@ public final class ArrayUtils {
      *
      * @param values the table
      * @param column the column index to be removed
-     * @param <T>    the type of the table
      * @return the table without the removed column
      */
-    public static <T> T[][] removeColumn(T[][] values, int column) {
-        T[][] result = create2dTypedArray(values, values.length);
+    public static Object[][] removeColumn(Object[][] values, int column) {
+        Object[][] result = new Object[values.length][];
         for (int i = 0; i < result.length; i++) {
-            T[] subResult = createTypedArray(values, values[i].length - 1);
+            Object[] subResult = new Object[values[i].length - 1];
             int currentIndex = 0;
             for (int j = 0; j < values[i].length; j++) {
                 if (j != column)
