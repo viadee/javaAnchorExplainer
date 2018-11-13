@@ -47,7 +47,7 @@ public class TabularInstance implements DataInstance<Object[]> {
             throw new IllegalArgumentException("feature " + featureName + " not found");
         }
 
-        return instance[this.featureNames.get(featureName)];
+        return this.getFeature(this.featureNames.get(featureName));
     }
 
     @Override
