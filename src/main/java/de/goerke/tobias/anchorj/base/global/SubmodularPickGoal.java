@@ -11,6 +11,8 @@ import java.util.function.Function;
 
 /**
  * Defines the optimization goal of the {@link SubmodularPick} algorithm
+ *
+ * TODO remove or refactor
  */
 public enum SubmodularPickGoal {
 
