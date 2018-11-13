@@ -1,5 +1,7 @@
 package de.goerke.tobias.anchorj.tabular;
 
+import java.util.Map;
+
 import de.goerke.tobias.anchorj.base.DataInstance;
 
 /**
@@ -8,12 +10,15 @@ import de.goerke.tobias.anchorj.base.DataInstance;
 public class TabularInstance implements DataInstance<Object[]> {
     private final Object[] instance;
 
+    private final Map<String, Integer> featureNames;
+
     /**
      * Constructs the instance
      *
      * @param instance the instance array containing one element for each column
      */
-    public TabularInstance(Object[] instance) {
+    public TabularInstance(final Map<String, Integer> featureNames, Object[] instance) {
+        this.featureNames = featureNames;
         this.instance = instance;
     }
 
@@ -26,6 +31,7 @@ public class TabularInstance implements DataInstance<Object[]> {
         Object[] copy = new Object[instance.getInstance().length];
         System.arraycopy(instance.getInstance(), 0, copy, 0, instance.getInstance().length);
         this.instance = copy;
+        this.featureNames = instance.featureNames;
     }
 
     @Override
@@ -33,10 +39,16 @@ public class TabularInstance implements DataInstance<Object[]> {
         return instance;
     }
 
-//    @Override
-//    public Object getFeature(int featureId) {
-//        return instance[featureId];
-//    }
+    public Object getFeature(String featureName) {
+        if (this.featureNames == null) {
+            throw new IllegalArgumentException("no feature names provided");
+        }
+        if (!this.featureNames.containsKey(featureName)) {
+            throw new IllegalArgumentException("feature " + featureName + " not found");
+        }
+
+        return this.getFeature(this.featureNames.get(featureName));
+    }
 
     @Override
     public int getFeatureCount() {

@@ -7,7 +7,7 @@ import java.util.stream.Stream;
 /**
  * Discretizer partitioning data into n specified classes using their mean values as a class label
  */
-public class PercentileDiscretizer implements Function<Number[], Integer[]> {
+public class PercentileMedianDiscretizer implements Function<Number[], Integer[]> {
 
     private final int classCount;
 
@@ -16,7 +16,7 @@ public class PercentileDiscretizer implements Function<Number[], Integer[]> {
      *
      * @param classCount the amount of classes to use
      */
-    public PercentileDiscretizer(int classCount) {
+    public PercentileMedianDiscretizer(int classCount) {
         this.classCount = classCount;
     }
 

@@ -5,7 +5,9 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static de.goerke.tobias.anchorj.util.ArrayUtils.*;
+import static de.goerke.tobias.anchorj.util.ArrayUtils.removeColumn;
+import static de.goerke.tobias.anchorj.util.ArrayUtils.replaceColumnValues;
+import static de.goerke.tobias.anchorj.util.ArrayUtils.transformToIntArray;
 
 /**
  * Provides default means to use the Anchors algorithm on tabular data
@@ -16,11 +18,11 @@ public class AnchorTabular {
 
     private final TabularInstanceList tabularInstances;
     private final TabularFeature[] features;
-    private final Map<TabularFeature, Map<Object, Integer>> mappings;
+    private final Map<TabularFeature, Map<Object, Object>> mappings;
     private final TabularInstanceVisualizer tabularInstanceVisualizer;
 
     private AnchorTabular(final TabularInstanceList tabularInstances, final TabularFeature[] features,
-                          final Map<TabularFeature, Map<Object, Integer>> mappings,
+                          final Map<TabularFeature, Map<Object, Object>> mappings,
                           final TabularInstanceVisualizer tabularInstanceVisualizer) {
         this.tabularInstances = tabularInstances;
         this.features = features;
@@ -29,43 +31,70 @@ public class AnchorTabular {
     }
 
     @SuppressWarnings("unchecked")
-    private static AnchorTabular preprocess(final Collection<String[]> fileContents,
-                                            List<InternalColumn> internalColumns, final boolean doBalance) {
+    private static AnchorTabular preprocess(final Collection<String[]> dataCollection, Map<String, Integer> featureNames,
+                                            List<ColumnDescription> columnDescription, final boolean doBalance) {
         // Read data to object
-        Object[][] data = readFromResource(fileContents);
-        List<Integer> unusedIndices = new ArrayList<>();
-        for (int i = 0; i < internalColumns.size(); i++) {
-            if (!internalColumns.get(i).doUse)
-                unusedIndices.add(i);
-        }
-        // Remove unused columns
-        if (!unusedIndices.isEmpty()) {
-            data = removeColumns(data, unusedIndices);
-            internalColumns = internalColumns.stream().filter(c -> c.doUse).collect(Collectors.toList());
-        }
-        // Create features the dataset will ultimately consist of
-        TabularFeature[] finalFeatures = createFeatures(internalColumns);
+        Object[][] data = mapCollectionToArray(dataCollection);
+        data = removeUnusedColumns(columnDescription, data);
+        List<ColumnDescription> usedColumns = columnDescription.stream().filter(c -> c.isDoUse()).collect(Collectors.toList());
+
+        // Create features the data set will ultimately consist of
+        TabularFeature[] tabularFeatures = transformColumnDescriptionToFeatureDescription(usedColumns);
 
         // Apply transformation to used columns
-        applyTransformations(data, internalColumns);
+        applyTransformations(data, usedColumns);
 
         // Store the mappings that were conducted in order to be able to reverse them later on
-        Map<TabularFeature, Map<Object, Integer>> mappings = new LinkedHashMap<>();
+        Map<TabularFeature, Map<Object, Object>> mappings = transformDataAndCreateReverseTransformationMapping(data, usedColumns, tabularFeatures);
+
+        // Convert to int array
+        Object[][] dataAsInt = transformToIntArray(data);
+        int[] transformedLabelColumn = null;
+
+        // Split off labels if there are
+        final List<ColumnDescription> targetColumns = usedColumns.stream().filter(c -> c.isTargetFeature()).collect(Collectors.toList());
+        if (!targetColumns.isEmpty()) {
+            int labelColumnIndex = usedColumns.indexOf(targetColumns.get(0));
+            Object[] mappingResult = transformColumnToUniqueValues(dataAsInt, labelColumnIndex);
+            transformedLabelColumn = (int[]) mappingResult[0];
+            dataAsInt = removeColumn(dataAsInt, labelColumnIndex);
+            tabularFeatures = Stream.of(tabularFeatures)
+                    .filter(f -> !f.isTargetFeature()).toArray(TabularFeature[]::new);
+        }
+
+        TabularInstanceList instances = new TabularInstanceList(dataAsInt, transformedLabelColumn, featureNames, tabularFeatures);
+
+        // Balancing = for each label have the same amount of entries
+        if (doBalance && transformedLabelColumn == null) {
+            throw new IllegalArgumentException("Cannot balance when no target column is specified");
+        }
+        if (doBalance) {
+            instances = instances.balance();
+        }
+
+        // Create the result explainer
+        TabularInstanceVisualizer tabularInstanceVisualizer = new TabularInstanceVisualizer(mappings);
+
+        return new AnchorTabular(instances, tabularFeatures, mappings, tabularInstanceVisualizer);
+    }
+
+    private static Map<TabularFeature, Map<Object, Object>> transformDataAndCreateReverseTransformationMapping(Object[][] data, List<ColumnDescription> usedColumns, TabularFeature[] finalFeatures) {
+        Map<TabularFeature, Map<Object, Object>> mappings = new LinkedHashMap<>();
 
         // Transform categorical features to be in a range of 0..(distinct values)
         // Also discretize nominal values
-        for (int i = 0; i < internalColumns.size(); i++) {
-            InternalColumn internalColumn = internalColumns.get(i);
+        for (int i = 0; i < usedColumns.size(); i++) {
+            ColumnDescription internalColumn = usedColumns.get(i);
 
             // Only categorize categorical features
-            if (internalColumn.columnType == TabularFeature.ColumnType.CATEGORICAL) {
+            if (internalColumn.getColumnType() == TabularFeature.ColumnType.CATEGORICAL) {
                 Object[] result = transformColumnToUniqueValues(data, i);
-                mappings.put(finalFeatures[i], (Map<Object, Integer>) result[1]);
+                mappings.put(finalFeatures[i], (Map<Object, Object>) result[1]);
                 replaceColumnValues(data, (int[]) result[0], i);
             }
 
             // Discretize nominal values if discretizer given
-            else if (internalColumn.columnType == TabularFeature.ColumnType.NOMINAL && internalColumn.discretizer != null) {
+            else if (internalColumn.getColumnType() == TabularFeature.ColumnType.NOMINAL && internalColumn.getDiscretizer() != null) {
                 Number[] valuesToBeDiscretized = new Number[data.length];
                 for (int j = 0; j < valuesToBeDiscretized.length; j++) {
                     if (data[j][i] instanceof String)
@@ -75,9 +104,9 @@ public class AnchorTabular {
                     else
                         throw new IllegalArgumentException("Could not read nominal column");
                 }
-                Integer[] discretizedValues = internalColumn.discretizer.apply(valuesToBeDiscretized);
+                Object[] discretizedValues = internalColumn.getDiscretizer().apply(valuesToBeDiscretized);
                 // Discretized values come from a "range" of input values.
-                Map<Integer, Set<Number>> tmpMapping = new LinkedHashMap<>();
+                Map<Object, Set<Number>> tmpMapping = new LinkedHashMap<>();
                 for (int j = 0; j < discretizedValues.length; j++) {
                     data[j][i] = discretizedValues[j];
 
@@ -91,8 +120,8 @@ public class AnchorTabular {
                     values.add(valuesToBeDiscretized[j]);
                 }
 
-                Map<Object, Integer> mapping = new LinkedHashMap<>();
-                for (Map.Entry<Integer, Set<Number>> entry : tmpMapping.entrySet()) {
+                Map<Object, Object> mapping = new LinkedHashMap<>();
+                for (Map.Entry<Object, Set<Number>> entry : tmpMapping.entrySet()) {
                     Set<Integer> values = entry.getValue().stream().map(Number::intValue).collect(Collectors.toSet());
                     String range = String.format("Range(%d, %d)", Collections.min(values), Collections.max(values));
                     mapping.put(range, entry.getKey());
@@ -102,63 +131,57 @@ public class AnchorTabular {
                 mappings.put(finalFeatures[i], Collections.emptyMap());
             }
         }
+        return mappings;
+    }
 
-        // Convert to int array
-        Object[][] converted = tryToIntArray(data);
-        int[] labels = null;
-
-        // Split off labels if there are
-        final List<InternalColumn> targetColumns = internalColumns.stream().filter(c -> c.isTargetFeature).collect(Collectors.toList());
-        if (!targetColumns.isEmpty()) {
-            int labelColumnIndex = internalColumns.indexOf(targetColumns.get(0));
-            Object[] mappingResult = transformColumnToUniqueValues(converted, labelColumnIndex);
-            labels = (int[]) mappingResult[0];
-            converted = removeColumn(converted, labelColumnIndex);
+    /**
+     * Iterates through the column description and removes all ignored columns.
+     *
+     * @param columnDescription list of columns
+     * @param data              the 2D data array
+     * @return the data without ignored columns
+     */
+    private static Object[][] removeUnusedColumns(List<ColumnDescription> columnDescription, Object[][] data) {
+        List<Integer> unusedIndices = new ArrayList<>();
+        for (int i = 0; i < columnDescription.size(); i++) {
+            if (!columnDescription.get(i).isDoUse())
+                unusedIndices.add(i);
         }
-
-        TabularInstanceList instances = new TabularInstanceList(converted, labels,
-                Stream.of(finalFeatures).filter(f -> !f.isTargetFeature()).toArray(TabularFeature[]::new));
-
-        // Balancing = for each label have the same amount of entries
-        if (doBalance && labels == null)
-            throw new IllegalArgumentException("Cannot balance when no target column is specified");
-        if (doBalance)
-            instances = instances.balance();
-
-        // Create the result explainer
-        TabularInstanceVisualizer tabularInstanceVisualizer = new TabularInstanceVisualizer(mappings);
-
-        return new AnchorTabular(instances, finalFeatures, mappings, tabularInstanceVisualizer);
+        // Remove unused columns
+        if (!unusedIndices.isEmpty()) {
+            data = removeColumns(data, unusedIndices);
+        }
+        return data;
     }
 
 
-    private static TabularFeature[] createFeatures(List<InternalColumn> internalColumns) {
-        List<InternalColumn> usedFeatures = new ArrayList<>();
-        for (InternalColumn internalColumn : internalColumns) {
-            if (internalColumn.doUse)
+    private static TabularFeature[] transformColumnDescriptionToFeatureDescription(List<ColumnDescription> internalColumns) {
+        List<ColumnDescription> usedFeatures = new ArrayList<>();
+        for (ColumnDescription internalColumn : internalColumns) {
+            if (internalColumn.isDoUse())
                 usedFeatures.add(internalColumn);
         }
 
         TabularFeature[] result = new TabularFeature[usedFeatures.size()];
         for (int i = 0; i < result.length; i++) {
-            InternalColumn internalColumn = usedFeatures.get(i);
+            ColumnDescription internalColumn = usedFeatures.get(i);
             TabularFeature.ColumnType type;
-            if (internalColumn.columnType == TabularFeature.ColumnType.NATIVE)
+            if (internalColumn.getColumnType() == TabularFeature.ColumnType.NATIVE)
                 type = TabularFeature.ColumnType.NATIVE;
-            else if ((internalColumn.columnType == TabularFeature.ColumnType.CATEGORICAL) ||
-                    (internalColumn.columnType == TabularFeature.ColumnType.NOMINAL && internalColumn.discretizer != null))
+            else if ((internalColumn.getColumnType() == TabularFeature.ColumnType.CATEGORICAL) ||
+                    (internalColumn.getColumnType() == TabularFeature.ColumnType.NOMINAL && internalColumn.getDiscretizer() != null))
                 type = TabularFeature.ColumnType.CATEGORICAL;
             else
                 type = TabularFeature.ColumnType.NOMINAL;
 
-            result[i] = new TabularFeature(type, internalColumn.name, internalColumn.isTargetFeature);
+            result[i] = new TabularFeature(type, internalColumn.getName(), internalColumn.isTargetFeature());
         }
         return result;
     }
 
-    private static void applyTransformations(Object[][] data, List<InternalColumn> internalColumns) {
+    private static void applyTransformations(Object[][] data, List<ColumnDescription> internalColumns) {
         for (int i = 0; i < internalColumns.size(); i++) {
-            Function<Object[], Object[]> transformation = internalColumns.get(i).transformation;
+            Function<Object[], Object[]> transformation = internalColumns.get(i).getTransformation();
             if (transformation == null)
                 continue;
             Object[] column = new Object[data.length];
@@ -208,26 +231,20 @@ public class AnchorTabular {
         return result;
     }
 
-    private static Object[][] readFromResource(Collection<String[]> data) {
+    private static Object[][] mapCollectionToArray(Collection<String[]> data) {
         if (data.size() < 1 || data.stream().mapToInt(d -> d.length).distinct().count() != 1)
             throw new RuntimeException("No data submitted or rows are differently sized");
 
-        int colCount = data.iterator().next().length;
-        Object[][] rows = new Object[data.size()][colCount];
-        Iterator<String[]> iter = data.iterator();
-        for (int i = 0; i < rows.length; i++) {
-            String[] row = iter.next();
-            Object[] columns = new Object[colCount];
-            for (int j = 0; j < colCount; j++) {
-                String cell = row[j];
-                // This reader includes spacings after comma --> delete if present
-                if (cell.charAt(0) == ' ')
-                    cell = cell.substring(1);
-                columns[j] = cell;
-            }
-            rows[i] = columns;
+        final int rowLength = data.iterator().next().length;
+        Object[][] convertedData = new Object[data.size()][];
+        Iterator<String[]> dataIter = data.iterator();
+        for (int i = 0; i < data.size(); i++) {
+            Object[] dataRow = new Object[rowLength];
+            String[] oldRow = dataIter.next();
+            System.arraycopy(oldRow, 0, dataRow, 0, rowLength);
+            convertedData[i] = dataRow;
         }
-        return rows;
+        return convertedData;
     }
 
     /**
@@ -248,7 +265,7 @@ public class AnchorTabular {
      * @return a {@link Map} mapping, for each feature, which value got replaced by which other value during
      * preprocessing
      */
-    public Map<TabularFeature, Map<Object, Integer>> getMappings() {
+    public Map<TabularFeature, Map<Object, Object>> getMappings() {
         return mappings;
     }
 
@@ -265,34 +282,14 @@ public class AnchorTabular {
      * The addColumn operations must be called as many times as there are columns in the submitted dataset.
      */
     public static class TabularPreprocessorBuilder {
-        private final Collection<String[]> fileContents;
-        private final List<InternalColumn> internalColumns = new ArrayList<>();
+        private final List<ColumnDescription> columnDescriptions = new ArrayList<>();
         private boolean doBalance = false;
+        private final Map<String, Integer> featureLabels = new HashMap<>();
 
         /**
          * Constructs the builder
-         *
-         * @param fileContents the file contents. Each element represents an instance, i.e. a set of features
          */
-        public TabularPreprocessorBuilder(Collection<String[]> fileContents) {
-            this(false, fileContents);
-        }
-
-        /**
-         * Constructs the builder
-         *
-         * @param excludeFirst if set true, the first row will be removed. Useful, if the header contains column names
-         * @param fileContents the file contents. Each element represents an instance, i.e. a set of features
-         */
-        public TabularPreprocessorBuilder(boolean excludeFirst, Collection<String[]> fileContents) {
-            if (fileContents.size() < 1)
-                throw new IllegalArgumentException("No rows available");
-            final Iterator<String[]> iterator = fileContents.iterator();
-            if (excludeFirst) {
-                iterator.next();
-                iterator.remove();
-            }
-            this.fileContents = fileContents;
+        public TabularPreprocessorBuilder() {
         }
 
         /**
@@ -300,14 +297,34 @@ public class AnchorTabular {
          *
          * @return the {@link AnchorTabular} instance
          */
-        public AnchorTabular build() {
-            //if (internalColumns.stream().noneMatch(c -> c.isTargetFeature))
+        public AnchorTabular build(Collection<String[]> dataCollection) {
+            return this.build(dataCollection, false);
+        }
+
+        /**
+         * Builds the configured instance
+         *
+         * @param dataCollection the data to be transformed
+         * @param excludeFirst   exclude the first row. Helpful if it is the header row
+         * @return the {@link AnchorTabular} instance
+         */
+        public AnchorTabular build(Collection<String[]> dataCollection, boolean excludeFirst) {
+            //if (columnDescriptions.stream().noneMatch(c -> c.isTargetFeature))
             //    throw new IllegalArgumentException("Not target feature specified");
-            for (String[] fileContent : fileContents)
-                if (fileContent.length != internalColumns.size())
+            for (String[] fileContent : dataCollection) {
+                if (fileContent.length != columnDescriptions.size()) {
                     throw new IllegalArgumentException("InternalColumn count does not match loaded data's features. " +
-                            fileContent.length + " vs " + internalColumns.size());
-            return AnchorTabular.preprocess(fileContents, internalColumns, doBalance);
+                            fileContent.length + " vs " + columnDescriptions.size());
+                }
+            }
+
+            if (excludeFirst) {
+                final Iterator<String[]> iterator = dataCollection.iterator();
+                iterator.next();
+                iterator.remove();
+            }
+
+            return AnchorTabular.preprocess(dataCollection, this.featureLabels, this.columnDescriptions, this.doBalance);
         }
 
         /**
@@ -340,7 +357,7 @@ public class AnchorTabular {
          * @return the current {@link TabularPreprocessorBuilder}'s instance
          */
         public TabularPreprocessorBuilder addIgnoredColumn(String name) {
-            this.internalColumns.add(new InternalColumn(null, name, false, false, null, null));
+            this.addColumn(new ColumnDescription(null, name, false, false, null, null));
             return this;
         }
 
@@ -352,7 +369,7 @@ public class AnchorTabular {
          * @return the current {@link TabularPreprocessorBuilder}'s instance
          */
         public TabularPreprocessorBuilder addCategoricalColumn(String name, Function<Object[], Object[]> transformation) {
-            this.internalColumns.add(new InternalColumn(TabularFeature.ColumnType.CATEGORICAL, name, true, false, transformation, null));
+            this.addColumn(new ColumnDescription(TabularFeature.ColumnType.CATEGORICAL, name, true, false, transformation, null));
             return this;
         }
 
@@ -375,7 +392,7 @@ public class AnchorTabular {
          * @return the current {@link TabularPreprocessorBuilder}'s instance
          */
         public TabularPreprocessorBuilder addNominalColumn(String name, Function<Object[], Object[]> transformation, Function<Number[], Integer[]> discretizer) {
-            this.internalColumns.add(new InternalColumn(TabularFeature.ColumnType.NOMINAL, name, true, false, transformation, discretizer));
+            this.addColumn(new ColumnDescription(TabularFeature.ColumnType.NOMINAL, name, true, false, transformation, discretizer));
             return this;
         }
 
@@ -387,7 +404,7 @@ public class AnchorTabular {
          * @return the current {@link TabularPreprocessorBuilder}'s instance
          */
         public TabularPreprocessorBuilder addNominalColumn(String name, Function<Number[], Integer[]> discretizer) {
-            this.internalColumns.add(new InternalColumn(TabularFeature.ColumnType.NOMINAL, name, true, false, null, discretizer));
+            this.addColumn(new ColumnDescription(TabularFeature.ColumnType.NOMINAL, name, true, false, null, discretizer));
             return this;
         }
 
@@ -410,9 +427,10 @@ public class AnchorTabular {
          * @return the current {@link TabularPreprocessorBuilder}'s instance
          */
         public TabularPreprocessorBuilder addTargetColumn(String name, Function<Object[], Object[]> transformation) {
-            if (this.internalColumns.stream().anyMatch(c -> c.isTargetFeature))
+            if (this.columnDescriptions.stream().anyMatch(ColumnDescription::isTargetFeature)) {
                 throw new IllegalArgumentException("There is already a target column registered");
-            this.internalColumns.add(new InternalColumn(TabularFeature.ColumnType.CATEGORICAL, name, true, true, transformation, null));
+            }
+            this.addColumn(new ColumnDescription(TabularFeature.ColumnType.CATEGORICAL, name, true, true, transformation, null));
             return this;
         }
 
@@ -434,28 +452,22 @@ public class AnchorTabular {
          * @return the current {@link TabularPreprocessorBuilder}'s instance
          */
         public TabularPreprocessorBuilder addObjectColumn(String name) {
-            this.internalColumns.add(new InternalColumn(TabularFeature.ColumnType.NATIVE, name, true, false, null, null));
+            this.addColumn(new ColumnDescription(TabularFeature.ColumnType.NATIVE, name, true, false, null, null));
             return this;
         }
-    }
 
-    private static class InternalColumn {
-        private final TabularFeature.ColumnType columnType;
-        private final String name;
-        private final boolean doUse;
-        private final boolean isTargetFeature;
-        private final Function<Object[], Object[]> transformation;
-        private final Function<Number[], Integer[]> discretizer;
+        private TabularPreprocessorBuilder addColumn(ColumnDescription description) {
+            this.columnDescriptions.add(description);
+            this.featureLabels.put(description.getName(), this.featureLabels.size());
+            return this;
+        }
 
-        private InternalColumn(TabularFeature.ColumnType columnType, String name, boolean doUse,
-                               boolean isTargetFeature, Function<Object[], Object[]> transformation,
-                               Function<Number[], Integer[]> discretizer) {
-            this.columnType = columnType;
-            this.name = name;
-            this.doUse = doUse;
-            this.isTargetFeature = isTargetFeature;
-            this.transformation = transformation;
-            this.discretizer = discretizer;
+        public List<ColumnDescription> getColumnDescriptions() {
+            return columnDescriptions;
+        }
+
+        public boolean isDoBalance() {
+            return doBalance;
         }
     }
 
