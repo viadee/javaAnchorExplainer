@@ -3,7 +3,6 @@ package de.goerke.tobias.anchorj.tabular;
 import java.util.function.Function;
 
 /**
- * @author ak902764
  */
 public class ColumnDescription {
 
