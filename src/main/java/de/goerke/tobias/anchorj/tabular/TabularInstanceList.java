@@ -1,19 +1,32 @@
 package de.goerke.tobias.anchorj.tabular;
 
-import de.goerke.tobias.anchorj.base.LabeledInstanceList;
-import de.goerke.tobias.anchorj.util.ParameterValidation;
-
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static de.goerke.tobias.anchorj.util.ArrayUtils.*;
+import de.goerke.tobias.anchorj.base.LabeledInstanceList;
+import de.goerke.tobias.anchorj.util.ParameterValidation;
+
+import static de.goerke.tobias.anchorj.util.ArrayUtils.appendColumn;
+import static de.goerke.tobias.anchorj.util.ArrayUtils.extractIntegerColumn;
+import static de.goerke.tobias.anchorj.util.ArrayUtils.removeColumn;
+import static de.goerke.tobias.anchorj.util.ArrayUtils.toBoxedArray;
+import static de.goerke.tobias.anchorj.util.ArrayUtils.toPrimitiveArray;
+import static de.goerke.tobias.anchorj.util.ArrayUtils.transformToIntArray;
 
 /**
  * Stores multiple instances of a {@link TabularInstance} and their corresponding labels
  */
 public class TabularInstanceList extends LabeledInstanceList<TabularInstance> {
     private final TabularFeature[] features;
+    private final Map<String, Integer> featureNames;
 
     /**
      * Constructs the instance.
@@ -22,12 +35,13 @@ public class TabularInstanceList extends LabeledInstanceList<TabularInstance> {
      * @param labels        the labels, one for each {@link TabularInstance}
      * @param features      the features. One for each column.
      */
-    public TabularInstanceList(TabularInstance[] dataInstances, int[] labels,
+    public TabularInstanceList(TabularInstance[] dataInstances, int[] labels, Map<String, Integer> featureNames,
                                TabularFeature[] features) {
         super(dataInstances, labels);
         if (getFeatureCount() != features.length)
             throw new IllegalArgumentException("Feature count of data instances must equal features");
         this.features = features;
+        this.featureNames = featureNames;
     }
 
     /**
@@ -37,8 +51,9 @@ public class TabularInstanceList extends LabeledInstanceList<TabularInstance> {
      * @param labels   the labels, one for each {@link TabularInstance}
      * @param features the features. One for each column.
      */
-    public TabularInstanceList(Object[][] table, int[] labels, TabularFeature[] features) {
-        this(Stream.of(transformToIntArray(table)).map(TabularInstance::new).toArray(TabularInstance[]::new), labels, features);
+    public TabularInstanceList(Object[][] table, int[] labels, Map<String, Integer> featureNames, TabularFeature[] features) {
+        this(Stream.of(transformToIntArray(table)).map(entry -> new TabularInstance(featureNames, entry))
+                .toArray(TabularInstance[]::new), labels, featureNames, features);
     }
 
     /**
@@ -47,7 +62,7 @@ public class TabularInstanceList extends LabeledInstanceList<TabularInstance> {
      * @param copyList the list whose values to copy.
      */
     public TabularInstanceList(TabularInstanceList copyList) {
-        this(copyList.dataInstances, copyList.labels, copyList.features);
+        this(copyList.dataInstances, copyList.labels, copyList.featureNames, copyList.features);
     }
 
     private static Object[][] balanceDataset(Object[][] values, Integer[] labels) {
@@ -94,8 +109,8 @@ public class TabularInstanceList extends LabeledInstanceList<TabularInstance> {
         // Split labels off again
         int[] newLabels = toPrimitiveArray(extractIntegerColumn(table, table[0].length - 1));
         table = removeColumn(table, table[0].length - 1);
-        return new TabularInstanceList(Stream.of(table).map(TabularInstance::new).toArray(TabularInstance[]::new),
-                newLabels, features);
+        return new TabularInstanceList(Stream.of(table).map(entry -> new TabularInstance(this.featureNames, entry))
+                .toArray(TabularInstance[]::new), newLabels, this.featureNames, this.features);
     }
 
     /**
@@ -147,8 +162,8 @@ public class TabularInstanceList extends LabeledInstanceList<TabularInstance> {
         afterSplitArray = removeColumn(afterSplitArray, featureCount);
 
         return (Arrays.asList(
-                new TabularInstanceList(beforeSplitArray, beforeSplitLabels, features),
-                new TabularInstanceList(afterSplitArray, afterSplitLabels, features)
+                new TabularInstanceList(beforeSplitArray, beforeSplitLabels, this.featureNames, this.features),
+                new TabularInstanceList(afterSplitArray, afterSplitLabels, this.featureNames, this.features)
         ));
     }
 
