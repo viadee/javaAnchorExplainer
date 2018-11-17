@@ -156,7 +156,7 @@ public class FunctionSampleTest {
         };
 
         AnchorResult<Point> result = new AnchorConstructionBuilder<>(noisedClassificationFunction,
-                perturbationFunction, explainedInstance, explainedInstanceLabel)
+                perturbationFunction, explainedInstance)
                 .setCoverageIdentification(coverageIdentification)
                 .setInitSampleCount(200)
                 .setTau(0.8)
@@ -200,7 +200,7 @@ public class FunctionSampleTest {
         PerturbationFunction<Point> perturbationFunction = createPerturbationFunction(explainedInstance);
 
         AnchorResult<Point> result = new AnchorConstructionBuilder<>(noisedClassificationFunction,
-                perturbationFunction, explainedInstance, classificationFunction.predict(explainedInstance))
+                perturbationFunction, explainedInstance)
                 .setTau(0.8)
                 .setBeamSize(1)
                 .build()
@@ -228,7 +228,7 @@ public class FunctionSampleTest {
         PerturbationFunction<Point> perturbationFunction = createPerturbationFunction(explainedInstance);
 
         AnchorResult<Point> result = new AnchorConstructionBuilder<>(noisedClassificationFunction,
-                perturbationFunction, explainedInstance, classificationFunction.predict(explainedInstance))
+                perturbationFunction, explainedInstance)
                 .setTau(0.8)
                 .setBeamSize(1)
                 .build()
@@ -255,7 +255,7 @@ public class FunctionSampleTest {
         PerturbationFunction<Point> perturbationFunction = createPerturbationFunction(explainedInstance);
 
         AnchorResult<Point> result = new AnchorConstructionBuilder<>(noisedClassificationFunction,
-                perturbationFunction, explainedInstance, classificationFunction.predict(explainedInstance))
+                perturbationFunction, explainedInstance)
                 .setTau(0.8)
                 .setBeamSize(1)
                 .build()
