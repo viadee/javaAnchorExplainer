@@ -24,7 +24,7 @@ public interface DataInstance<T> extends Serializable {
      * @param featureId the featureId
      * @return the feature
      */
-    default Object getFeature(int featureId) throws UnsupportedOperationException {
+    default Object getValue(int featureId) throws UnsupportedOperationException {
         T instance = getInstance();
         if (instance != null && instance.getClass().isArray()) {
             return ((Object[]) instance)[featureId];

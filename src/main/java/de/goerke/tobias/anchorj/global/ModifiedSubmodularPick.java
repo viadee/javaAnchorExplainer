@@ -53,7 +53,7 @@ public class ModifiedSubmodularPick<T extends DataInstance<?>> extends Submodula
         final AtomicInteger uniqueIndex = new AtomicInteger();
         for (final AnchorResult<T> anchorResult : anchorResults)
             for (final Integer feature : anchorResult.getOrderedFeatures()) {
-                Object featureValue = anchorResult.getInstance().getFeature(feature);
+                Object featureValue = anchorResult.getInstance().getValue(feature);
                 featureValueIndexMap
                         .computeIfAbsent(feature, (v) -> new HashMap<>())
                         .computeIfAbsent(featureValue, (v) -> uniqueIndex.getAndIncrement());
@@ -64,7 +64,7 @@ public class ModifiedSubmodularPick<T extends DataInstance<?>> extends Submodula
         for (int i = 0; i < importanceMatrix.length; i++) {
             for (final int feature : anchorResults[i].getOrderedFeatures()) {
                 Integer colIndex = featureValueIndexMap.get(feature)
-                        .get(anchorResults[i].getInstance().getFeature(feature));
+                        .get(anchorResults[i].getInstance().getValue(feature));
                 importanceMatrix[i][colIndex] = getOptimizationGoal().computeFeatureImportance(anchorResults[i], feature);
             }
         }
