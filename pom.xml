@@ -4,12 +4,33 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>de.goerke.tobias</groupId>
+    <groupId>de.viadee</groupId>
     <artifactId>anchorj</artifactId>
     <packaging>jar</packaging>
     <version>1.0-SNAPSHOT</version>
     <name>AnchorJ</name>
-    <description>Java application implementing the Anchors algorithm (https://github.com/marcotcr/anchor)</description>
+    <description>
+    	Java application implementing the Anchors algorithm (https://github.com/marcotcr/anchor)
+     	efficiently, in order to explain the underlying rules in machine learning models. 
+     </description>
+
+	<licenses>
+		<license>
+			<name>BSD-3 Clause</name>
+			<url>https://opensource.org/licenses/BSD-3-Clause</url>
+		</license>
+	</licenses>
+	
+	<organization>
+		<name>viadee Unternehmensberatung AG</name>
+		<url>http://www.viadee.de</url>
+	</organization>
+	
+	<scm>
+		<connection>scm:git:git://https://github.com/viadee/javaAnchorExplainer</connection>
+		<developerConnection>scm:git:ssh://github.com/viadee/javaAnchorExplainer</developerConnection>
+		<url>https://github.com/viadee/javaAnchorExplainer/tree/master</url>
+	</scm>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
