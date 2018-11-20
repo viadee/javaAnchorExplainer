@@ -25,6 +25,27 @@
 		<name>viadee Unternehmensberatung AG</name>
 		<url>http://www.viadee.de</url>
 	</organization>
+		
+	<developers>
+		<developer>
+			<name>Tobias Goerke</name>
+			<email>Tobias.Goerke@viadee.de</email>
+			<organization>viadee Unternehmensberatung AG</organization>
+			<organizationUrl>http://www.viadee.de</organizationUrl>
+		</developer>
+		<developer>
+			<name>Alex Kroeker</name>
+			<email>Alex.Kroeker@viadee.de</email>
+			<organization>viadee Unternehmensberatung AG</organization>
+			<organizationUrl>http://www.viadee.de</organizationUrl>
+		</developer>
+		<developer>
+			<name>Frank Koehne</name>
+			<email>Frank.Koehne@viadee.de</email>
+			<organization>viadee Unternehmensberatung AG</organization>
+			<organizationUrl>http://www.viadee.de</organizationUrl>
+		</developer>		
+	</developers>
 	
 	<scm>
 		<connection>scm:git:git://https://github.com/viadee/javaAnchorExplainer</connection>
