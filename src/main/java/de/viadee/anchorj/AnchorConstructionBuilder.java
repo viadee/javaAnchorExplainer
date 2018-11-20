@@ -60,7 +60,7 @@ public class AnchorConstructionBuilder<T extends DataInstance<?>> {
      */
     public AnchorConstructionBuilder(final ClassificationFunction<T> classificationFunction,
                                      final PerturbationFunction<T> perturbationFunction) {
-        this(classificationFunction, perturbationFunction, null, -1);
+        this(classificationFunction, perturbationFunction, null);
     }
 
     /**
@@ -69,15 +69,18 @@ public class AnchorConstructionBuilder<T extends DataInstance<?>> {
      * @param classificationFunction the classification function
      * @param perturbationFunction   the perturbation function
      * @param explainedInstance      the explained instance
-     * @param explainedInstanceLabel the explained instance label
      */
     public AnchorConstructionBuilder(final ClassificationFunction<T> classificationFunction,
                                      final PerturbationFunction<T> perturbationFunction,
-                                     final T explainedInstance, final int explainedInstanceLabel) {
+                                     final T explainedInstance) {
         this.classificationFunction = classificationFunction;
         this.perturbationFunction = perturbationFunction;
         this.explainedInstance = explainedInstance;
-        this.explainedInstanceLabel = explainedInstanceLabel;
+        if (this.explainedInstance != null) {
+            this.explainedInstanceLabel = this.classificationFunction.predict(explainedInstance);
+        } else {
+            this.explainedInstanceLabel = -1;
+        }
     }
 
     /**
