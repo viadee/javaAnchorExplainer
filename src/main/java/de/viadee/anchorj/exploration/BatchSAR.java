@@ -1,12 +1,12 @@
 package de.viadee.anchorj.exploration;
 
-import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-
 import de.viadee.anchorj.AnchorCandidate;
 import de.viadee.anchorj.execution.SamplingService;
 import de.viadee.anchorj.util.ParameterValidation;
+
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * Implementation of the BatchSAR algorithm proposed by Jun et al in
@@ -50,6 +50,10 @@ public class BatchSAR extends AbstractBRAlgorithm {
             throw new IllegalArgumentException("Batch budget must not be negative");
         this.batchBudget = batchBudget;
         this.nn = Math.max(ceil(b / (double) r), 2);
+    }
+
+    private static int ceil(double a) {
+        return (int) Math.ceil(a);
     }
 
     @Override
@@ -125,9 +129,5 @@ public class BatchSAR extends AbstractBRAlgorithm {
         final double multiplier = 1 / multiplierDenominator;
 
         return ceil(base * multiplier);
-    }
-
-    private static int ceil(double a) {
-        return (int) Math.ceil(a);
     }
 }

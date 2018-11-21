@@ -1,5 +1,6 @@
 package de.viadee.anchorj.exploration;
 
+import java.io.Serializable;
 import java.util.List;
 
 import de.viadee.anchorj.AnchorCandidate;
@@ -18,7 +19,7 @@ import de.viadee.anchorj.execution.SamplingService;
  * <p>
  * Implementation, such as {@link KL_LUCB} or {@link BatchSAR} may be found in this package, too.
  */
-public interface BestAnchorIdentification {
+public interface BestAnchorIdentification extends Serializable {
 
     /**
      * Explores the best candidates by (repeatedly) evaluating them.

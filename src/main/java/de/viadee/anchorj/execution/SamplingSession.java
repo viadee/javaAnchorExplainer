@@ -1,5 +1,6 @@
 package de.viadee.anchorj.execution;
 
+import java.io.Serializable;
 import java.util.Map;
 
 import de.viadee.anchorj.AnchorCandidate;
@@ -7,7 +8,7 @@ import de.viadee.anchorj.AnchorCandidate;
 /**
  * Interface defining a session which can be run to sample all registered candidates
  */
-public interface SamplingSession {
+public interface SamplingSession extends Serializable {
 
     /**
      * Registers a candidate to be evaluated.

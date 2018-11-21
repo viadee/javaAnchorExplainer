@@ -1,5 +1,6 @@
 package de.viadee.anchorj.coverage;
 
+import java.io.Serializable;
 import java.util.Set;
 
 import de.viadee.anchorj.AnchorCandidate;
@@ -17,7 +18,7 @@ import de.viadee.anchorj.AnchorCandidate;
  * Base on the notion that some use-cases require specialized coverage functions, this interface may be used to define
  * custom coverage identification methods.
  */
-public interface CoverageIdentification {
+public interface CoverageIdentification extends Serializable {
 
     /**
      * Calculates a feature set's coverage.
