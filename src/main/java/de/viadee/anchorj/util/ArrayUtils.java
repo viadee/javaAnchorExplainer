@@ -97,25 +97,29 @@ public final class ArrayUtils {
     public static Object[][] transformToIntArray(Object[][] values) {
         Object[][] result = new Object[values.length][];
         for (int i = 0; i < values.length; i++) {
-            Object[] row = values[i];
-            Object[] intRow = new Object[row.length];
-            for (int j = 0; j < row.length; j++) {
-                Object cell = row[j];
-                if (cell instanceof Integer)
-                    intRow[j] = cell;
-                else {
-                    try {
-                        intRow[j] = Integer.valueOf((String) cell);
-                    } catch (Exception e) {
-                        // Just store the string
-                        intRow[j] = cell;
-                        //throw new IllegalArgumentException("Cell is not convertable");
-                    }
-                }
-            }
-            result[i] = intRow;
+            result[i] = transformToIntArray(values[i]);
         }
         return result;
+    }
+
+    public static Object[] transformToIntArray(Object[] value) {
+        Object[] row = value;
+        Object[] intRow = new Object[row.length];
+        for (int j = 0; j < row.length; j++) {
+            Object cell = row[j];
+            if (cell instanceof Integer)
+                intRow[j] = cell;
+            else {
+                try {
+                    intRow[j] = Integer.valueOf((String) cell);
+                } catch (Exception e) {
+                    // Just store the string
+                    intRow[j] = cell;
+                    //throw new IllegalArgumentException("Cell is not convertable");
+                }
+            }
+        }
+        return intRow;
     }
 
     /**
