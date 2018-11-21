@@ -77,9 +77,10 @@ public final class ArrayUtils {
             Object[] subResult = new Object[values[i].length - 1];
             int currentIndex = 0;
             for (int j = 0; j < values[i].length; j++) {
-                if (j != column)
+                if (j != column) {
                     subResult[currentIndex] = values[i][j];
-                currentIndex++;
+                    currentIndex++;
+                }
             }
             result[i] = subResult;
         }
