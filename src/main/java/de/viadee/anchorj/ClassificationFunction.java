@@ -1,11 +1,13 @@
 package de.viadee.anchorj;
 
+import java.io.Serializable;
+
 /**
  * Interface for models predicting an instance's label
  *
  * @param <T> type of the predicted data instance
  */
-public interface ClassificationFunction<T extends DataInstance<?>> {
+public interface ClassificationFunction<T extends DataInstance<?>> extends Serializable {
 
     /**
      * Labels an instance according to the models prediction

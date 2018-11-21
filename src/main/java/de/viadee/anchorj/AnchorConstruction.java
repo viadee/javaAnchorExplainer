@@ -10,6 +10,7 @@ import de.viadee.anchorj.exploration.BestAnchorIdentification;
 import de.viadee.anchorj.util.KLBernoulliUtils;
 import de.viadee.anchorj.util.ParameterValidation;
 
+import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -21,7 +22,7 @@ import java.util.stream.IntStream;
  *
  * @param <T> the type of the predicted instance
  */
-public class AnchorConstruction<T extends DataInstance<?>> {
+public class AnchorConstruction<T extends DataInstance<?>> implements Serializable {
     private static final Logger LOGGER = LoggerFactory.getLogger(AnchorConstruction.class);
 
     /*

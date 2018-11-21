@@ -1,9 +1,11 @@
 package de.viadee.anchorj.execution;
 
+import java.io.Serializable;
+
 /**
  * Interface defining all methods a sampling service is obligated to provide.
  */
-public interface SamplingService {
+public interface SamplingService extends Serializable {
 
     /**
      * Returns the time spent taking samples

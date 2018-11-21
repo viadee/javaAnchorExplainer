@@ -11,12 +11,14 @@ import de.viadee.anchorj.exploration.KL_LUCB;
 import de.viadee.anchorj.global.ReconfigurablePerturbationFunction;
 import de.viadee.anchorj.global.SubmodularPick;
 
+import java.io.Serializable;
+
 /**
  * Builder class used to configure an {@link AnchorConstruction} instance easily.
  *
  * @param <T> the dataInstance type constructing an anchor for
  */
-public class AnchorConstructionBuilder<T extends DataInstance<?>> {
+public class AnchorConstructionBuilder<T extends DataInstance<?>> implements Serializable {
     private static final int DEFAULT_COVERAGE_SAMPLE_COUNT = 1000;
 
     /*

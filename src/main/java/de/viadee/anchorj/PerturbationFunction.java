@@ -1,5 +1,6 @@
 package de.viadee.anchorj;
 
+import java.io.Serializable;
 import java.util.Set;
 
 /**
@@ -7,7 +8,7 @@ import java.util.Set;
  *
  * @param <T> the type of instance that gets perturbed.
  */
-public interface PerturbationFunction<T extends DataInstance<?>> {
+public interface PerturbationFunction<T extends DataInstance<?>> extends Serializable {
 
     /**
      * Perturbs an instance to create a possibly similar instance.
