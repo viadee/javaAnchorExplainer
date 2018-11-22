@@ -22,14 +22,12 @@ public class ModifiedSubmodularPick<T extends DataInstance<?>> extends Submodula
      *
      * @param constructionBuilder the builder used to create instances of the {@link AnchorConstruction}
      *                            when running the algorithm.
-     * @param optimizationGoal    the optimization goal
      * @param maxThreads          the number of threads to obtainAnchors in parallel.
      *                            Note: if threading is enabled in the anchorConstructionBuilder, the actual
      *                            thread count multiplies.
      */
-    public ModifiedSubmodularPick(AnchorConstructionBuilder<T> constructionBuilder, SubmodularPickGoal optimizationGoal,
-                                  int maxThreads) {
-        super(constructionBuilder, optimizationGoal, maxThreads);
+    public ModifiedSubmodularPick(AnchorConstructionBuilder<T> constructionBuilder, int maxThreads) {
+        super(constructionBuilder, maxThreads);
     }
 
     /**
@@ -38,11 +36,9 @@ public class ModifiedSubmodularPick<T extends DataInstance<?>> extends Submodula
      * @param batchExplainer      the {@link BatchExplainer} to be used to obtain multiple explanations
      * @param constructionBuilder the builder used to create instances of the {@link AnchorConstruction}
      *                            when running the algorithm.
-     * @param optimizationGoal    the optimization goal
      */
-    public ModifiedSubmodularPick(BatchExplainer<T> batchExplainer, AnchorConstructionBuilder<T> constructionBuilder,
-                                  SubmodularPickGoal optimizationGoal) {
-        super(batchExplainer, constructionBuilder, optimizationGoal);
+    public ModifiedSubmodularPick(BatchExplainer<T> batchExplainer, AnchorConstructionBuilder<T> constructionBuilder) {
+        super(batchExplainer, constructionBuilder);
     }
 
     @Override
@@ -65,7 +61,7 @@ public class ModifiedSubmodularPick<T extends DataInstance<?>> extends Submodula
             for (final int feature : anchorResults[i].getOrderedFeatures()) {
                 Integer colIndex = featureValueIndexMap.get(feature)
                         .get(anchorResults[i].getInstance().getValue(feature));
-                importanceMatrix[i][colIndex] = getOptimizationGoal().computeFeatureImportance(anchorResults[i], feature);
+                importanceMatrix[i][colIndex] = computeFeatureImportance(anchorResults[i], feature);
             }
         }
         return importanceMatrix;

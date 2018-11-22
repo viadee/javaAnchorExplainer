@@ -1,12 +1,8 @@
 package de.viadee.anchorj.global;
 
+import de.viadee.anchorj.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import de.viadee.anchorj.AnchorConstruction;
-import de.viadee.anchorj.AnchorConstructionBuilder;
-import de.viadee.anchorj.AnchorResult;
-import de.viadee.anchorj.DataInstance;
 
 import java.util.*;
 
@@ -15,27 +11,32 @@ import java.util.*;
  * <p>
  * In the showcase example this class gets extended and enabled to be used in conjunction with Apache Spark.
  * Due to this projects dependency-less design, it is not included in the core project.
+ * <p>
+ * Algorithm outline:
+ * <ol>
+ * <li>Obtain explanations for all instances</li>
+ * <li>Create a 2D matrix. Store a row for each explanation and map it to the explanation's feature importance</li>
+ * <li>Flatten this matrix to obtain feature importance of a whole feature</li>
+ * <li>Now select explanations s.t. they optimize these values</li>
+ * </ol>
  */
 public class SubmodularPick<T extends DataInstance<?>> {
     private static final Logger LOGGER = LoggerFactory.getLogger(SubmodularPick.class);
 
     private final BatchExplainer<T> batchExplainer;
     private final AnchorConstructionBuilder<T> constructionBuilder;
-    private final SubmodularPickGoal optimizationGoal;
 
     /**
      * Creates an instance of the {@link SubmodularPick}.
      *
      * @param constructionBuilder the builder used to create instances of the {@link AnchorConstruction}
      *                            when running the algorithm.
-     * @param optimizationGoal    the optimization goal
      * @param maxThreads          the number of threads to obtainAnchors in parallel.
      *                            Note: if threading is enabled in the anchorConstructionBuilder, the actual
      *                            thread count multiplies.
      */
-    public SubmodularPick(AnchorConstructionBuilder<T> constructionBuilder,
-                          SubmodularPickGoal optimizationGoal, int maxThreads) {
-        this(new ThreadedBatchExplainer<>(maxThreads), constructionBuilder, optimizationGoal);
+    public SubmodularPick(AnchorConstructionBuilder<T> constructionBuilder, int maxThreads) {
+        this(new ThreadedBatchExplainer<>(maxThreads), constructionBuilder);
     }
 
     /**
@@ -44,13 +45,59 @@ public class SubmodularPick<T extends DataInstance<?>> {
      * @param batchExplainer      the {@link BatchExplainer} to be used to obtain multiple explanations
      * @param constructionBuilder the builder used to create instances of the {@link AnchorConstruction}
      *                            when running the algorithm.
-     * @param optimizationGoal    the optimization goal
      */
-    public SubmodularPick(BatchExplainer<T> batchExplainer, AnchorConstructionBuilder<T> constructionBuilder,
-                          SubmodularPickGoal optimizationGoal) {
+    public SubmodularPick(BatchExplainer<T> batchExplainer, AnchorConstructionBuilder<T> constructionBuilder) {
         this.batchExplainer = batchExplainer;
         this.constructionBuilder = constructionBuilder;
-        this.optimizationGoal = optimizationGoal;
+    }
+
+    /**
+     * Flatten matrix to see how important each column is. Results in importance matrix I
+     *
+     * @param importanceMatrix the importance matrix
+     * @return the column importance I
+     */
+    protected double[] createColumnImportance(double[][] importanceMatrix) {
+        final double[] columnImportances = new double[importanceMatrix[0].length];
+        // Loop columns
+        for (int columnIndex = 0; columnIndex < importanceMatrix[0].length; columnIndex++) {
+            double currentImportance = 0;
+            // Loop rows
+            for (final double[] row : importanceMatrix) {
+                // Only count, if feature has any importance in this row
+                final double cellValue = row[columnIndex];
+                currentImportance += cellValue;
+            }
+            // ColImportance = average over all rows
+            columnImportances[columnIndex] = currentImportance / importanceMatrix.length;
+        }
+
+        return columnImportances;
+    }
+
+    /**
+     * This method returns an importance value for a specific feature of an {@link AnchorResult}.
+     * <p>
+     * This value gets used to build the importance matrix.
+     * <p>
+     * This works by retrieving the added feature importance value of the specific
+     *
+     * @param anchorResult the {@link AnchorResult} the feature is taken out of
+     * @param feature      the feature being examined
+     * @return an importance value
+     */
+    protected double computeFeatureImportance(AnchorResult<T> anchorResult, int feature) {
+        // Searches for the parent in which the features has been added and extracts its added feature value
+        AnchorCandidate current = anchorResult;
+        do {
+            final List<Integer> orderedFeatures = current.getOrderedFeatures();
+            final Integer addedElement = orderedFeatures.get(orderedFeatures.size() - 1);
+            if (addedElement.equals(feature))
+                return Math.max(0, Math.min(1, current.getAddedPrecision()));
+            current = current.getParentCandidate();
+        } while (current != null);
+
+        throw new RuntimeException("Should not happen - Inconsistent candidate inheritance!");
     }
 
     /**
@@ -74,7 +121,7 @@ public class SubmodularPick<T extends DataInstance<?>> {
         final double[][] importanceMatrix = createImportanceMatrix(anchorResults);
 
         // 4. Flatten matrix to see how important each column is. Results in importance matrix I
-        final double[] columnImportance = optimizationGoal.computeColumnImportance(importanceMatrix);
+        final double[] columnImportance = createColumnImportance(importanceMatrix);
 
         return greedyPick(nrOfExplanationsDesired, anchorResults, importanceMatrix, columnImportance);
     }
@@ -91,10 +138,9 @@ public class SubmodularPick<T extends DataInstance<?>> {
 
         // 3. Calculate cell importance matrix, which later gets transformed to importance matrix
         final double[][] importanceMatrix = new double[anchorResults.length][featureToColumnMap.size()];
-        for (int i = 0; i < importanceMatrix.length; i++) {
+        for (int i = 0; i < anchorResults.length; i++) {
             for (final int feature : anchorResults[i].getOrderedFeatures()) {
-                importanceMatrix[i][featureToColumnMap.get(feature)] = optimizationGoal
-                        .computeFeatureImportance(anchorResults[i], feature);
+                importanceMatrix[i][featureToColumnMap.get(feature)] = computeFeatureImportance(anchorResults[i], feature);
             }
         }
         return importanceMatrix;
@@ -128,12 +174,5 @@ public class SubmodularPick<T extends DataInstance<?>> {
         for (final Integer idx : selectedIndices)
             result.add(anchorResults[idx]);
         return result;
-    }
-
-    /**
-     * @return the optimization goal
-     */
-    SubmodularPickGoal getOptimizationGoal() {
-        return optimizationGoal;
     }
 }
