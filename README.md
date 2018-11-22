@@ -51,6 +51,11 @@ new AnchorConstructionBuilder<>(classificationFunction, perturbationFunction, la
 The builder offers many more options on how to construct the anchor. Amongst others, the multi-armed bandit algorithm or
 the coverage calculation function may be customized. Additionally, the algorithm may be configured to utilize threading.
 
+## Adapters
+
+While Anchors is model-agnostic, it requires some client provided functions, e.g. perturbation functions. These can usually be defined once per domain. 
+Thus, a second project, called [*javaAnchorAdapters*](https://github.com/viadee/javaAnchorAdapters), aims to include methodological, i.e. default approaches to common Anchors applications.
+
 ## Built With
 
 * [Maven](https://maven.apache.org/) - Dependency Management
