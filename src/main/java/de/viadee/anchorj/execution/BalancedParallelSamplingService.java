@@ -46,6 +46,11 @@ public class BalancedParallelSamplingService<T extends DataInstance<?>> extends 
     }
 
     @Override
+    public SamplingService notifySamplingFunctionChange(SamplingFunction samplingFunction) {
+        return new BalancedParallelSamplingService<>(samplingFunction, threadCount);
+    }
+
+    @Override
     public SamplingSession createSession(int explainedInstanceLabel) {
         return new BalancedParallelSession(explainedInstanceLabel);
     }

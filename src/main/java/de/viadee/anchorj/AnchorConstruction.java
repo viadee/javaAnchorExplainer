@@ -14,6 +14,7 @@ import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 /**
  * Base class for constructing Anchors.
@@ -43,6 +44,7 @@ public class AnchorConstruction<T extends DataInstance<?>> implements Serializab
     private final boolean allowSuboptimalSteps;
 
     private final SamplingService samplingService;
+
 
     /**
      * Constructs the instance setting all required parameters
@@ -105,7 +107,6 @@ public class AnchorConstruction<T extends DataInstance<?>> implements Serializab
         if (!ParameterValidation.isUnsigned(initSampleCount))
             throw new IllegalArgumentException("Initialization sample count" + ParameterValidation.NEGATIVE_VALUE_MESSAGE);
 
-
         this.bestAnchorIdentification = bestAnchorIdentification;
         this.coverageIdentification = coverageIdentification;
         this.explainedInstance = explainedInstance;
@@ -146,7 +147,6 @@ public class AnchorConstruction<T extends DataInstance<?>> implements Serializab
      */
     private List<AnchorCandidate> generateCandidateSet(final List<AnchorCandidate> previousBest, final int featureCount,
                                                        final double minCoverage) {
-        // FIXME this method returned the same candidate twice! Check reason and write test
         final List<AnchorCandidate> result = new ArrayList<>();
         final Set<AnchorCandidate> intermediateResult = new HashSet<>();
         // Loop over every available features
@@ -397,7 +397,8 @@ public class AnchorConstruction<T extends DataInstance<?>> implements Serializab
     /**
      * Constructs the anchor given the specified algorithms and parameters.
      * <p>
-     * TODO anchor explanation
+     * For more information regarding the Anchors algorithm, see
+     * <a href=https://github.com/viadee/javaAnchorExplainer>https://github.com/viadee/javaAnchorExplainer</a>
      * <p>
      * In case no anchors get found or, in general, the precision is bad, there could be multiple reasons for this:
      * <ul>
@@ -410,7 +411,33 @@ public class AnchorConstruction<T extends DataInstance<?>> implements Serializab
      * @throws NoCandidateFoundException if no single candidate with a precision &gt; 0 could be found.
      */
     public AnchorResult<T> constructAnchor() throws NoCandidateFoundException {
-        LOGGER.info("Starting Anchor Construction with "); // TODO put parameters
+        LOGGER.info("Starting Anchor Construction for instance {} and label {} with params: {}",
+                explainedInstance, explainedInstanceLabel,
+                createKeyValueMap(
+                        "maxAnchorSize", maxAnchorSize,
+                        "beamSize", beamSize,
+                        "delta", delta,
+                        "epsilon", epsilon,
+                        "tau", tau,
+                        "tauDiscrepancy", tauDiscrepancy,
+                        "initSampleCount",initSampleCount ,
+                        "lazyCoverageEvaluation", lazyCoverageEvaluation,
+                        "allowSuboptimalSteps", allowSuboptimalSteps));
         return beamSearch();
     }
+
+    private static String createKeyValueMap(Object... objects) {
+        String[] results = new String[objects.length / 2];
+        List<Object> list = Arrays.asList(objects);
+        final Iterator<Object> iterator = list.iterator();
+        int i = 0;
+        while (iterator.hasNext()) {
+            final Object key = iterator.next();
+            final Object value = iterator.next();
+            results[i++] = key + "=" + value;
+        }
+        return String.join(", ", results);
+    }
+
+
 }

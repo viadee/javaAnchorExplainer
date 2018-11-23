@@ -1,9 +1,11 @@
 package de.viadee.anchorj.execution.sampling;
 
+import de.viadee.anchorj.*;
+import de.viadee.anchorj.coverage.CoverageIdentification;
+import de.viadee.anchorj.coverage.PerturbationBasedCoverageIdentification;
+import de.viadee.anchorj.global.ReconfigurablePerturbationFunction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import de.viadee.anchorj.*;
 
 import java.util.stream.IntStream;
 
@@ -12,8 +14,9 @@ import java.util.stream.IntStream;
  * <p>
  * Perturbs and evaluates candidates
  */
-public class DefaultSamplingFunction<T extends DataInstance<?>> implements SamplingFunction {
+public class DefaultSamplingFunction<T extends DataInstance<?>> implements SamplingFunction<T> {
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultSamplingFunction.class);
+    private static final int DEFAULT_COVERAGE_SAMPLE_COUNT = 1000;
 
     private final ClassificationFunction<T> classificationFunction;
     private final PerturbationFunction<T> perturbationFunction;
@@ -52,4 +55,39 @@ public class DefaultSamplingFunction<T extends DataInstance<?>> implements Sampl
                 samplesToEvaluate, candidate.getCanonicalFeatures(), matchingLabels, precision);
         return precision;
     }
+
+    @Override
+    public DefaultSamplingFunction<T> notifyOriginChange(T explainedInstance) throws UnsupportedOperationException {
+        if (!(this.perturbationFunction instanceof ReconfigurablePerturbationFunction)) {
+            throw new UnsupportedOperationException("For using the SP-algorithm, the perturbation function needs to " +
+                    "be reconfigurable for foreign instances. Please implement the ReconfigurablePerturbationFunction");
+        }
+
+        return new DefaultSamplingFunction<>(this.classificationFunction,
+                ((ReconfigurablePerturbationFunction<T>) this.perturbationFunction)
+                        .createForInstance(explainedInstance));
+    }
+
+    /**
+     * Extends the {@link #createPerturbationBasedCoverageIdentification()} to specify a coverage sample count
+     *
+     * @param coverageSampleCount the amount of samples to take for coverage
+     * @return a {@link CoverageIdentification} function
+     */
+    public PerturbationBasedCoverageIdentification createPerturbationBasedCoverageIdentification(final int coverageSampleCount) {
+        return PerturbationBasedCoverageIdentification.createFromPerturbationFunction(coverageSampleCount,
+                perturbationFunction);
+    }
+
+    @Override
+    public PerturbationBasedCoverageIdentification createPerturbationBasedCoverageIdentification() {
+        return createPerturbationBasedCoverageIdentification(DEFAULT_COVERAGE_SAMPLE_COUNT);
+    }
+
+    @Override
+    public ClassificationFunction<T> getClassificationFunction() {
+        return classificationFunction;
+    }
+
 }
+

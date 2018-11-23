@@ -1,11 +1,10 @@
 package de.viadee.anchorj.execution;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import de.viadee.anchorj.*;
 import de.viadee.anchorj.execution.sampling.DefaultSamplingFunction;
 import de.viadee.anchorj.execution.sampling.SamplingFunction;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -18,13 +17,16 @@ import java.util.Map;
 public abstract class AbstractSamplingService<T extends DataInstance<?>> implements SamplingService {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractSamplingService.class);
 
-    private final SamplingFunction samplingFunction;
+    private SamplingFunction samplingFunction;
 
     /**
      * Used to record the total time spend sampling.
      * As the service takes multiple samples at once, recording this time should not become a performance issue
      */
     private double timeSpentSampling;
+
+    private int samplesTakenCount;
+
 
     /**
      * Creates the sampling service using the {@link DefaultSamplingFunction}
@@ -35,8 +37,8 @@ public abstract class AbstractSamplingService<T extends DataInstance<?>> impleme
      * @param perturbationFunction   Function used to create perturbations of the
      *                               {@link AnchorConstruction#explainedInstance}
      */
-    protected AbstractSamplingService(ClassificationFunction<T> classificationFunction,
-                                      PerturbationFunction<T> perturbationFunction) {
+    protected AbstractSamplingService(final ClassificationFunction<T> classificationFunction,
+                                      final PerturbationFunction<T> perturbationFunction) {
         this(new DefaultSamplingFunction<>(classificationFunction, perturbationFunction));
     }
 
@@ -52,6 +54,11 @@ public abstract class AbstractSamplingService<T extends DataInstance<?>> impleme
     @Override
     public double getTimeSpentSampling() {
         return timeSpentSampling;
+    }
+
+    @Override
+    public int getSamplesTakenCount() {
+        return samplesTakenCount;
     }
 
     /**
@@ -87,9 +94,9 @@ public abstract class AbstractSamplingService<T extends DataInstance<?>> impleme
             execute();
             time = System.currentTimeMillis() - time;
             timeSpentSampling += time;
+            samplesTakenCount += samplingCountMap.values().stream().mapToInt(i -> i).sum();
             LOGGER.debug("Evaluated a total of {} samples for {} candidates in {}ms",
-                    samplingCountMap.values().stream().mapToInt(i -> i).sum(),
-                    samplingCountMap.entrySet().size(), time);
+                    samplesTakenCount, samplingCountMap.entrySet().size(), time);
         }
 
         /**

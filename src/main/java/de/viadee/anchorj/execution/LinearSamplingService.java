@@ -42,6 +42,11 @@ public class LinearSamplingService<T extends DataInstance<?>> extends AbstractSa
         return new LinearSession(explainedInstanceLabel);
     }
 
+    @Override
+    public SamplingService notifySamplingFunctionChange(SamplingFunction samplingFunction) {
+        return new LinearSamplingService<>(samplingFunction);
+    }
+
     private class LinearSession extends AbstractSamplingSession {
         /**
          * Creates an instance.

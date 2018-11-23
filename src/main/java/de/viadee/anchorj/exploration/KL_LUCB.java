@@ -1,15 +1,15 @@
 package de.viadee.anchorj.exploration;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-
 import de.viadee.anchorj.AnchorCandidate;
 import de.viadee.anchorj.execution.SamplingService;
 import de.viadee.anchorj.util.KLBernoulliUtils;
 import de.viadee.anchorj.util.MathUtils;
 import de.viadee.anchorj.util.ParameterValidation;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * Implementation of the KL LUCB algorithm by Kaufmann and Kalyanakrishnan in their publication
@@ -18,7 +18,24 @@ import de.viadee.anchorj.util.ParameterValidation;
  * See <a href="http://proceedings.mlr.press/v30/Kaufmann13.pdf">http://proceedings.mlr.press/v30/Kaufmann13.pdf</a>
  */
 public class KL_LUCB implements BestAnchorIdentification {
+    /*
+     * Default values not used for constructing the instance but for instantiating other default classes
+     */
+    private static final int DEFAULT_KL_LUCB_BATCH_SIZE = 100;
+
     private final int batchSize;
+
+    /**
+     * Sets the algorithm's parameters using a default batch size
+     * <p>
+     * If A* is the arm with the highest true precision, the following holds for the true precision of the chosen rule A
+     * <p>
+     * {@code P(prec(A) >= prec(A*) - epsilon) >= 1 - delta}
+     */
+    public KL_LUCB() {
+        this(DEFAULT_KL_LUCB_BATCH_SIZE);
+    }
+
 
     /**
      * Sets the algorithm's parameters

@@ -1,17 +1,16 @@
 package de.viadee.anchorj.global;
 
+import de.viadee.anchorj.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import de.viadee.anchorj.*;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Default batch explainer using threads to obtain multiple results
@@ -65,26 +64,22 @@ public class ThreadedBatchExplainer<T extends DataInstance<?>> implements BatchE
     public AnchorResult<T>[] obtainAnchors(AnchorConstructionBuilder<T> anchorConstructionBuilder, List<T> instances) {
         final List<List<T>> splitLists = SubmodularPickUtils.splitList(instances, instances.size() / maxThreads);
         final Collection<AnchorResult<T>> threadResults = Collections.synchronizedCollection(new ArrayList<>());
+        List<Callable<Object>> callables = new ArrayList<>();
         for (final List<T> list : splitLists) {
-            executorService.submit(() -> {
+            callables.add(() -> {
                 for (final T instance : list) {
-                    final ClassificationFunction<T> classifier = anchorConstructionBuilder.getClassificationFunction();
-                    final int label = classifier.predict(instance);
                     // This section needs to be synchronized as to prevent racing conditions
-                    AnchorConstruction<T> anchorConstruction;
-                    synchronized (this) {
-                        anchorConstruction = anchorConstructionBuilder.setupForSP(instance, label).build();
-                    }
+                    AnchorConstruction<T> anchorConstruction = AnchorConstructionBuilder
+                            .buildForSP(anchorConstructionBuilder, instance);
                     final AnchorResult<T> result = obtainAnchor(anchorConstruction);
                     if (result != null)
                         threadResults.add(result);
                 }
+                return null;
             });
         }
-        // TODO use invokeAll so can be reused
-        executorService.shutdown();
         try {
-            executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+            executorService.invokeAll(callables);
         } catch (InterruptedException e) {
             LOGGER.error("Thread interrupted", e);
             Thread.currentThread().interrupt();

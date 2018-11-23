@@ -6,9 +6,10 @@ import de.viadee.anchorj.execution.BalancedParallelSamplingService;
 import de.viadee.anchorj.execution.LinearSamplingService;
 import de.viadee.anchorj.execution.ParallelSamplingService;
 import de.viadee.anchorj.execution.SamplingService;
+import de.viadee.anchorj.execution.sampling.DefaultSamplingFunction;
+import de.viadee.anchorj.execution.sampling.SamplingFunction;
 import de.viadee.anchorj.exploration.BestAnchorIdentification;
 import de.viadee.anchorj.exploration.KL_LUCB;
-import de.viadee.anchorj.global.ReconfigurablePerturbationFunction;
 import de.viadee.anchorj.global.SubmodularPick;
 
 import java.io.Serializable;
@@ -21,18 +22,12 @@ import java.io.Serializable;
 public class AnchorConstructionBuilder<T extends DataInstance<?>> implements Serializable {
     private static final int DEFAULT_COVERAGE_SAMPLE_COUNT = 1000;
 
-    /*
-     * Default values not used for constructing the instance but for instantiating other default classes
-     */
-    private static final int DEFAULT_KL_LUCB_BATCH_SIZE = 100;
-
-    private ClassificationFunction<T> classificationFunction;
-    private PerturbationFunction<T> perturbationFunction;
+    private SamplingFunction<T> samplingFunction;
+    private T explainedInstance;
+    private int explainedInstanceLabel;
     private BestAnchorIdentification bestAnchorIdentification;
     private CoverageIdentification coverageIdentification;
     private SamplingService samplingService;
-    private T explainedInstance;
-    private int explainedInstanceLabel;
 
     /*
      *  Default values
@@ -47,22 +42,43 @@ public class AnchorConstructionBuilder<T extends DataInstance<?>> implements Ser
     private boolean lazyCoverageEvaluation = false;
     private boolean allowSuboptimalSteps = true;
 
-    private AnchorConstructionBuilder() {
+    private AnchorConstructionBuilder(SamplingFunction<T> samplingFunction, T explainedInstance,
+                                      int explainedInstanceLabel, BestAnchorIdentification bestAnchorIdentification,
+                                      CoverageIdentification coverageIdentification, SamplingService samplingService,
+                                      double delta, double epsilon, Integer maxAnchorSize, int beamSize, double tau,
+                                      double tauDiscrepancy, int initSampleCount, boolean lazyCoverageEvaluation,
+                                      boolean allowSuboptimalSteps) {
+        this.samplingFunction = samplingFunction;
+        this.explainedInstance = explainedInstance;
+        this.explainedInstanceLabel = explainedInstanceLabel;
+        this.bestAnchorIdentification = bestAnchorIdentification;
+        this.coverageIdentification = coverageIdentification;
+        this.samplingService = samplingService;
+        this.delta = delta;
+        this.epsilon = epsilon;
+        this.maxAnchorSize = maxAnchorSize;
+        this.beamSize = beamSize;
+        this.tau = tau;
+        this.tauDiscrepancy = tauDiscrepancy;
+        this.initSampleCount = initSampleCount;
+        this.lazyCoverageEvaluation = lazyCoverageEvaluation;
+        this.allowSuboptimalSteps = allowSuboptimalSteps;
     }
 
     /**
      * Instantiates a new Anchor construction builder.
      * <p>
-     * Shall only be used when using {@link SubmodularPick}, as instance and labels get setBestAnchorIdentification by it.
-     * <p>
-     * If used for {@link AnchorConstruction} and no instance and label gets setBestAnchorIdentification, an exception will be thrown.
+     * Uses the classification function to predict a label to explain, if the instance is != null
      *
      * @param classificationFunction the classification function
      * @param perturbationFunction   the perturbation function
+     * @param explainedInstance      the instance to explain
      */
     public AnchorConstructionBuilder(final ClassificationFunction<T> classificationFunction,
-                                     final PerturbationFunction<T> perturbationFunction) {
-        this(classificationFunction, perturbationFunction, null, -1);
+                                     final PerturbationFunction<T> perturbationFunction,
+                                     final T explainedInstance) {
+        this(classificationFunction, perturbationFunction, explainedInstance,
+                (explainedInstance != null) ? classificationFunction.predict(explainedInstance) : -1);
     }
 
     /**
@@ -76,21 +92,57 @@ public class AnchorConstructionBuilder<T extends DataInstance<?>> implements Ser
     public AnchorConstructionBuilder(final ClassificationFunction<T> classificationFunction,
                                      final PerturbationFunction<T> perturbationFunction,
                                      final T explainedInstance, final int explainedInstanceLabel) {
-        this.classificationFunction = classificationFunction;
-        this.perturbationFunction = perturbationFunction;
+        this(new DefaultSamplingFunction<>(classificationFunction, perturbationFunction),
+                explainedInstance, explainedInstanceLabel);
+    }
+
+    /**
+     * Instantiates a new Anchor construction builder.
+     *
+     * @param samplingFunction       the samplingFunction to use
+     * @param explainedInstance      the explained instance
+     * @param explainedInstanceLabel the explained instance label
+     */
+    public AnchorConstructionBuilder(final SamplingFunction<T> samplingFunction,
+                                     final T explainedInstance, final int explainedInstanceLabel) {
+        this.samplingFunction = samplingFunction;
         this.explainedInstance = explainedInstance;
         this.explainedInstanceLabel = explainedInstanceLabel;
     }
 
     /**
-     * Sets the perturbation function.
+     * This method sets up the builder for usage within the {@link SubmodularPick} algorithm.
+     * <p>
+     * As the SP-algorithm requires setting another instance and label for each run, this method takes all required
+     * adjustments to the builder to provide a suitable {@link AnchorConstruction}.
+     * <p>
+     * Creates a temporary new builder as to not change any fields already set.
+     * Thus, the builder param does not get changed
      *
-     * @param perturbationFunction the perturbation function
-     * @return the current {@link AnchorConstructionBuilder} for chaining
+     * @param builder           the construction builder used
+     * @param explainedInstance the instance being explained by the current SP's iteration
+     * @param <T>               the type of the explained instance
+     * @return the builder ready to be built for usage within the SP algorithm
      */
-    public AnchorConstructionBuilder<T> setPerturbationFunction(final PerturbationFunction<T> perturbationFunction) {
-        this.perturbationFunction = perturbationFunction;
-        return this;
+    public static <T extends DataInstance<?>> AnchorConstruction<T> buildForSP(AnchorConstructionBuilder<T> builder,
+                                                                               final T explainedInstance) {
+        final AnchorConstructionBuilder<T> newBuilder = new AnchorConstructionBuilder<>(builder.samplingFunction,
+                builder.explainedInstance, builder.explainedInstanceLabel, builder.bestAnchorIdentification,
+                builder.coverageIdentification, builder.samplingService, builder.delta, builder.epsilon,
+                builder.maxAnchorSize, builder.beamSize, builder.tau, builder.tauDiscrepancy, builder.initSampleCount,
+                builder.lazyCoverageEvaluation, builder.allowSuboptimalSteps);
+
+        newBuilder.explainedInstance = explainedInstance;
+        newBuilder.samplingFunction = newBuilder.samplingFunction.notifyOriginChange(explainedInstance);
+
+        newBuilder.prepareForBuild();
+
+        newBuilder.explainedInstanceLabel = newBuilder.samplingFunction.getClassificationFunction().predict(explainedInstance);
+        if (newBuilder.coverageIdentification instanceof PerturbationBasedCoverageIdentification)
+            newBuilder.coverageIdentification = newBuilder.samplingFunction.createPerturbationBasedCoverageIdentification();
+        newBuilder.samplingService = newBuilder.samplingService.notifySamplingFunctionChange(newBuilder.samplingFunction);
+
+        return newBuilder.build();
     }
 
     /**
@@ -210,10 +262,10 @@ public class AnchorConstructionBuilder<T extends DataInstance<?>> implements Ser
      */
     public AnchorConstructionBuilder<T> enableThreading(final int threadCount, final boolean doBalanceSampling) {
         if (threadCount <= 1)
-            this.samplingService = new LinearSamplingService<>(classificationFunction, perturbationFunction);
+            this.samplingService = new LinearSamplingService<>(samplingFunction);
         if (!doBalanceSampling)
-            this.samplingService = new ParallelSamplingService<>(classificationFunction, perturbationFunction, threadCount);
-        this.samplingService = new BalancedParallelSamplingService<>(classificationFunction, perturbationFunction, threadCount);
+            this.samplingService = new ParallelSamplingService<>(samplingFunction, threadCount);
+        this.samplingService = new BalancedParallelSamplingService<>(samplingFunction, threadCount);
 
         return this;
     }
@@ -285,37 +337,13 @@ public class AnchorConstructionBuilder<T extends DataInstance<?>> implements Ser
         return this;
     }
 
-    /**
-     * This method sets up the builder for usage within the {@link SubmodularPick} algorithm.
-     * <p>
-     * As the SP-algorithm requires setting another instance and label for each run, this method takes all required
-     * adjustments to the builder to provide a suitable {@link AnchorConstruction}.
-     *
-     * @param explainedInstance      the instance being explained by the current SP's iteration
-     * @param explainedInstanceLabel the instanceLabel belonging to the explainedInstance
-     * @return the builder ready to be built for usage within the SP algorithm
-     */
-    public AnchorConstructionBuilder<T> setupForSP(final T explainedInstance, final int explainedInstanceLabel) {
-        if (!(this.perturbationFunction instanceof ReconfigurablePerturbationFunction)) {
-            throw new IllegalArgumentException("For using the SP-algorithm, the perturbation function needs to " +
-                    "be reconfigurable for foreign instances. Please implement the ReconfigurablePerturbationFunction");
-        }
-
-        // FIXME perturbation function needs to be set in sampling function
-        this.explainedInstance = explainedInstance;
-        this.explainedInstanceLabel = explainedInstanceLabel;
-        this.perturbationFunction = ((ReconfigurablePerturbationFunction<T>) this.perturbationFunction)
-                .createForInstance(explainedInstance);
-        return this;
-    }
-
-    private CoverageIdentification createDefaultCoverageIdentification() {
-        return PerturbationBasedCoverageIdentification.createFromPerturbationFunction(
-                DEFAULT_COVERAGE_SAMPLE_COUNT, perturbationFunction);
-    }
-
-    private BestAnchorIdentification createDefaultBestAnchorIdentification() {
-        return new KL_LUCB(DEFAULT_KL_LUCB_BATCH_SIZE);
+    private void prepareForBuild() {
+        if (this.bestAnchorIdentification == null)
+            this.bestAnchorIdentification = new KL_LUCB();
+        if (this.coverageIdentification == null)
+            this.coverageIdentification = samplingFunction.createPerturbationBasedCoverageIdentification();
+        if (this.samplingService == null)
+            this.samplingService = new LinearSamplingService<>(samplingFunction);
     }
 
     /**
@@ -324,32 +352,12 @@ public class AnchorConstructionBuilder<T extends DataInstance<?>> implements Ser
      * @return the anchor construction
      */
     public AnchorConstruction<T> build() {
-        return new AnchorConstruction<>(
-                (bestAnchorIdentification == null) ? createDefaultBestAnchorIdentification() : bestAnchorIdentification,
-                (coverageIdentification == null) ? createDefaultCoverageIdentification() : coverageIdentification,
-                (samplingService == null) ? new LinearSamplingService<>(classificationFunction, perturbationFunction) : samplingService,
+        this.prepareForBuild();
+        return new AnchorConstruction<>(bestAnchorIdentification, coverageIdentification, samplingService,
                 explainedInstance, explainedInstanceLabel,
                 (maxAnchorSize == null) ? explainedInstance.getFeatureCount() : maxAnchorSize,
                 beamSize, delta, epsilon, tau, tauDiscrepancy, initSampleCount,
                 lazyCoverageEvaluation, allowSuboptimalSteps);
-    }
-
-    /**
-     * @return the {@link ClassificationFunction} to be obtained by the {@link SubmodularPick} algorithm
-     */
-    public ClassificationFunction<T> getClassificationFunction() {
-        return classificationFunction;
-    }
-
-    /**
-     * Sets the classification function.
-     *
-     * @param classificationFunction the classification function
-     * @return the current {@link AnchorConstructionBuilder} for chaining
-     */
-    public AnchorConstructionBuilder<T> setClassificationFunction(final ClassificationFunction<T> classificationFunction) {
-        this.classificationFunction = classificationFunction;
-        return this;
     }
 
 }

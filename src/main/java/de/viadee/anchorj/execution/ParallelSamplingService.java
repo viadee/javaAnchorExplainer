@@ -1,12 +1,11 @@
 package de.viadee.anchorj.execution;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import de.viadee.anchorj.ClassificationFunction;
 import de.viadee.anchorj.DataInstance;
 import de.viadee.anchorj.PerturbationFunction;
 import de.viadee.anchorj.execution.sampling.SamplingFunction;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.concurrent.Callable;
@@ -22,7 +21,8 @@ import java.util.stream.Collectors;
 public class ParallelSamplingService<T extends DataInstance<?>> extends AbstractSamplingService<T> {
     private static final Logger LOGGER = LoggerFactory.getLogger(ParallelSamplingService.class);
     final int threadCount;
-    private final ExecutorService executor;
+    // ExecutorService cannot
+    private transient ExecutorService executor;
 
     /**
      * Creates the sampling service.
@@ -36,7 +36,6 @@ public class ParallelSamplingService<T extends DataInstance<?>> extends Abstract
     public ParallelSamplingService(ClassificationFunction<T> classificationFunction,
                                    PerturbationFunction<T> perturbationFunction, int threadCount) {
         super(classificationFunction, perturbationFunction);
-        this.executor = Executors.newFixedThreadPool(Math.max(threadCount, 1));
         this.threadCount = threadCount;
     }
 
@@ -48,13 +47,17 @@ public class ParallelSamplingService<T extends DataInstance<?>> extends Abstract
      */
     public ParallelSamplingService(SamplingFunction samplingFunction, int threadCount) {
         super(samplingFunction);
-        this.executor = Executors.newFixedThreadPool(Math.max(threadCount, 1));
         this.threadCount = threadCount;
     }
 
     @Override
     public SamplingSession createSession(int explainedInstanceLabel) {
         return new ParallelSession(explainedInstanceLabel);
+    }
+
+    @Override
+    public SamplingService notifySamplingFunctionChange(SamplingFunction samplingFunction) {
+        return new ParallelSamplingService<>(samplingFunction, threadCount);
     }
 
     protected class ParallelSession extends AbstractSamplingSession {
@@ -66,6 +69,9 @@ public class ParallelSamplingService<T extends DataInstance<?>> extends Abstract
          */
         ParallelSession(int explainedInstanceLabel) {
             super(explainedInstanceLabel);
+            // Avoid serialization issues, as ExecutorService is not serializable
+            if (ParallelSamplingService.this.executor == null)
+                ParallelSamplingService.this.executor = Executors.newFixedThreadPool(Math.max(threadCount, 1));
         }
 
         protected Collection<Callable<Object>> createCallables() {

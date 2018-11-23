@@ -1,5 +1,6 @@
 package de.viadee.anchorj.exploration;
 
+import de.viadee.anchorj.execution.sampling.SamplingFunction;
 import org.junit.jupiter.api.Test;
 
 import de.viadee.anchorj.AnchorCandidate;
@@ -38,6 +39,11 @@ public class KL_LUCBTest {
             }
 
             @Override
+            public int getSamplesTakenCount() {
+                return 0;
+            }
+
+            @Override
             public SamplingSession createSession(int explainedInstanceLabel) {
                 return new SamplingSession() {
                     @Override
@@ -51,6 +57,11 @@ public class KL_LUCBTest {
 
                     }
                 };
+            }
+
+            @Override
+            public SamplingService notifySamplingFunctionChange(SamplingFunction samplingFunction) {
+                return null;
             }
         };
 
