@@ -1,9 +1,8 @@
 package de.viadee.anchorj.global;
 
-import de.viadee.anchorj.AnchorConstruction;
-import de.viadee.anchorj.AnchorConstructionBuilder;
-import de.viadee.anchorj.AnchorResult;
-import de.viadee.anchorj.DataInstance;
+import de.viadee.anchorj.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -18,9 +17,10 @@ import java.util.ListIterator;
  * @param <T> Type of the explained instance
  */
 public class CoveragePick<T extends DataInstance<?>> extends AbstractGlobalExplainer<T> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(CoveragePick.class);
 
     /**
-     * Creates an instance of the {@link SubmodularPick}.
+     * Creates the instance.
      *
      * @param constructionBuilder the builder used to create instances of the {@link AnchorConstruction}
      *                            when running the algorithm.
@@ -33,7 +33,7 @@ public class CoveragePick<T extends DataInstance<?>> extends AbstractGlobalExpla
     }
 
     /**
-     * Creates an instance of the {@link SubmodularPick}.
+     * Creates the instance.
      *
      * @param batchExplainer      the {@link BatchExplainer} to be used to obtain multiple explanations
      * @param constructionBuilder the builder used to create instances of the {@link AnchorConstruction}
@@ -78,6 +78,10 @@ public class CoveragePick<T extends DataInstance<?>> extends AbstractGlobalExpla
             }
         }
 
+        final Double resultCoverage = result.stream().map(AnchorCandidate::getCoverage).reduce((x, y) -> x + y)
+                .orElse(0D);
+        LOGGER.info("The returned {} results exclusively cover a total of {}% of the mode's input",
+                result.size(), resultCoverage);
         return result;
     }
 }
