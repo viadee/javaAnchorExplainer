@@ -56,9 +56,12 @@ the coverage calculation function may be customized. Additionally, the algorithm
 While Anchors is model-agnostic, it requires some client provided functions, e.g. perturbation functions. These can usually be defined once per domain. 
 Thus, a second project, called [*javaAnchorAdapters*](https://github.com/viadee/javaAnchorAdapters), aims to include methodological, i.e. default approaches to common Anchors applications.
 
-## Built With
+# Collaboration
 
-* [Maven](https://maven.apache.org/) - Dependency Management
+The project is operated and further developed by the viadee Consulting AG in Münster, Westphalia. Results from theses at the WWU Münster and the FH Münster have been incorporated.
+* Further theses are planned: Contact person is Dr. Frank Köhne from viadee.
+    Community contributions to the project are welcome: Please open Github-Issues with suggestions (or PR), which we can then edit in the team.
+*   We are looking for further partners who have interesting process data to refine our tooling as well as partners that are simply interested in a discussion about AI in the context of business process automation and explainability.
 
 ## Authors
 
