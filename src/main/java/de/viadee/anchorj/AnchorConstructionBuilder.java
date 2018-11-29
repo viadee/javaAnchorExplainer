@@ -263,9 +263,10 @@ public class AnchorConstructionBuilder<T extends DataInstance<?>> implements Ser
     public AnchorConstructionBuilder<T> enableThreading(final int threadCount, final boolean doBalanceSampling) {
         if (threadCount <= 1)
             this.samplingService = new LinearSamplingService<>(samplingFunction);
-        if (!doBalanceSampling)
+        else if (!doBalanceSampling)
             this.samplingService = new ParallelSamplingService<>(samplingFunction, threadCount);
-        this.samplingService = new BalancedParallelSamplingService<>(samplingFunction, threadCount);
+        else
+            this.samplingService = new BalancedParallelSamplingService<>(samplingFunction, threadCount);
 
         return this;
     }
