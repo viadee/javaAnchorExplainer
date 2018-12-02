@@ -70,9 +70,12 @@ public class CoveragePick<T extends DataInstance<?>> extends AbstractGlobalExpla
             iter = survivors.listIterator();
             while (iter.hasNext()) {
                 final AnchorResult<T> current = iter.next();
-                if (current.getCanonicalFeatures().stream()
+                final boolean hasSameLabel = bestExplanation.getLabel() == current.getLabel();
+                final boolean hasSameFeatureValue = current.getCanonicalFeatures().stream()
                         .anyMatch(feature -> bestExplanation.getCanonicalFeatures().contains(feature) &&
-                                current.getInstance().getValue(feature).equals(bestExplanation.getInstance().getValue(feature)))) {
+                                current.getInstance().getValue(feature).equals(
+                                        bestExplanation.getInstance().getValue(feature)));
+                if (hasSameLabel && hasSameFeatureValue) {
                     iter.remove();
                 }
             }
