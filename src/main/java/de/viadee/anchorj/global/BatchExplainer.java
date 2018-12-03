@@ -1,5 +1,6 @@
 package de.viadee.anchorj.global;
 
+import java.io.Serializable;
 import java.util.List;
 
 import de.viadee.anchorj.AnchorConstruction;
@@ -16,7 +17,7 @@ import de.viadee.anchorj.DataInstance;
  *
  * @param <T> Type of the explained instance
  */
-public interface BatchExplainer<T extends DataInstance<?>> {
+public interface BatchExplainer<T extends DataInstance<?>> extends Serializable {
 
     /**
      * Obtains explanations for the given instances.
