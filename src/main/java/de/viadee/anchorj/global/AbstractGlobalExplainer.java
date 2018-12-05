@@ -7,6 +7,7 @@ import de.viadee.anchorj.DataInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -46,6 +47,19 @@ abstract class AbstractGlobalExplainer<T extends DataInstance<?>> {
     public AbstractGlobalExplainer(BatchExplainer<T> batchExplainer, AnchorConstructionBuilder<T> constructionBuilder) {
         this.batchExplainer = batchExplainer;
         this.constructionBuilder = constructionBuilder;
+    }
+
+    /**
+     * Executes the global explainer.
+     * <p>
+     * Produces multiple results that are most important for the global explanation of a model.
+     *
+     * @param instances               the instances to obtain explanations for.
+     * @param nrOfExplanationsDesired the max result number to generate
+     * @return a {@link List} of {@link AnchorResult}s
+     */
+    public List<AnchorResult<T>> run(final T[] instances, final int nrOfExplanationsDesired) {
+        return run(Arrays.asList(instances), nrOfExplanationsDesired);
     }
 
     /**
