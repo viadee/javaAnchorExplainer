@@ -87,6 +87,29 @@ public final class ArrayUtils {
         return result;
     }
 
+    /**
+     * Removes a specific column index from an integer table
+     *
+     * @param values the integer table
+     * @param column the column index to be removed
+     * @return the table without the removed column
+     */
+    public static Integer[][] removeIntegerColumn(Integer[][] values, int column) {
+        Integer[][] result = new Integer[values.length][];
+        for (int i = 0; i < result.length; i++) {
+            Integer[] subResult = new Integer[values[i].length - 1];
+            int currentIndex = 0;
+            for (int j = 0; j < values[i].length; j++) {
+                if (j != column) {
+                    subResult[currentIndex] = values[i][j];
+                    currentIndex++;
+                }
+            }
+            result[i] = subResult;
+        }
+        return result;
+    }
+
 
     /**
      * Tries to convert an object table containing integer values only to an integer table
