@@ -18,7 +18,7 @@ import java.util.List;
  *
  * @param <T> Type of the instance
  */
-abstract class AbstractGlobalExplainer<T extends DataInstance<?>> {
+abstract class AbstractGlobalExplainer<T extends DataInstance<?>> implements GlobalExplainer<T> {
     private static final Logger LOGGER = LoggerFactory.getLogger(SubmodularPick.class);
 
     protected final BatchExplainer<T> batchExplainer;
@@ -49,28 +49,9 @@ abstract class AbstractGlobalExplainer<T extends DataInstance<?>> {
         this.constructionBuilder = constructionBuilder;
     }
 
-    /**
-     * Executes the global explainer.
-     * <p>
-     * Produces multiple results that are most important for the global explanation of a model.
-     *
-     * @param instances               the instances to obtain explanations for.
-     * @param nrOfExplanationsDesired the max result number to generate
-     * @return a {@link List} of {@link AnchorResult}s
-     */
-    public List<AnchorResult<T>> run(final T[] instances, final int nrOfExplanationsDesired) {
-        return run(Arrays.asList(instances), nrOfExplanationsDesired);
-    }
 
-    /**
-     * Executes the global explainer.
-     * <p>
-     * Produces multiple results that are most important for the global explanation of a model.
-     *
-     * @param instances               the instances to obtain explanations for.
-     * @param nrOfExplanationsDesired the max result number to generate
-     * @return a {@link List} of {@link AnchorResult}s
-     */
+
+    @Override
     public List<AnchorResult<T>> run(final List<T> instances, final int nrOfExplanationsDesired) {
         if (instances == null || instances.isEmpty())
             return Collections.emptyList();
