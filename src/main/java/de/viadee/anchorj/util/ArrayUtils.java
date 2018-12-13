@@ -49,6 +49,22 @@ public final class ArrayUtils {
         return result;
     }
 
+
+    /**
+     * Reads all values from a specific table column
+     *
+     * @param values the table
+     * @param column index of the column to be read
+     * @return the column extracted
+     */
+    public static Object[] extractObjectColumn(Object[][] values, int column) {
+        Object[] result = new Object[values.length];
+        for (int i = 0; i < values.length; i++) {
+            result[i] = values[i][column];
+        }
+        return result;
+    }
+
     /**
      * Reads all values from a specific table column
      *
