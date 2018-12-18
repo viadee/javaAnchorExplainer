@@ -7,7 +7,6 @@ import de.viadee.anchorj.DataInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -18,10 +17,12 @@ import java.util.List;
  *
  * @param <T> Type of the instance
  */
-abstract class AbstractGlobalExplainer<T extends DataInstance<?>> implements GlobalExplainer<T> {
+@SuppressWarnings("WeakerAccess")
+public abstract class AbstractGlobalExplainer<T extends DataInstance<?>> implements GlobalExplainer<T> {
     private static final Logger LOGGER = LoggerFactory.getLogger(SubmodularPick.class);
 
     protected final BatchExplainer<T> batchExplainer;
+
     protected final AnchorConstructionBuilder<T> constructionBuilder;
 
     /**
