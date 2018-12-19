@@ -6,6 +6,8 @@ package de.viadee.anchorj;
  * @param <T> the type of the data instance
  */
 public class AnchorResult<T extends DataInstance<?>> extends AnchorCandidate {
+    private static final long serialVersionUID = -1378097055362567551L;
+
     private final T instance;
     private final int label;
     private final boolean isAnchor;
@@ -22,8 +24,8 @@ public class AnchorResult<T extends DataInstance<?>> extends AnchorCandidate {
      * @param timeSpent         the total time spent constructing the result
      * @param timeSpentSampling the total time spent sampling and evaluating candidates
      */
-    AnchorResult(AnchorCandidate candidate, T instance, int label, boolean isAnchor, double timeSpent,
-                 double timeSpentSampling) {
+    public AnchorResult(AnchorCandidate candidate, T instance, int label, boolean isAnchor, double timeSpent,
+                        double timeSpentSampling) {
         super(candidate.getOrderedFeatures(), candidate.getParentCandidate());
         super.setCoverage(candidate.getCoverage());
         this.registerSamples(candidate.getSampledSize(), candidate.getPositiveSamples());
