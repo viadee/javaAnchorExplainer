@@ -94,9 +94,10 @@ public abstract class AbstractSamplingService<T extends DataInstance<?>> impleme
             execute();
             time = System.currentTimeMillis() - time;
             timeSpentSampling += time;
+            final int previouslyTakenCount = samplesTakenCount;
             samplesTakenCount += samplingCountMap.values().stream().mapToInt(i -> i).sum();
             LOGGER.debug("Evaluated a total of {} samples for {} candidates in {}ms",
-                    samplesTakenCount, samplingCountMap.entrySet().size(), time);
+                    samplesTakenCount - previouslyTakenCount, samplingCountMap.entrySet().size(), time);
         }
 
         /**
