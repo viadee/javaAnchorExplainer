@@ -1,20 +1,18 @@
 package de.viadee.anchorj;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import de.viadee.anchorj.coverage.CoverageIdentification;
 import de.viadee.anchorj.execution.SamplingService;
 import de.viadee.anchorj.execution.SamplingSession;
 import de.viadee.anchorj.exploration.BestAnchorIdentification;
 import de.viadee.anchorj.util.KLBernoulliUtils;
 import de.viadee.anchorj.util.ParameterValidation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 /**
  * Base class for constructing Anchors.
@@ -123,6 +121,18 @@ public class AnchorConstruction<T extends DataInstance<?>> implements Serializab
         this.samplingService = samplingService;
     }
 
+    private static String createKeyValueMap(Object... objects) {
+        String[] results = new String[objects.length / 2];
+        List<Object> list = Arrays.asList(objects);
+        final Iterator<Object> iterator = list.iterator();
+        int i = 0;
+        while (iterator.hasNext()) {
+            final Object key = iterator.next();
+            final Object value = iterator.next();
+            results[i++] = key + "=" + value;
+        }
+        return String.join(", ", results);
+    }
 
     /**
      * Generates a set of news anchors based on a previous best ones.
@@ -149,6 +159,7 @@ public class AnchorConstruction<T extends DataInstance<?>> implements Serializab
                                                        final double minCoverage) {
         final List<AnchorCandidate> result = new ArrayList<>();
         final Set<AnchorCandidate> intermediateResult = new HashSet<>();
+        final Set<Set<Integer>> createdFeatureSet = new HashSet<>();
         // Loop over every available features
         for (final Integer additionalFeature : IntStream.range(0, featureCount).boxed().collect(Collectors.toList())) {
             // if we don't have any anchor to extend then we are in the first round
@@ -165,8 +176,15 @@ public class AnchorConstruction<T extends DataInstance<?>> implements Serializab
                 // If new element is already contained in the candidate go to the next one
                 if (candidate.getCanonicalFeatures().contains(additionalFeature))
                     continue;
-                final LinkedHashSet<Integer> extendedCandidate = new LinkedHashSet<>(candidate.getOrderedFeatures());
+
+                final Set<Integer> extendedCandidate = new LinkedHashSet<>(candidate.getOrderedFeatures());
                 extendedCandidate.add(additionalFeature);
+
+                HashSet<Integer> unorderedSet = new HashSet<>(extendedCandidate);
+                if (createdFeatureSet.contains(unorderedSet))
+                    continue;
+                createdFeatureSet.add(unorderedSet);
+
                 intermediateResult.add(new AnchorCandidate(extendedCandidate, candidate));
             }
         }
@@ -189,7 +207,6 @@ public class AnchorConstruction<T extends DataInstance<?>> implements Serializab
         }
         return result;
     }
-
 
     /**
      * Finding best candidates may be formulated as an optimization problem
@@ -420,23 +437,10 @@ public class AnchorConstruction<T extends DataInstance<?>> implements Serializab
                         "epsilon", epsilon,
                         "tau", tau,
                         "tauDiscrepancy", tauDiscrepancy,
-                        "initSampleCount",initSampleCount ,
+                        "initSampleCount", initSampleCount,
                         "lazyCoverageEvaluation", lazyCoverageEvaluation,
                         "allowSuboptimalSteps", allowSuboptimalSteps));
         return beamSearch();
-    }
-
-    private static String createKeyValueMap(Object... objects) {
-        String[] results = new String[objects.length / 2];
-        List<Object> list = Arrays.asList(objects);
-        final Iterator<Object> iterator = list.iterator();
-        int i = 0;
-        while (iterator.hasNext()) {
-            final Object key = iterator.next();
-            final Object value = iterator.next();
-            results[i++] = key + "=" + value;
-        }
-        return String.join(", ", results);
     }
 
 

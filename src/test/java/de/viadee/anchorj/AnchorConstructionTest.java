@@ -39,7 +39,7 @@ class AnchorConstructionTest {
         assertEquals(generateCandidateSet(Collections.singletonList(candidate(1,2,3)), 10, 0).size(), 7);
 
 
-        assertEquals(generateCandidateSet(Arrays.asList(candidate(1,2,3), candidate(1,2,3)), 10, 0).size(), 14);
+        assertEquals(generateCandidateSet(Arrays.asList(candidate(1,2,3), candidate(1,2,3)), 10, 0).size(), 7);
         assertEquals(generateCandidateSet(Arrays.asList(candidate(1,2,3), candidate(1,2,3,4)), 10, 0).size(), 13);
     }
 
