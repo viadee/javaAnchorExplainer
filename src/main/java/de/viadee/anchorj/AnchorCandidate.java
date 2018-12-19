@@ -1,7 +1,12 @@
 package de.viadee.anchorj;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import de.viadee.anchorj.util.ParameterValidation;
 
@@ -12,7 +17,10 @@ import de.viadee.anchorj.util.ParameterValidation;
  * <p>
  * This class is not completely immutable but thread-safe!
  */
+@SuppressWarnings({ "unused", "WeakerAccess" })
 public class AnchorCandidate implements Serializable {
+    private static final long serialVersionUID = 3193512500527138686L;
+
     /*
      * Immutable fields
      */
@@ -61,9 +69,9 @@ public class AnchorCandidate implements Serializable {
     }
 
     private static AnchorCandidate fakeParent(final Collection<Integer> features) {
-        if (features.size() == 1)
+        if (features.size() == 1) {
             return null;
-        else {
+        } else {
             final Collection<Integer> parentFeatures = new ArrayList<>(features).subList(0, features.size() - 1);
             return new AnchorCandidate(parentFeatures, fakeParent(parentFeatures));
         }
@@ -175,6 +183,10 @@ public class AnchorCandidate implements Serializable {
         return positiveSamples;
     }
 
+    public boolean hasParentCandidate() {
+        return this.parentCandidate != null;
+    }
+
     /**
      * May be used to get the parent this rule has been derived from.
      * <p>
@@ -192,7 +204,7 @@ public class AnchorCandidate implements Serializable {
      * @return the increased precision value this candidate provides over his parent.
      */
     public double getAddedPrecision() {
-        final double parentPrecision = (parentCandidate == null) ? 0 : parentCandidate.getPrecision();
+        final double parentPrecision = hasParentCandidate() ? parentCandidate.getPrecision() : 0;
         return precision - parentPrecision;
     }
 
@@ -204,7 +216,7 @@ public class AnchorCandidate implements Serializable {
      * @return the reduced coverage in comparison to this candidate's parent
      */
     public double getAddedCoverage() {
-        final double parentCoverage = (parentCandidate == null) ? 1 : parentCandidate.getCoverage();
+        final double parentCoverage = hasParentCandidate() ? parentCandidate.getCoverage() : 1;
         return coverage - parentCoverage;
     }
 
@@ -218,7 +230,7 @@ public class AnchorCandidate implements Serializable {
      * @return the reduced coverage in comparison to this candidate's parent
      */
     public double getAddedCoverageInPercent() {
-        final double parentCoverage = (parentCandidate == null) ? 1 : parentCandidate.getCoverage();
+        final double parentCoverage = hasParentCandidate() ? parentCandidate.getCoverage() : 1;
         return (coverage - parentCoverage) / parentCoverage;
     }
 
