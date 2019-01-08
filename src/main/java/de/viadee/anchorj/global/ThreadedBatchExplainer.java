@@ -64,6 +64,7 @@ public class ThreadedBatchExplainer<T extends DataInstance<?>> implements BatchE
 
     @Override
     public AnchorResult<T>[] obtainAnchors(AnchorConstructionBuilder<T> anchorConstructionBuilder, List<T> instances) {
+        // TODO may re add changes of branche fix-parallelization
         final List<List<T>> splitLists = SubmodularPickUtils.splitList(instances, instances.size() / maxThreads);
         final Collection<AnchorResult<T>> threadResults = Collections.synchronizedCollection(new ArrayList<>());
         List<Callable<Object>> callables = new ArrayList<>();
