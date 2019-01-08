@@ -22,6 +22,7 @@ import de.viadee.anchorj.execution.SamplingService;
  * If the fixed budget setting is to be used, {@link BatchSAR} may be used.
  */
 public class BatchRacing extends AbstractBRAlgorithm {
+    private static final long serialVersionUID = -2546942894609106783L;
 
     /**
      * Constructs the algorithm class settings its parameters.

@@ -15,6 +15,8 @@ import java.util.stream.IntStream;
  * Perturbs and evaluates candidates
  */
 public class DefaultSamplingFunction<T extends DataInstance<?>> implements SamplingFunction<T> {
+    private static final long serialVersionUID = 2870480419515709442L;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultSamplingFunction.class);
     private static final int DEFAULT_COVERAGE_SAMPLE_COUNT = 1000;
 

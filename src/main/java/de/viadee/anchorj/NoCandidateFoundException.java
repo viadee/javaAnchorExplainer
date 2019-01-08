@@ -11,6 +11,8 @@ package de.viadee.anchorj;
  * Based on this, no further rounds could be conducted.
  */
 public class NoCandidateFoundException extends RuntimeException {
+    private static final long serialVersionUID = 5995789152156741475L;
+
     private static final String MESSAGE = "No candidate found having a precision greater than 0";
 
     /**

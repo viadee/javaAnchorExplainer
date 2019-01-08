@@ -8,6 +8,7 @@ import java.util.Set;
  * However, this coverage identification method will penalize longer candidates.
  */
 public class DisabledCoverageIdentification implements CoverageIdentification {
+    private static final long serialVersionUID = -5492745653645291390L;
 
     @Override
     public double calculateCoverage(final Set<Integer> featureSet) {

@@ -1,20 +1,17 @@
 package de.viadee.anchorj.exploration;
 
-import de.viadee.anchorj.execution.sampling.SamplingFunction;
-import org.junit.jupiter.api.Test;
-
-import de.viadee.anchorj.AnchorCandidate;
-import de.viadee.anchorj.execution.AbstractSamplingService;
-import de.viadee.anchorj.execution.SamplingService;
-import de.viadee.anchorj.execution.SamplingSession;
-import de.viadee.anchorj.exploration.KL_LUCB;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
+
+import org.junit.jupiter.api.Test;
+import de.viadee.anchorj.AnchorCandidate;
+import de.viadee.anchorj.execution.SamplingService;
+import de.viadee.anchorj.execution.SamplingSession;
+import de.viadee.anchorj.execution.sampling.SamplingFunction;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -32,7 +29,9 @@ public class KL_LUCBTest {
             return 0D;
         };
 
-        SamplingService samplingService = new SamplingService() {
+        return new SamplingService() {
+            private static final long serialVersionUID = -1015790616477178369L;
+
             @Override
             public double getTimeSpentSampling() {
                 return 0;
@@ -46,6 +45,8 @@ public class KL_LUCBTest {
             @Override
             public SamplingSession createSession(int explainedInstanceLabel) {
                 return new SamplingSession() {
+                    private static final long serialVersionUID = -2995382802085107059L;
+
                     @Override
                     public SamplingSession registerCandidateEvaluation(AnchorCandidate candidate, int count) {
                         function.apply(candidate, count);
@@ -64,13 +65,11 @@ public class KL_LUCBTest {
                 return null;
             }
         };
-
-        return samplingService;
     }
 
     @Test
     @SuppressWarnings("deprecation")
-    public void updateBoundsTest() {
+    void updateBoundsTest() {
         int[] result = mockUpdateBounds(1, 5, new int[]{1, 1, 1, 1, 1},
                 new double[]{0, 1, 1, 1, 0}, 1, new double[]{0, 0, 0, 0, 0},
                 new double[]{0, 0, 0, 0, 0});

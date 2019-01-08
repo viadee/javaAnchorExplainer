@@ -1,15 +1,17 @@
 package de.viadee.anchorj.global;
 
-import de.viadee.anchorj.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import de.viadee.anchorj.AnchorCandidate;
+import de.viadee.anchorj.AnchorConstruction;
+import de.viadee.anchorj.AnchorConstructionBuilder;
+import de.viadee.anchorj.AnchorResult;
+import de.viadee.anchorj.DataInstance;
 
 /**
  * {@link CoveragePick} is a global explainer aiming to maximize the result's coverage.

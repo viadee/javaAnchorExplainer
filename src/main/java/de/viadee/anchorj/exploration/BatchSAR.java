@@ -24,6 +24,8 @@ import java.util.stream.IntStream;
  * If the fixed confidence setting is to be used, {@link BatchRacing} may be used.
  */
 public class BatchSAR extends AbstractBRAlgorithm {
+    private static final long serialVersionUID = 6756864957771948578L;
+
     private final int batchBudget;
     private final int nn;
 

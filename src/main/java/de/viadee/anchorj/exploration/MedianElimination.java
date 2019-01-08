@@ -22,6 +22,8 @@ import de.viadee.anchorj.execution.SamplingSession;
  * complexity are required
  */
 public class MedianElimination implements BestAnchorIdentification {
+    private static final long serialVersionUID = 4039788473508865431L;
+
     /**
      * This method implements the actual algorithm as proposed
      *

@@ -19,6 +19,8 @@ import java.util.stream.Collectors;
  * @param <T> Type of the sampled instance
  */
 public class ParallelSamplingService<T extends DataInstance<?>> extends AbstractSamplingService<T> {
+    private static final long serialVersionUID = 2726826635848365350L;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(ParallelSamplingService.class);
     final int threadCount;
     // ExecutorService cannot
@@ -61,6 +63,7 @@ public class ParallelSamplingService<T extends DataInstance<?>> extends Abstract
     }
 
     protected class ParallelSession extends AbstractSamplingSession {
+        private static final long serialVersionUID = 5719558301835996215L;
 
         /**
          * Creates an instance.

@@ -22,6 +22,8 @@ import java.util.stream.IntStream;
  * @param <T> the type of the predicted instance
  */
 public class AnchorConstruction<T extends DataInstance<?>> implements Serializable {
+    private static final long serialVersionUID = -478521750533925027L;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(AnchorConstruction.class);
 
     /*

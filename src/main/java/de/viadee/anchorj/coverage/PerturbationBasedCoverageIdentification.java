@@ -13,6 +13,7 @@ import de.viadee.anchorj.util.ParameterValidation;
  * According to this definition, the coverage directly depends on the perturbation space, as realized by this class.
  */
 public class PerturbationBasedCoverageIdentification implements CoverageIdentification {
+    private static final long serialVersionUID = 5343179535650095069L;
 
     private final boolean[][] coverageData;
 

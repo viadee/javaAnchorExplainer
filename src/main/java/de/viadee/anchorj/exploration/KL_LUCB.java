@@ -18,6 +18,8 @@ import java.util.stream.IntStream;
  * See <a href="http://proceedings.mlr.press/v30/Kaufmann13.pdf">http://proceedings.mlr.press/v30/Kaufmann13.pdf</a>
  */
 public class KL_LUCB implements BestAnchorIdentification {
+    private static final long serialVersionUID = -1417031236085364837L;
+
     /*
      * Default values not used for constructing the instance but for instantiating other default classes
      */

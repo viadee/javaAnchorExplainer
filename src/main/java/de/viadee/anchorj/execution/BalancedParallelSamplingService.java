@@ -20,6 +20,7 @@ import de.viadee.anchorj.execution.sampling.SamplingFunction;
  * @param <T> Type of the sampled instance
  */
 public class BalancedParallelSamplingService<T extends DataInstance<?>> extends ParallelSamplingService<T> {
+    private static final long serialVersionUID = 344301140970085409L;
 
     /**
      * Creates the sampling service.
@@ -56,6 +57,7 @@ public class BalancedParallelSamplingService<T extends DataInstance<?>> extends 
     }
 
     private class BalancedParallelSession extends ParallelSession {
+        private static final long serialVersionUID = 8982485103898064125L;
 
         /**
          * Creates an instance.

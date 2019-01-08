@@ -21,6 +21,7 @@ import de.viadee.anchorj.util.ParameterValidation;
  * by Ribeiro et al.
  */
 abstract class AbstractBRAlgorithm implements BestAnchorIdentification {
+    private static final long serialVersionUID = 5078307006205349309L;
     /**
      * Arms must be pulled in batches of size b each round
      */
@@ -112,7 +113,7 @@ abstract class AbstractBRAlgorithm implements BestAnchorIdentification {
 
         @Override
         // @NonNull would do the trick, however, we have not imported javax.*
-        @SuppressWarnings({"NullableProblems", "unchecked"})
+        @SuppressWarnings({"unchecked"})
         public Iterator<T> iterator() {
             return new Iterator() {
                 private int index = 0;

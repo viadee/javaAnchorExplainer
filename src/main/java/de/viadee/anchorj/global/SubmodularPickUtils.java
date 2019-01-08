@@ -52,7 +52,7 @@ final class SubmodularPickUtils {
         final Set<Integer> indices = new HashSet<>(previouslySelectedRows);
         indices.add(additionalIndex);
 
-        double result[] = new double[matrix[0].length];
+        double[] result = new double[matrix[0].length];
         for (int col = 0; col < result.length; col++) {
             for (final int row : indices) {
                 result[col] += matrix[row][col];

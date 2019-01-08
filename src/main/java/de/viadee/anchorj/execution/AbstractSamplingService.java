@@ -15,9 +15,11 @@ import java.util.Map;
  * Its subclasses mainly enable different kinds of parallelization.
  */
 public abstract class AbstractSamplingService<T extends DataInstance<?>> implements SamplingService {
+    private static final long serialVersionUID = -5654563959959180926L;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractSamplingService.class);
 
-    private SamplingFunction samplingFunction;
+    private final SamplingFunction samplingFunction;
 
     /**
      * Used to record the total time spend sampling.
@@ -65,6 +67,8 @@ public abstract class AbstractSamplingService<T extends DataInstance<?>> impleme
      * Session object
      */
     public abstract class AbstractSamplingSession implements SamplingSession {
+        private static final long serialVersionUID = -7494218152964261940L;
+
         // Retain order
         protected final Map<AnchorCandidate, Integer> samplingCountMap = new LinkedHashMap<>();
         private final int explainedInstanceLabel;

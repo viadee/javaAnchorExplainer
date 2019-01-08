@@ -20,6 +20,8 @@ import java.io.Serializable;
  * @param <T> the dataInstance type constructing an anchor for
  */
 public class AnchorConstructionBuilder<T extends DataInstance<?>> implements Serializable {
+    private static final long serialVersionUID = -4081808558489352450L;
+
     private static final int DEFAULT_COVERAGE_SAMPLE_COUNT = 1000;
 
     private SamplingFunction<T> samplingFunction;

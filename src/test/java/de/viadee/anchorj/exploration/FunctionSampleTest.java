@@ -99,7 +99,7 @@ public class FunctionSampleTest {
             for (int i = 0; i < nrPerturbations; i++) {
                 rawResult[i] = perturbCircular(explainedInstance,
                         !immutableFeaturesIdx.contains(0), !immutableFeaturesIdx.contains(1));
-                boolean featureChanged[] = new boolean[2];
+                boolean[] featureChanged = new boolean[2];
                 featureChanged[0] = rawResult[i].x != explainedInstance.x;
                 featureChanged[1] = rawResult[i].y != explainedInstance.y;
                 featuresChanged[i] = featureChanged;
@@ -137,7 +137,7 @@ public class FunctionSampleTest {
 
     @AfterEach
     void afterEach() {
-        System.out.println("");
+        System.out.println();
     }
 
     @Test
@@ -270,6 +270,8 @@ public class FunctionSampleTest {
     }
 
     private static class Point implements DataInstance<Double[]> {
+        private static final long serialVersionUID = 8921163081817881426L;
+
         final double x;
         final double y;
 

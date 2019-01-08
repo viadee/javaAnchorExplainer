@@ -18,6 +18,8 @@ import java.util.concurrent.Executors;
  * @param <T> Type of the explained instance
  */
 public class ThreadedBatchExplainer<T extends DataInstance<?>> implements BatchExplainer<T> {
+    private static final long serialVersionUID = -4681054503306584585L;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(ThreadedBatchExplainer.class);
 
     private final int maxThreads;

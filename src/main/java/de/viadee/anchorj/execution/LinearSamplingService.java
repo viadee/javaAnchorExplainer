@@ -14,6 +14,7 @@ import de.viadee.anchorj.execution.sampling.SamplingFunction;
  * @param <T> Type of the sampled instance
  */
 public class LinearSamplingService<T extends DataInstance<?>> extends AbstractSamplingService<T> {
+    private static final long serialVersionUID = -2145854454277378170L;
 
     /**
      * Creates the sampling service.
@@ -48,6 +49,8 @@ public class LinearSamplingService<T extends DataInstance<?>> extends AbstractSa
     }
 
     private class LinearSession extends AbstractSamplingSession {
+        private static final long serialVersionUID = -5683739179207561142L;
+
         /**
          * Creates an instance.
          *

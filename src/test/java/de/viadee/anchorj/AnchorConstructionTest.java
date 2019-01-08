@@ -36,14 +36,15 @@ class AnchorConstructionTest {
         assertEquals(generateCandidateSet(Collections.emptyList(), 10, 0).size(), 10);
         assertEquals(generateCandidateSet(Collections.singletonList(candidate(-1)), 10, 0).size(), 10);
         assertEquals(generateCandidateSet(Collections.singletonList(candidate(0)), 10, 0).size(), 9);
-        assertEquals(generateCandidateSet(Collections.singletonList(candidate(1,2,3)), 10, 0).size(), 7);
+        assertEquals(generateCandidateSet(Collections.singletonList(candidate(1, 2, 3)), 10, 0).size(), 7);
 
 
-        assertEquals(generateCandidateSet(Arrays.asList(candidate(1,2,3), candidate(1,2,3)), 10, 0).size(), 7);
-        assertEquals(generateCandidateSet(Arrays.asList(candidate(1,2,3), candidate(1,2,3,4)), 10, 0).size(), 13);
+        assertEquals(generateCandidateSet(Arrays.asList(candidate(1, 2, 3), candidate(1, 2, 3)), 10, 0).size(), 7);
+        assertEquals(generateCandidateSet(Arrays.asList(candidate(1, 2, 3), candidate(1, 2, 3, 4)), 10, 0).size(), 13);
     }
 
     private static class IntegerDataInstance implements DataInstance<int[]> {
+        private static final long serialVersionUID = -8505052889913449802L;
 
         final int[] wrapped;
 
