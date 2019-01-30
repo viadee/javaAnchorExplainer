@@ -9,6 +9,12 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import de.viadee.xai.anchor.AnchorCandidate;
+import de.viadee.xai.anchor.AnchorConstruction;
+import de.viadee.xai.anchor.AnchorConstructionBuilder;
+import de.viadee.xai.anchor.DataInstance;
+import de.viadee.xai.anchor.PerturbationFunction;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class AnchorConstructionTest {
