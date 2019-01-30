@@ -5,10 +5,10 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>de.viadee.xai.anchor</groupId>
-    <artifactId>anchorj</artifactId>
-    <packaging>jar</packaging>
+    <artifactId>algorithm</artifactId>
     <version>1.0-SNAPSHOT</version>
-    <name>AnchorJ</name>
+
+    <name>AnchorJ-Algorithm</name>
     <description>
     	Java application implementing the Anchors algorithm (https://github.com/marcotcr/anchor)
      	efficiently, in order to explain the underlying rules in machine learning models. 
