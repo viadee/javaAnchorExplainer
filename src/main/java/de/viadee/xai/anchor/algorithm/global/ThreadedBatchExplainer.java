@@ -1,22 +1,23 @@
 package de.viadee.xai.anchor.algorithm.global;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import de.viadee.xai.anchor.algorithm.AnchorConstruction;
 import de.viadee.xai.anchor.algorithm.AnchorConstructionBuilder;
 import de.viadee.xai.anchor.algorithm.AnchorResult;
 import de.viadee.xai.anchor.algorithm.DataInstance;
 import de.viadee.xai.anchor.algorithm.NoCandidateFoundException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * Default batch explainer using threads to obtain multiple results
@@ -72,30 +73,48 @@ public class ThreadedBatchExplainer<T extends DataInstance<?>> implements BatchE
     public AnchorResult<T>[] obtainAnchors(AnchorConstructionBuilder<T> anchorConstructionBuilder, List<T> instances) {
         // TODO may re add changes of branche fix-parallelization
         final List<List<T>> splitLists = SubmodularPickUtils.splitList(instances, instances.size() / maxThreads);
-        final Collection<AnchorResult<T>> threadResults = Collections.synchronizedCollection(new ArrayList<>());
-        List<Callable<Object>> callables = new ArrayList<>();
+        final Collection<AnchorResult<T>> threadResults = new ArrayList<>();
+        List<Callable<List<AnchorResult<T>>>> callables = new ArrayList<>();
         for (final List<T> list : splitLists) {
-            callables.add(() -> {
-                for (final T instance : list) {
-                    // This section needs to be synchronized as to prevent racing conditions
-                    AnchorConstruction<T> anchorConstruction = AnchorConstructionBuilder
-                            .buildForSP(anchorConstructionBuilder, instance);
-                    final AnchorResult<T> result = obtainAnchor(anchorConstruction);
-                    if (result != null)
-                        threadResults.add(result);
-                }
-                return null;
-            });
+            callables.add(new AnchorCallable(anchorConstructionBuilder, list));
         }
         try {
-            executorService.invokeAll(callables);
-        } catch (InterruptedException e) {
+            List<Future<List<AnchorResult<T>>>> resultLists = executorService.invokeAll(callables);
+            for (Future<List<AnchorResult<T>>> future : resultLists) {
+                threadResults.addAll(future.get());
+            }
+        } catch (InterruptedException | ExecutionException e) {
             LOGGER.error("Thread interrupted", e);
             Thread.currentThread().interrupt();
         }
-        @SuppressWarnings("unchecked")
-        AnchorResult<T>[] result = threadResults.toArray((AnchorResult<T>[]) new AnchorResult[0]);
-        return result;
+
+        //noinspection unchecked
+        return threadResults.toArray((AnchorResult<T>[]) new AnchorResult[0]);
+    }
+
+    private class AnchorCallable implements Callable<List<AnchorResult<T>>> {
+        private final List<T> list;
+        private final AnchorConstructionBuilder<T> anchorConstructionBuilder;
+
+        AnchorCallable(AnchorConstructionBuilder<T> anchorConstructionBuilder, List<T> list) {
+            this.list = list;
+            this.anchorConstructionBuilder = anchorConstructionBuilder;
+        }
+
+        @Override
+        public List<AnchorResult<T>> call() {
+            List<AnchorResult<T>> localResult = new ArrayList<>();
+            for (final T instance : list) {
+                // This section needs to be synchronized as to prevent racing conditions
+                AnchorConstruction<T> anchorConstruction = AnchorConstructionBuilder
+                        .buildForSP(anchorConstructionBuilder, instance);
+                final AnchorResult<T> result = obtainAnchor(anchorConstruction);
+                if (result != null) {
+                    localResult.add(result);
+                }
+            }
+            return localResult;
+        }
     }
 
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
