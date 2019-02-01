@@ -1,5 +1,7 @@
 package de.viadee.xai.anchor.algorithm;
 
+import java.util.Objects;
+
 /**
  * Represents a result of the Anchors algorithm.
  *
@@ -71,4 +73,23 @@ public class AnchorResult<T extends DataInstance<?>> extends AnchorCandidate {
     public double getTimeSpentSampling() {
         return timeSpentSampling;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+        AnchorResult<?> that = (AnchorResult<?>) o;
+        return label == that.label &&
+                isAnchor == that.isAnchor &&
+                Double.compare(that.timeSpent, timeSpent) == 0 &&
+                Double.compare(that.timeSpentSampling, timeSpentSampling) == 0 &&
+                Objects.equals(instance, that.instance);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), instance, label, isAnchor, timeSpent, timeSpentSampling);
+    }
+
 }

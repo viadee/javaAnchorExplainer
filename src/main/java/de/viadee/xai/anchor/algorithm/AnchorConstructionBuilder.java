@@ -1,5 +1,8 @@
 package de.viadee.xai.anchor.algorithm;
 
+import java.io.Serializable;
+import java.util.concurrent.ExecutorService;
+
 import de.viadee.xai.anchor.algorithm.coverage.CoverageIdentification;
 import de.viadee.xai.anchor.algorithm.coverage.PerturbationBasedCoverageIdentification;
 import de.viadee.xai.anchor.algorithm.execution.BalancedParallelSamplingService;
@@ -11,8 +14,6 @@ import de.viadee.xai.anchor.algorithm.execution.sampling.SamplingFunction;
 import de.viadee.xai.anchor.algorithm.exploration.BestAnchorIdentification;
 import de.viadee.xai.anchor.algorithm.exploration.KL_LUCB;
 import de.viadee.xai.anchor.algorithm.global.SubmodularPick;
-
-import java.io.Serializable;
 
 /**
  * Builder class used to configure an {@link AnchorConstruction} instance easily.
@@ -30,6 +31,7 @@ public class AnchorConstructionBuilder<T extends DataInstance<?>> implements Ser
     private BestAnchorIdentification bestAnchorIdentification;
     private CoverageIdentification coverageIdentification;
     private SamplingService samplingService;
+    private transient ExecutorService executorService;
 
     /*
      *  Default values
@@ -140,11 +142,16 @@ public class AnchorConstructionBuilder<T extends DataInstance<?>> implements Ser
         newBuilder.prepareForBuild();
 
         newBuilder.explainedInstanceLabel = newBuilder.samplingFunction.getClassificationFunction().predict(explainedInstance);
-        if (newBuilder.coverageIdentification instanceof PerturbationBasedCoverageIdentification)
+        if (newBuilder.coverageIdentification instanceof PerturbationBasedCoverageIdentification) {
             newBuilder.coverageIdentification = newBuilder.samplingFunction.createPerturbationBasedCoverageIdentification();
+        }
         newBuilder.samplingService = newBuilder.samplingService.notifySamplingFunctionChange(newBuilder.samplingFunction);
 
         return newBuilder.build();
+    }
+
+    public ExecutorService getExecutorService() {
+        return executorService;
     }
 
     /**
@@ -258,19 +265,37 @@ public class AnchorConstructionBuilder<T extends DataInstance<?>> implements Ser
     /**
      * Enable threading anchor construction builder.
      *
-     * @param threadCount       the thread count
-     * @param doBalanceSampling the do balance sampling
+     * @param threadCount             the thread count for balancing. If 0 the {@link ParallelSamplingService} is used
+     * @param executorService         the desired executor
+     * @param executorServiceSupplier needed if this instance gets serialized e. g. to cluster the execution with Spark.
+     *                                Simple lambda with desired Executor as return type
      * @return the current {@link AnchorConstructionBuilder} for chaining
      */
-    public AnchorConstructionBuilder<T> enableThreading(final int threadCount, final boolean doBalanceSampling) {
-        if (threadCount <= 1)
-            this.samplingService = new LinearSamplingService<>(samplingFunction);
-        else if (!doBalanceSampling)
-            this.samplingService = new ParallelSamplingService<>(samplingFunction, threadCount);
-        else
-            this.samplingService = new BalancedParallelSamplingService<>(samplingFunction, threadCount);
+    public AnchorConstructionBuilder<T> enableThreading(final int threadCount,
+                                                        final ExecutorService executorService,
+                                                        final ParallelSamplingService.ExecutorServiceSupplier executorServiceSupplier) {
+        this.executorService = executorService;
+        if (threadCount <= 1) {
+            this.samplingService = new ParallelSamplingService<>(samplingFunction, executorService, executorServiceSupplier);
+        } else {
+            this.samplingService = new BalancedParallelSamplingService<>(samplingFunction, executorService,
+                    executorServiceSupplier, threadCount);
+        }
 
         return this;
+    }
+
+    /**
+     * Enable threading anchor construction builder.
+     *
+     * @param executorService         the desired executor
+     * @param executorServiceSupplier needed if this instance gets serialized e. g. to cluster the execution with Spark.
+     *                                Simple lambda with desired Executor as return type
+     * @return the current {@link AnchorConstructionBuilder} for chaining
+     */
+    public AnchorConstructionBuilder<T> enableThreading(final ExecutorService executorService,
+                                                        final ParallelSamplingService.ExecutorServiceSupplier executorServiceSupplier) {
+        return this.enableThreading(0, executorService, executorServiceSupplier);
     }
 
     /**

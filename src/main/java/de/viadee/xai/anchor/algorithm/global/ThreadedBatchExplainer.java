@@ -8,6 +8,8 @@ import de.viadee.xai.anchor.algorithm.NoCandidateFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -27,7 +29,7 @@ public class ThreadedBatchExplainer<T extends DataInstance<?>> implements BatchE
     private static final Logger LOGGER = LoggerFactory.getLogger(ThreadedBatchExplainer.class);
 
     private final int maxThreads;
-    private final ExecutorService executorService;
+    private transient ExecutorService executorService;
 
     /**
      * Creates an instance of the {@link ThreadedBatchExplainer}
@@ -94,5 +96,10 @@ public class ThreadedBatchExplainer<T extends DataInstance<?>> implements BatchE
         @SuppressWarnings("unchecked")
         AnchorResult<T>[] result = threadResults.toArray((AnchorResult<T>[]) new AnchorResult[0]);
         return result;
+    }
+
+    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+        in.defaultReadObject();
+        this.executorService = Executors.newFixedThreadPool(this.maxThreads);
     }
 }

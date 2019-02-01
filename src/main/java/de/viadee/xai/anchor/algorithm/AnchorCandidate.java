@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -17,7 +18,6 @@ import de.viadee.xai.anchor.algorithm.util.ParameterValidation;
  * <p>
  * This class is not completely immutable but thread-safe!
  */
-@SuppressWarnings({ "unused", "WeakerAccess" })
 public class AnchorCandidate implements Serializable {
     private static final long serialVersionUID = 3193512500527138686L;
 
@@ -232,6 +232,25 @@ public class AnchorCandidate implements Serializable {
     public double getAddedCoverageInPercent() {
         final double parentCoverage = hasParentCandidate() ? parentCandidate.getCoverage() : 1;
         return (coverage - parentCoverage) / parentCoverage;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        AnchorCandidate that = (AnchorCandidate) o;
+        return sampledSize == that.sampledSize &&
+                positiveSamples == that.positiveSamples &&
+                Double.compare(that.precision, precision) == 0 &&
+                Objects.equals(orderedFeatures, that.orderedFeatures) &&
+                Objects.equals(canonicalFeatures, that.canonicalFeatures) &&
+                Objects.equals(parentCandidate, that.parentCandidate) &&
+                Objects.equals(coverage, that.coverage);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(orderedFeatures, canonicalFeatures, parentCandidate, coverage, sampledSize, positiveSamples, precision);
     }
 
     @Override

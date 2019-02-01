@@ -96,13 +96,13 @@ public class CoveragePick<T extends DataInstance<?>> extends AbstractGlobalExpla
                 final Double resultCoverage = result.stream().filter(a -> a.getLabel() == label)
                         .map(AnchorCandidate::getCoverage).reduce((x, y) -> x + y)
                         .orElse(0D);
-                LOGGER.info("The returned {} results for label {} exclusively cover a total of {}% of the mode's input",
+                LOGGER.info("The returned {} results for label {} exclusively cover a total of {}% of the model's input",
                         result.size(), label, resultCoverage);
             });
         } else {
             final Double resultCoverage = result.stream().map(AnchorCandidate::getCoverage).reduce((x, y) -> x + y)
                     .orElse(0D);
-            LOGGER.info("The returned {} results exclusively cover a total of {}% of the mode's input",
+            LOGGER.info("The returned {} results exclusively cover a total of {}% of the model's input",
                     result.size(), resultCoverage);
         }
         return result;
