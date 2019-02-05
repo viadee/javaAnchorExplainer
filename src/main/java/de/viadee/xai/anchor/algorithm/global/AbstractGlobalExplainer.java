@@ -17,7 +17,6 @@ import java.util.List;
  *
  * @param <T> Type of the instance
  */
-@SuppressWarnings("WeakerAccess")
 public abstract class AbstractGlobalExplainer<T extends DataInstance<?>> implements GlobalExplainer<T> {
     private static final Logger LOGGER = LoggerFactory.getLogger(SubmodularPick.class);
 
@@ -61,6 +60,7 @@ public abstract class AbstractGlobalExplainer<T extends DataInstance<?>> impleme
         // 1. Obtain the anchors - explanation matrix W
         final AnchorResult<T>[] anchorResults = batchExplainer.obtainAnchors(constructionBuilder, instances);
         LOGGER.info("Took {} ms for gathering all explanations", (System.currentTimeMillis() - startTime));
+        this.constructionBuilder.getExecutorService().shutdown();
 
         return pickExplanations(anchorResults, nrOfExplanationsDesired);
     }
