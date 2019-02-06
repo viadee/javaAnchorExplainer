@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.concurrent.ExecutorService;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,6 +13,7 @@ import de.viadee.xai.anchor.algorithm.AnchorConstruction;
 import de.viadee.xai.anchor.algorithm.AnchorConstructionBuilder;
 import de.viadee.xai.anchor.algorithm.AnchorResult;
 import de.viadee.xai.anchor.algorithm.DataInstance;
+import de.viadee.xai.anchor.algorithm.execution.ExecutorServiceFunction;
 
 /**
  * {@link CoveragePick} is a global explainer aiming to maximize the result's coverage.
@@ -28,14 +30,19 @@ public class CoveragePick<T extends DataInstance<?>> extends AbstractGlobalExpla
     /**
      * Creates the instance.
      *
-     * @param constructionBuilder the builder used to create instances of the {@link AnchorConstruction}
-     *                            when running the algorithm.
-     * @param maxThreads          the number of threads to obtainAnchors in parallel.
-     *                            Note: if threading is enabled in the anchorConstructionBuilder, the actual
-     *                            thread count multiplies.
+     * @param constructionBuilder     the builder used to create instances of the {@link AnchorConstruction}
+     *                                when running the algorithm.
+     * @param maxThreads              the number of threads to obtainAnchors in parallel.
+     *                                Note: if threading is enabled in the anchorConstructionBuilder, the actual
+     *                                thread count multiplies.
+     * @param executorService         Executor to use - if this one is not clustered, this instance will be closed after
+     *                                finishing computations
+     * @param executorServiceFunction used when this class is serialized (e. g. clustering)
      */
-    public CoveragePick(AnchorConstructionBuilder<T> constructionBuilder, int maxThreads) {
-        super(constructionBuilder, maxThreads);
+    public CoveragePick(AnchorConstructionBuilder<T> constructionBuilder, int maxThreads,
+                        final ExecutorService executorService,
+                        final ExecutorServiceFunction executorServiceFunction) {
+        super(constructionBuilder, maxThreads, executorService, executorServiceFunction);
         this.includeTargetValue = false;
     }
 
@@ -96,13 +103,13 @@ public class CoveragePick<T extends DataInstance<?>> extends AbstractGlobalExpla
                 final Double resultCoverage = result.stream().filter(a -> a.getLabel() == label)
                         .map(AnchorCandidate::getCoverage).reduce((x, y) -> x + y)
                         .orElse(0D);
-                LOGGER.info("The returned {} results for label {} exclusively cover a total of {}% of the mode's input",
+                LOGGER.info("The returned {} results for label {} exclusively cover a total of {}% of the model's input",
                         result.size(), label, resultCoverage);
             });
         } else {
             final Double resultCoverage = result.stream().map(AnchorCandidate::getCoverage).reduce((x, y) -> x + y)
                     .orElse(0D);
-            LOGGER.info("The returned {} results exclusively cover a total of {}% of the mode's input",
+            LOGGER.info("The returned {} results exclusively cover a total of {}% of the model's input",
                     result.size(), resultCoverage);
         }
         return result;

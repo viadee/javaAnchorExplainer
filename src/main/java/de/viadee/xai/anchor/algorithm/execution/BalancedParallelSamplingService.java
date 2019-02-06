@@ -1,7 +1,15 @@
 package de.viadee.xai.anchor.algorithm.execution;
 
-import java.util.*;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import de.viadee.xai.anchor.algorithm.AnchorCandidate;
@@ -22,6 +30,17 @@ import de.viadee.xai.anchor.algorithm.execution.sampling.SamplingFunction;
 public class BalancedParallelSamplingService<T extends DataInstance<?>> extends ParallelSamplingService<T> {
     private static final long serialVersionUID = 344301140970085409L;
 
+    private final int threadCount;
+
+    private final ExecutorServiceFunction executorServiceFunction;
+
+    private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException {
+        ois.defaultReadObject();
+        if (this.getExecutorService() == null && this.executorServiceFunction != null) {
+            this.setExecutorService(this.executorServiceFunction.apply(threadCount));
+        }
+    }
+
     /**
      * Creates the sampling service.
      * <p>
@@ -32,28 +51,65 @@ public class BalancedParallelSamplingService<T extends DataInstance<?>> extends 
      * @param threadCount            the number of threads to use
      */
     public BalancedParallelSamplingService(ClassificationFunction<T> classificationFunction,
-                                           PerturbationFunction<T> perturbationFunction, int threadCount) {
-        super(classificationFunction, perturbationFunction, threadCount);
+                                           PerturbationFunction<T> perturbationFunction,
+                                           ExecutorService executorService,
+                                           ExecutorServiceSupplier executorServiceSupplier,
+                                           int threadCount) {
+        super(classificationFunction, perturbationFunction, executorService, executorServiceSupplier);
+        this.threadCount = threadCount;
+        this.executorServiceFunction = null;
     }
 
     /**
      * Creates the sampling service.
+     * <p>
+     * Requires both a perturbation and classification function to evaluate candidates
      *
-     * @param samplingFunction the sampling function to be used
-     * @param threadCount      the number of threads to use
+     * @param classificationFunction Function used to classify any instance of type
+     * @param perturbationFunction   Function used to create perturbations of the explained instance
+     * @param threadCount            the number of threads to use
      */
-    public BalancedParallelSamplingService(SamplingFunction samplingFunction, int threadCount) {
-        super(samplingFunction, threadCount);
+    public BalancedParallelSamplingService(ClassificationFunction<T> classificationFunction,
+                                           PerturbationFunction<T> perturbationFunction,
+                                           ExecutorService executorService,
+                                           ExecutorServiceFunction executorServiceFunction,
+                                           int threadCount) {
+        super(classificationFunction, perturbationFunction, executorService, null);
+        this.threadCount = threadCount;
+        this.executorServiceFunction = executorServiceFunction;
+    }
+
+    public BalancedParallelSamplingService(SamplingFunction samplingFunction,
+                                           ExecutorService executorService,
+                                           ExecutorServiceSupplier executorServiceSupplier,
+                                           int threadCount) {
+        super(samplingFunction, executorService, executorServiceSupplier);
+        this.threadCount = threadCount;
+        this.executorServiceFunction = null;
+    }
+
+    public BalancedParallelSamplingService(SamplingFunction samplingFunction,
+                                           ExecutorService executorService,
+                                           ExecutorServiceFunction executorServiceFunction,
+                                           int threadCount) {
+        super(samplingFunction, executorService, null);
+        this.threadCount = threadCount;
+        this.executorServiceFunction = executorServiceFunction;
     }
 
     @Override
     public SamplingService notifySamplingFunctionChange(SamplingFunction samplingFunction) {
-        return new BalancedParallelSamplingService<>(samplingFunction, threadCount);
+        return new BalancedParallelSamplingService<>(samplingFunction, this.getExecutorService(),
+                this.getExecutorServiceSupplier(), this.getThreadCount());
     }
 
     @Override
     public SamplingSession createSession(int explainedInstanceLabel) {
         return new BalancedParallelSession(explainedInstanceLabel);
+    }
+
+    protected int getThreadCount() {
+        return threadCount;
     }
 
     private class BalancedParallelSession extends ParallelSession {
@@ -70,14 +126,15 @@ public class BalancedParallelSamplingService<T extends DataInstance<?>> extends 
 
         @Override
         protected Collection<Callable<Object>> createCallables() {
+            final int threadCount = BalancedParallelSamplingService.this.getThreadCount();
             Collection<Callable<Object>> result = new ArrayList<>();
             // Equally distribute all calls (no matter which candidate) among the different threads
-            final int totalCount = samplingCountMap.values().stream().mapToInt(i -> i).sum();
+            final int totalCount = this.samplingCountMap.values().stream().mapToInt(i -> i).sum();
             final int countPerThread = totalCount / threadCount;
             // Division rest needs to be distributed, too
             int leftOver = totalCount % threadCount;
 
-            final Iterator<Map.Entry<AnchorCandidate, Integer>> iterator = samplingCountMap.entrySet().iterator();
+            final Iterator<Map.Entry<AnchorCandidate, Integer>> iterator = this.samplingCountMap.entrySet().iterator();
             // Check if no samples shall be taken at all
             if (!iterator.hasNext())
                 return Collections.emptyList();

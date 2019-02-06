@@ -1,14 +1,24 @@
 package de.viadee.xai.anchor.algorithm.global;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ExecutorService;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import de.viadee.xai.anchor.algorithm.AnchorCandidate;
 import de.viadee.xai.anchor.algorithm.AnchorConstruction;
 import de.viadee.xai.anchor.algorithm.AnchorConstructionBuilder;
 import de.viadee.xai.anchor.algorithm.AnchorResult;
 import de.viadee.xai.anchor.algorithm.DataInstance;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.*;
+import de.viadee.xai.anchor.algorithm.execution.ExecutorServiceFunction;
+import de.viadee.xai.anchor.algorithm.execution.ExecutorServiceSupplier;
 
 /**
  * Class implementing the Submodular Pick (SP) algorithm proposed by Ribeiro (2016).
@@ -30,14 +40,38 @@ public class SubmodularPick<T extends DataInstance<?>> extends AbstractGlobalExp
     /**
      * Creates the instance.
      *
-     * @param constructionBuilder the builder used to create instances of the {@link AnchorConstruction}
-     *                            when running the algorithm.
-     * @param maxThreads          the number of threads to obtainAnchors in parallel.
-     *                            Note: if threading is enabled in the anchorConstructionBuilder, the actual
-     *                            thread count multiplies if executed locally.
+     * @param constructionBuilder     the builder used to create instances of the {@link AnchorConstruction}
+     *                                when running the algorithm.
+     * @param maxThreads              the number of threads to obtainAnchors in parallel.
+     *                                Note: if threading is enabled in the anchorConstructionBuilder, the actual
+     *                                thread count multiplies if executed locally.
+     * @param executorService         Executor to use - if this one is not clustered, this instance will be closed after
+     *                                finishing computations
+     * @param executorServiceSupplier used when this class is serialized (e. g. clustering)
      */
-    public SubmodularPick(AnchorConstructionBuilder<T> constructionBuilder, int maxThreads) {
-        super(constructionBuilder, maxThreads);
+    public SubmodularPick(AnchorConstructionBuilder<T> constructionBuilder, int maxThreads,
+                          final ExecutorService executorService,
+                          final ExecutorServiceSupplier executorServiceSupplier) {
+        super(constructionBuilder, maxThreads, executorService, executorServiceSupplier);
+    }
+
+    /**
+     * Creates the instance.
+     *
+     * @param constructionBuilder     the builder used to create instances of the {@link AnchorConstruction}
+     *                                when running the algorithm.
+     * @param maxThreads              the number of threads to obtainAnchors in parallel.
+     *                                Note: if threading is enabled in the anchorConstructionBuilder, the actual
+     *                                thread count multiplies if executed locally.
+     * @param executorService         Executor to use - if this one is not clustered, this instance will be closed after
+     *                                finishing computations
+     * @param executorServiceFunction used when this class is serialized (e. g. clustering). maxThreads is used as
+     *                                parameter
+     */
+    public SubmodularPick(AnchorConstructionBuilder<T> constructionBuilder, int maxThreads,
+                          final ExecutorService executorService,
+                          final ExecutorServiceFunction executorServiceFunction) {
+        super(constructionBuilder, maxThreads, executorService, executorServiceFunction);
     }
 
     /**
