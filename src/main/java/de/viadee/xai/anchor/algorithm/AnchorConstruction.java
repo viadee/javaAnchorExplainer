@@ -123,6 +123,10 @@ public class AnchorConstruction<T extends DataInstance<?>> implements Serializab
         this.samplingService = samplingService;
     }
 
+    public SamplingService getSamplingService() {
+        return samplingService;
+    }
+
     private static String createKeyValueMap(Object... objects) {
         String[] results = new String[objects.length / 2];
         List<Object> list = Arrays.asList(objects);

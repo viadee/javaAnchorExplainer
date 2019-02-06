@@ -1,5 +1,7 @@
 package de.viadee.xai.anchor.algorithm.execution;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -30,6 +32,15 @@ public class BalancedParallelSamplingService<T extends DataInstance<?>> extends 
 
     private final int threadCount;
 
+    private final ExecutorServiceFunction executorServiceFunction;
+
+    private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException {
+        ois.defaultReadObject();
+        if (this.getExecutorService() == null && this.executorServiceFunction != null) {
+            this.setExecutorService(this.executorServiceFunction.apply(threadCount));
+        }
+    }
+
     /**
      * Creates the sampling service.
      * <p>
@@ -46,6 +57,26 @@ public class BalancedParallelSamplingService<T extends DataInstance<?>> extends 
                                            int threadCount) {
         super(classificationFunction, perturbationFunction, executorService, executorServiceSupplier);
         this.threadCount = threadCount;
+        this.executorServiceFunction = null;
+    }
+
+    /**
+     * Creates the sampling service.
+     * <p>
+     * Requires both a perturbation and classification function to evaluate candidates
+     *
+     * @param classificationFunction Function used to classify any instance of type
+     * @param perturbationFunction   Function used to create perturbations of the explained instance
+     * @param threadCount            the number of threads to use
+     */
+    public BalancedParallelSamplingService(ClassificationFunction<T> classificationFunction,
+                                           PerturbationFunction<T> perturbationFunction,
+                                           ExecutorService executorService,
+                                           ExecutorServiceFunction executorServiceFunction,
+                                           int threadCount) {
+        super(classificationFunction, perturbationFunction, executorService, null);
+        this.threadCount = threadCount;
+        this.executorServiceFunction = executorServiceFunction;
     }
 
     public BalancedParallelSamplingService(SamplingFunction samplingFunction,
@@ -54,6 +85,16 @@ public class BalancedParallelSamplingService<T extends DataInstance<?>> extends 
                                            int threadCount) {
         super(samplingFunction, executorService, executorServiceSupplier);
         this.threadCount = threadCount;
+        this.executorServiceFunction = null;
+    }
+
+    public BalancedParallelSamplingService(SamplingFunction samplingFunction,
+                                           ExecutorService executorService,
+                                           ExecutorServiceFunction executorServiceFunction,
+                                           int threadCount) {
+        super(samplingFunction, executorService, null);
+        this.threadCount = threadCount;
+        this.executorServiceFunction = executorServiceFunction;
     }
 
     @Override

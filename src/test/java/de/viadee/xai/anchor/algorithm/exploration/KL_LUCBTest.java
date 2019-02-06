@@ -61,6 +61,10 @@ public class KL_LUCBTest {
             }
 
             @Override
+            public void endSampling() {
+            }
+
+            @Override
             public SamplingService notifySamplingFunctionChange(SamplingFunction samplingFunction) {
                 return null;
             }

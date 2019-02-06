@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import org.slf4j.Logger;
@@ -18,6 +17,8 @@ import de.viadee.xai.anchor.algorithm.AnchorConstructionBuilder;
 import de.viadee.xai.anchor.algorithm.AnchorResult;
 import de.viadee.xai.anchor.algorithm.DataInstance;
 import de.viadee.xai.anchor.algorithm.NoCandidateFoundException;
+import de.viadee.xai.anchor.algorithm.execution.ExecutorServiceFunction;
+import de.viadee.xai.anchor.algorithm.execution.ExecutorServiceSupplier;
 
 /**
  * Default batch explainer using threads to obtain multiple results
@@ -30,18 +31,42 @@ public class ThreadedBatchExplainer<T extends DataInstance<?>> implements BatchE
     private static final Logger LOGGER = LoggerFactory.getLogger(ThreadedBatchExplainer.class);
 
     private final int maxThreads;
+
     private transient ExecutorService executorService;
+
+    private final ExecutorServiceSupplier executorServiceSupplier;
+
+    private final ExecutorServiceFunction executorServiceFunction;
 
     /**
      * Creates an instance of the {@link ThreadedBatchExplainer}
      *
-     * @param maxThreads the number of threads to obtainAnchors in parallel.
-     *                   Note: if threading is enabled in the anchorConstructionBuilder, the actual
-     *                   thread count multiplies.
+     * @param executorService         Executor to use - if this one is not clustered, this instance will be closed after
+     *                                finishing computations
+     * @param executorServiceFunction used when this class is serialized (e. g. clustering). maxThreads is used as
+     *                                parameter
      */
-    public ThreadedBatchExplainer(final int maxThreads) {
+    public ThreadedBatchExplainer(final int maxThreads, final ExecutorService executorService,
+                                  final ExecutorServiceFunction executorServiceFunction) {
         this.maxThreads = maxThreads;
-        this.executorService = Executors.newFixedThreadPool(maxThreads);
+        this.executorService = executorService;
+        this.executorServiceFunction = executorServiceFunction;
+        this.executorServiceSupplier = null;
+    }
+
+    /**
+     * Creates an instance of the {@link ThreadedBatchExplainer}
+     *
+     * @param executorService         Executor to use - if this one is not clustered, this instance will be closed after
+     *                                finishing computations
+     * @param executorServiceSupplier used when this class is serialized (e. g. clustering)
+     */
+    public ThreadedBatchExplainer(final int maxThreads, final ExecutorService executorService,
+                                  final ExecutorServiceSupplier executorServiceSupplier) {
+        this.maxThreads = maxThreads;
+        this.executorService = executorService;
+        this.executorServiceFunction = null;
+        this.executorServiceSupplier = executorServiceSupplier;
     }
 
     /**
@@ -58,7 +83,7 @@ public class ThreadedBatchExplainer<T extends DataInstance<?>> implements BatchE
         try {
             final AnchorResult<T> anchorResult = anchorConstruction.constructAnchor();
             if (!anchorResult.isAnchor()) {
-                LOGGER.debug("Could not find an anchor for instance {}. Discarding best candidate.",
+                LOGGER.info("Could not find an anchor for instance {}. Discarding best candidate",
                         anchorResult.getInstance());
                 return null;
             }
@@ -72,13 +97,26 @@ public class ThreadedBatchExplainer<T extends DataInstance<?>> implements BatchE
     @Override
     public AnchorResult<T>[] obtainAnchors(AnchorConstructionBuilder<T> anchorConstructionBuilder, List<T> instances) {
         // TODO may re add changes of branche fix-parallelization
-        final List<List<T>> splitLists = SubmodularPickUtils.splitList(instances, instances.size() / maxThreads);
+        final List<List<T>> splitLists = SubmodularPickUtils.splitList(instances,
+                instances.size() / this.maxThreads);
         final Collection<AnchorResult<T>> threadResults = new ArrayList<>();
         List<Callable<List<AnchorResult<T>>>> callables = new ArrayList<>();
         for (final List<T> list : splitLists) {
             callables.add(new AnchorCallable(anchorConstructionBuilder, list));
         }
+
+        ExecutorService executorService = null;
         try {
+            if (this.executorService != null) {
+                executorService = this.executorService;
+            } else if (this.executorServiceFunction != null) {
+                executorService = this.executorServiceFunction.apply(this.maxThreads);
+            } else if (this.executorServiceSupplier != null) {
+                executorService = this.executorServiceSupplier.get();
+            } else {
+                throw new NullPointerException("ExecutorService, Supplier and Function are null");
+            }
+
             List<Future<List<AnchorResult<T>>>> resultLists = executorService.invokeAll(callables);
             for (Future<List<AnchorResult<T>>> future : resultLists) {
                 threadResults.addAll(future.get());
@@ -86,6 +124,11 @@ public class ThreadedBatchExplainer<T extends DataInstance<?>> implements BatchE
         } catch (InterruptedException | ExecutionException e) {
             LOGGER.error("Thread interrupted", e);
             Thread.currentThread().interrupt();
+        } finally {
+            if (executorService != null) {
+                executorService.shutdown();
+            }
+            anchorConstructionBuilder.getSamplingService().endSampling();
         }
 
         //noinspection unchecked
@@ -104,10 +147,10 @@ public class ThreadedBatchExplainer<T extends DataInstance<?>> implements BatchE
         @Override
         public List<AnchorResult<T>> call() {
             List<AnchorResult<T>> localResult = new ArrayList<>();
-            for (final T instance : list) {
+            for (final T instance : this.list) {
                 // This section needs to be synchronized as to prevent racing conditions
                 AnchorConstruction<T> anchorConstruction = AnchorConstructionBuilder
-                        .buildForSP(anchorConstructionBuilder, instance);
+                        .buildForSP(this.anchorConstructionBuilder, instance);
                 final AnchorResult<T> result = obtainAnchor(anchorConstruction);
                 if (result != null) {
                     localResult.add(result);
@@ -119,6 +162,6 @@ public class ThreadedBatchExplainer<T extends DataInstance<?>> implements BatchE
 
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
         in.defaultReadObject();
-        this.executorService = Executors.newFixedThreadPool(this.maxThreads);
+        this.executorService = null;
     }
 }

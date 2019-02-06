@@ -6,6 +6,7 @@ import java.util.concurrent.ExecutorService;
 import de.viadee.xai.anchor.algorithm.coverage.CoverageIdentification;
 import de.viadee.xai.anchor.algorithm.coverage.PerturbationBasedCoverageIdentification;
 import de.viadee.xai.anchor.algorithm.execution.BalancedParallelSamplingService;
+import de.viadee.xai.anchor.algorithm.execution.ExecutorServiceSupplier;
 import de.viadee.xai.anchor.algorithm.execution.LinearSamplingService;
 import de.viadee.xai.anchor.algorithm.execution.ParallelSamplingService;
 import de.viadee.xai.anchor.algorithm.execution.SamplingService;
@@ -31,7 +32,6 @@ public class AnchorConstructionBuilder<T extends DataInstance<?>> implements Ser
     private BestAnchorIdentification bestAnchorIdentification;
     private CoverageIdentification coverageIdentification;
     private SamplingService samplingService;
-    private transient ExecutorService executorService;
 
     /*
      *  Default values
@@ -150,8 +150,8 @@ public class AnchorConstructionBuilder<T extends DataInstance<?>> implements Ser
         return newBuilder.build();
     }
 
-    public ExecutorService getExecutorService() {
-        return executorService;
+    public SamplingService getSamplingService() {
+        return samplingService;
     }
 
     /**
@@ -273,8 +273,7 @@ public class AnchorConstructionBuilder<T extends DataInstance<?>> implements Ser
      */
     public AnchorConstructionBuilder<T> enableThreading(final int threadCount,
                                                         final ExecutorService executorService,
-                                                        final ParallelSamplingService.ExecutorServiceSupplier executorServiceSupplier) {
-        this.executorService = executorService;
+                                                        final ExecutorServiceSupplier executorServiceSupplier) {
         if (threadCount <= 1) {
             this.samplingService = new ParallelSamplingService<>(samplingFunction, executorService, executorServiceSupplier);
         } else {
@@ -294,7 +293,7 @@ public class AnchorConstructionBuilder<T extends DataInstance<?>> implements Ser
      * @return the current {@link AnchorConstructionBuilder} for chaining
      */
     public AnchorConstructionBuilder<T> enableThreading(final ExecutorService executorService,
-                                                        final ParallelSamplingService.ExecutorServiceSupplier executorServiceSupplier) {
+                                                        final ExecutorServiceSupplier executorServiceSupplier) {
         return this.enableThreading(0, executorService, executorServiceSupplier);
     }
 

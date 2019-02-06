@@ -44,6 +44,10 @@ public class LinearSamplingService<T extends DataInstance<?>> extends AbstractSa
     }
 
     @Override
+    public void endSampling() {
+    }
+
+    @Override
     public SamplingService notifySamplingFunctionChange(SamplingFunction samplingFunction) {
         return new LinearSamplingService<>(samplingFunction);
     }

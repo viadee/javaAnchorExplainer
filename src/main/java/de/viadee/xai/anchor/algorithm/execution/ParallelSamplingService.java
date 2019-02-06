@@ -2,11 +2,9 @@ package de.viadee.xai.anchor.algorithm.execution;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.io.Serializable;
 import java.util.Collection;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -26,17 +24,18 @@ public class ParallelSamplingService<T extends DataInstance<?>> extends Abstract
     private static final long serialVersionUID = 2726826635848365350L;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ParallelSamplingService.class);
-    // ExecutorService cannot
+
     private transient ExecutorService executorService;
 
-    private ExecutorServiceSupplier executorServiceSupplier;
-
-    public interface ExecutorServiceSupplier extends Supplier<ExecutorService>, Serializable {
-    }
+    private final ExecutorServiceSupplier executorServiceSupplier;
 
     private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException {
         ois.defaultReadObject();
-        executorService = executorServiceSupplier.get();
+        if (this.executorServiceSupplier != null) {
+            this.executorService = this.executorServiceSupplier.get();
+        } else {
+            this.executorService = null;
+        }
     }
 
     /**
@@ -83,12 +82,24 @@ public class ParallelSamplingService<T extends DataInstance<?>> extends Abstract
     }
 
     @Override
+    public void endSampling() {
+        if (this.executorService != null) {
+            LOGGER.debug("closing session");
+            this.executorService.shutdown();
+        }
+    }
+
+    @Override
     public SamplingService notifySamplingFunctionChange(SamplingFunction samplingFunction) {
         return new ParallelSamplingService<>(samplingFunction, this.executorService, this.executorServiceSupplier);
     }
 
     protected ExecutorService getExecutorService() {
         return executorService;
+    }
+
+    protected void setExecutorService(ExecutorService executorService) {
+        this.executorService = executorService;
     }
 
     protected ExecutorServiceSupplier getExecutorServiceSupplier() {
@@ -118,7 +129,7 @@ public class ParallelSamplingService<T extends DataInstance<?>> extends Abstract
             try {
                 ParallelSamplingService.this.executorService.invokeAll(createCallables());
             } catch (final InterruptedException e) {
-                LOGGER.warn("Thread interrupted", e);
+                LOGGER.error("Thread interrupted", e);
                 Thread.currentThread().interrupt();
             }
         }
