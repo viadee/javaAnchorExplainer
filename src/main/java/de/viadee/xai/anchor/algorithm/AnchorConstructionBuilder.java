@@ -6,6 +6,7 @@ import java.util.concurrent.ExecutorService;
 import de.viadee.xai.anchor.algorithm.coverage.CoverageIdentification;
 import de.viadee.xai.anchor.algorithm.coverage.PerturbationBasedCoverageIdentification;
 import de.viadee.xai.anchor.algorithm.execution.BalancedParallelSamplingService;
+import de.viadee.xai.anchor.algorithm.execution.ExecutorServiceFunction;
 import de.viadee.xai.anchor.algorithm.execution.ExecutorServiceSupplier;
 import de.viadee.xai.anchor.algorithm.execution.LinearSamplingService;
 import de.viadee.xai.anchor.algorithm.execution.ParallelSamplingService;
@@ -267,20 +268,15 @@ public class AnchorConstructionBuilder<T extends DataInstance<?>> implements Ser
      *
      * @param threadCount             the thread count for balancing. If 0 the {@link ParallelSamplingService} is used
      * @param executorService         the desired executor
-     * @param executorServiceSupplier needed if this instance gets serialized e. g. to cluster the execution with Spark.
+     * @param executorServiceFunction needed if this instance gets serialized e. g. to cluster the execution with Spark.
      *                                Simple lambda with desired Executor as return type
      * @return the current {@link AnchorConstructionBuilder} for chaining
      */
     public AnchorConstructionBuilder<T> enableThreading(final int threadCount,
                                                         final ExecutorService executorService,
-                                                        final ExecutorServiceSupplier executorServiceSupplier) {
-        if (threadCount <= 1) {
-            this.samplingService = new ParallelSamplingService<>(samplingFunction, executorService, executorServiceSupplier);
-        } else {
-            this.samplingService = new BalancedParallelSamplingService<>(samplingFunction, executorService,
-                    executorServiceSupplier, threadCount);
-        }
-
+                                                        final ExecutorServiceFunction executorServiceFunction) {
+        this.samplingService = new BalancedParallelSamplingService<>(samplingFunction, executorService,
+                executorServiceFunction, threadCount);
         return this;
     }
 
@@ -294,7 +290,8 @@ public class AnchorConstructionBuilder<T extends DataInstance<?>> implements Ser
      */
     public AnchorConstructionBuilder<T> enableThreading(final ExecutorService executorService,
                                                         final ExecutorServiceSupplier executorServiceSupplier) {
-        return this.enableThreading(0, executorService, executorServiceSupplier);
+        this.samplingService = new ParallelSamplingService<>(samplingFunction, executorService, executorServiceSupplier);
+        return this;
     }
 
     /**
