@@ -128,7 +128,9 @@ public class ThreadedBatchExplainer<T extends DataInstance<?>> implements BatchE
             if (executorService != null) {
                 executorService.shutdown();
             }
-            anchorConstructionBuilder.getSamplingService().endSampling();
+            if (anchorConstructionBuilder.getSamplingService() != null) {
+                anchorConstructionBuilder.getSamplingService().endSampling();
+            }
         }
 
         //noinspection unchecked
