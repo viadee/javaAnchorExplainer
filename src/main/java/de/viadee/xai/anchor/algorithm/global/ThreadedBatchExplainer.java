@@ -81,7 +81,7 @@ public class ThreadedBatchExplainer<T extends DataInstance<?>> implements BatchE
      */
     private static <T extends DataInstance<?>> AnchorResult<T> obtainAnchor(final AnchorConstruction<T> anchorConstruction) {
         try {
-            final AnchorResult<T> anchorResult = anchorConstruction.constructAnchor();
+            final AnchorResult<T> anchorResult = anchorConstruction.constructAnchor(false);
             if (!anchorResult.isAnchor()) {
                 LOGGER.info("Could not find an anchor for instance {}. Discarding best candidate",
                         anchorResult.getInstance());

@@ -429,11 +429,34 @@ public class AnchorConstruction<T extends DataInstance<?>> implements Serializab
      * <li>The precision for the current prediction is low as it might be a thin prediction</li>
      * <li>The beam size is too small and suboptimal choices have been made</li>
      * </ul>
+     * <p>
+     * After calculation the optional ExecutorService in SamplingService is shutdown.
      *
      * @return the {@link AnchorResult} of the best-anchor identification and beam-search
      * @throws NoCandidateFoundException if no single candidate with a precision &gt; 0 could be found.
      */
     public AnchorResult<T> constructAnchor() throws NoCandidateFoundException {
+        return this.constructAnchor(true);
+    }
+
+    /**
+     * Constructs the anchor given the specified algorithms and parameters.
+     * <p>
+     * For more information regarding the Anchors algorithm, see
+     * <a href=https://github.com/viadee/javaAnchorExplainer>https://github.com/viadee/javaAnchorExplainer</a>
+     * <p>
+     * In case no anchors get found or, in general, the precision is bad, there could be multiple reasons for this:
+     * <ul>
+     * <li>The perturbation function is of low quality</li>
+     * <li>The precision for the current prediction is low as it might be a thin prediction</li>
+     * <li>The beam size is too small and suboptimal choices have been made</li>
+     * </ul>
+     *
+     * @param endSamplingService if true and needed the ExecutorService in SamplingService is shutdown
+     * @return the {@link AnchorResult} of the best-anchor identification and beam-search
+     * @throws NoCandidateFoundException if no single candidate with a precision &gt; 0 could be found.
+     */
+    public AnchorResult<T> constructAnchor(boolean endSamplingService) throws NoCandidateFoundException {
         LOGGER.info("Starting Anchor Construction for instance {} and label {} with params: {}",
                 explainedInstance, explainedInstanceLabel,
                 createKeyValueMap(
@@ -446,8 +469,13 @@ public class AnchorConstruction<T extends DataInstance<?>> implements Serializab
                         "initSampleCount", initSampleCount,
                         "lazyCoverageEvaluation", lazyCoverageEvaluation,
                         "allowSuboptimalSteps", allowSuboptimalSteps));
-        return beamSearch();
-    }
 
+        AnchorResult<T> result = beamSearch();
+        if (endSamplingService) {
+            this.samplingService.endSampling();
+        }
+
+        return result;
+    }
 
 }
