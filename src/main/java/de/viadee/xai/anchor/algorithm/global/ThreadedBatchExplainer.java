@@ -1,5 +1,11 @@
 package de.viadee.xai.anchor.algorithm.global;
 
+import de.viadee.xai.anchor.algorithm.*;
+import de.viadee.xai.anchor.algorithm.execution.ExecutorServiceFunction;
+import de.viadee.xai.anchor.algorithm.execution.ExecutorServiceSupplier;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.ArrayList;
@@ -9,16 +15,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import de.viadee.xai.anchor.algorithm.AnchorConstruction;
-import de.viadee.xai.anchor.algorithm.AnchorConstructionBuilder;
-import de.viadee.xai.anchor.algorithm.AnchorResult;
-import de.viadee.xai.anchor.algorithm.DataInstance;
-import de.viadee.xai.anchor.algorithm.NoCandidateFoundException;
-import de.viadee.xai.anchor.algorithm.execution.ExecutorServiceFunction;
-import de.viadee.xai.anchor.algorithm.execution.ExecutorServiceSupplier;
 
 /**
  * Default batch explainer using threads to obtain multiple results
@@ -127,9 +123,6 @@ public class ThreadedBatchExplainer<T extends DataInstance<?>> implements BatchE
         } finally {
             if (executorService != null) {
                 executorService.shutdown();
-            }
-            if (anchorConstructionBuilder.getSamplingService() != null) {
-                anchorConstructionBuilder.getSamplingService().endSampling();
             }
         }
 

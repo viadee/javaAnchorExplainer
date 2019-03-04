@@ -1,17 +1,17 @@
 package de.viadee.xai.anchor.algorithm.exploration;
 
+import de.viadee.xai.anchor.algorithm.AnchorCandidate;
+import de.viadee.xai.anchor.algorithm.execution.SamplingService;
+import de.viadee.xai.anchor.algorithm.execution.SamplingSession;
+import de.viadee.xai.anchor.algorithm.execution.sampling.SamplingFunction;
+import org.junit.jupiter.api.Test;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
-
-import org.junit.jupiter.api.Test;
-import de.viadee.xai.anchor.algorithm.AnchorCandidate;
-import de.viadee.xai.anchor.algorithm.execution.SamplingService;
-import de.viadee.xai.anchor.algorithm.execution.SamplingSession;
-import de.viadee.xai.anchor.algorithm.execution.sampling.SamplingFunction;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -58,10 +58,6 @@ public class KL_LUCBTest {
 
                     }
                 };
-            }
-
-            @Override
-            public void endSampling() {
             }
 
             @Override

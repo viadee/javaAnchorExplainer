@@ -18,8 +18,6 @@ public interface SamplingService extends Serializable {
      */
     SamplingSession createSession(final int explainedInstanceLabel);
 
-    void endSampling();
-
     /**
      * Sets a new samplingFunction.
      * <p>

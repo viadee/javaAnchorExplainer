@@ -1,5 +1,13 @@
 package de.viadee.xai.anchor.algorithm.execution;
 
+import de.viadee.xai.anchor.algorithm.ClassificationFunction;
+import de.viadee.xai.anchor.algorithm.DataInstance;
+import de.viadee.xai.anchor.algorithm.PerturbationFunction;
+import de.viadee.xai.anchor.algorithm.execution.sampling.SamplingFunction;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.Collection;
@@ -7,20 +15,13 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import de.viadee.xai.anchor.algorithm.ClassificationFunction;
-import de.viadee.xai.anchor.algorithm.DataInstance;
-import de.viadee.xai.anchor.algorithm.PerturbationFunction;
-import de.viadee.xai.anchor.algorithm.execution.sampling.SamplingFunction;
-
 /**
  * Implementation of the {@link AbstractSamplingService} that gathers samples in
  * a multiple threads.
  *
  * @param <T> Type of the sampled instance
  */
-public class ParallelSamplingService<T extends DataInstance<?>> extends AbstractSamplingService<T> {
+public class ParallelSamplingService<T extends DataInstance<?>> extends AbstractSamplingService<T> implements Closeable {
     private static final long serialVersionUID = 2726826635848365350L;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ParallelSamplingService.class);
@@ -81,8 +82,13 @@ public class ParallelSamplingService<T extends DataInstance<?>> extends Abstract
         return new ParallelSession(explainedInstanceLabel);
     }
 
+    /**
+     * Closes the internally used ExecutorService.
+     * <p>
+     * The service can no longer be used after this method has been called.
+     */
     @Override
-    public void endSampling() {
+    public void close() {
         if (this.executorService != null) {
             LOGGER.debug("closing session");
             this.executorService.shutdown();

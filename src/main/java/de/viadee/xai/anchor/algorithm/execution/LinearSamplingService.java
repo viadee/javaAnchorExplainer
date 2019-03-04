@@ -1,12 +1,12 @@
 package de.viadee.xai.anchor.algorithm.execution;
 
-import java.util.Map;
-
 import de.viadee.xai.anchor.algorithm.AnchorCandidate;
 import de.viadee.xai.anchor.algorithm.ClassificationFunction;
 import de.viadee.xai.anchor.algorithm.DataInstance;
 import de.viadee.xai.anchor.algorithm.PerturbationFunction;
 import de.viadee.xai.anchor.algorithm.execution.sampling.SamplingFunction;
+
+import java.util.Map;
 
 /**
  * Implementation of the {@link AbstractSamplingService} sequentially obtaining all samples.
@@ -41,10 +41,6 @@ public class LinearSamplingService<T extends DataInstance<?>> extends AbstractSa
     @Override
     public SamplingSession createSession(int explainedInstanceLabel) {
         return new LinearSession(explainedInstanceLabel);
-    }
-
-    @Override
-    public void endSampling() {
     }
 
     @Override

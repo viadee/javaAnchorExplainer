@@ -470,12 +470,7 @@ public class AnchorConstruction<T extends DataInstance<?>> implements Serializab
                         "lazyCoverageEvaluation", lazyCoverageEvaluation,
                         "allowSuboptimalSteps", allowSuboptimalSteps));
 
-        AnchorResult<T> result = beamSearch();
-        if (endSamplingService) {
-            this.samplingService.endSampling();
-        }
-
-        return result;
+        return beamSearch();
     }
 
 }
