@@ -9,6 +9,11 @@ This project provides an efficient java implementation of the Anchors explanatio
 The initial proposal "Anchors: High-Precision Model-Agnostic Explanations" by Marco Tulio Ribeiro (2018) can be found
 [*here*](https://homes.cs.washington.edu/~marcotcr/aaai18.pdf).
 
+## Related Projects
+
++ This Anchors implementations features several add-ons and optional extensions which can be found in a dedicated project, called [AnchorAdapters](https://github.com/viadee/javaAnchorAdapters). These can, depending on the use-case, significantly ease implementation and customization efforts.
++ Examples of Anchors' usage can be found in the [XAI Examples](https://github.com/viadee/xai_examples) project. It features a readily compilable Maven project that can be used to skip necessary configuration steps.
+
 
 ## The Algorithm
 
