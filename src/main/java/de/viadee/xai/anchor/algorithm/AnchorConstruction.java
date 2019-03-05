@@ -321,7 +321,6 @@ public class AnchorConstruction<T extends DataInstance<?>> implements Serializab
      * @throws NoCandidateFoundException if no single candidate with a precision greater than 0 could be found.
      */
     private AnchorResult<T> beamSearch() throws NoCandidateFoundException {
-        LOGGER.info("Starting beam search with beam width {} and a max anchor size of {}", beamSize, maxAnchorSize);
         final double startTime = System.currentTimeMillis();
 
         int currentSize = 1;
@@ -330,7 +329,7 @@ public class AnchorConstruction<T extends DataInstance<?>> implements Serializab
 
         boolean stopLoop = false;
         while (currentSize <= maxAnchorSize && !stopLoop) {
-            LOGGER.info("Adding feature {} of {}", currentSize, maxAnchorSize);
+            LOGGER.debug("Adding feature {} of {}", currentSize, maxAnchorSize);
             // Generate candidates based on previous round's best candidates
             final List<AnchorCandidate> anchorCandidates = generateCandidateSet(bestOfSize.get(currentSize - 1),
                     explainedInstance.getFeatureCount(), (bestCandidate != null) ? bestCandidate.getCoverage() : 0);
@@ -349,10 +348,10 @@ public class AnchorConstruction<T extends DataInstance<?>> implements Serializab
                 // If anchorCandidate size <= beam size, then all candidates get returned without being sampled.
                 // Thus, these may not be removed
                 if (anchorCandidates.size() > bestCandidateCount && candidate.getPrecision() <= 0) {
-                    LOGGER.warn("Removing candidate {} as its precision is 0", candidate.getOrderedFeatures());
+                    LOGGER.debug("Removing candidate {} as its precision is 0", candidate.getOrderedFeatures());
                     iterator.remove();
                 } else if (!allowSuboptimalSteps && candidate.getAddedPrecision() <= 0) {
-                    LOGGER.warn("Removing candidate {} as it decreases its parent's precision",
+                    LOGGER.debug("Removing candidate {} as it decreases its parent's precision",
                             candidate.getOrderedFeatures());
                     iterator.remove();
                 }
@@ -366,7 +365,7 @@ public class AnchorConstruction<T extends DataInstance<?>> implements Serializab
             // For each candidate check whether it
             for (final AnchorCandidate candidate : bestCandidates) {
                 final boolean isValidCandidate = isValidCandidate(candidate, bestCandidateCount);
-                LOGGER.info("Top candidate {} is{} a valid anchor with precision {}",
+                LOGGER.debug("Top candidate {} is{} a valid anchor with precision {}",
                         candidate.getCanonicalFeatures(), (isValidCandidate) ? "" : " not", candidate.getPrecision());
                 // The best candidates returned do not necessarily have the right confidence constraints
                 // Check if this candidate is valid, i.e. adheres to the set constraints.
@@ -379,7 +378,7 @@ public class AnchorConstruction<T extends DataInstance<?>> implements Serializab
 
                     // See if current anchor has better coverage then previously bet one
                     if (bestCandidate == null || candidate.getCoverage() > bestCandidate.getCoverage()) {
-                        LOGGER.info("Found a new best anchor ({}) with a coverage of {}", candidate.getCanonicalFeatures(),
+                        LOGGER.debug("Found a new best anchor ({}) with a coverage of {}", candidate.getCanonicalFeatures(),
                                 candidate.getCoverage());
                         bestCandidate = candidate;
                         if (candidate.getCoverage() == 1) {
