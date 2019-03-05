@@ -14,6 +14,15 @@ The initial proposal "Anchors: High-Precision Model-Agnostic Explanations" by Ma
 + This Anchors implementations features several add-ons and optional extensions which can be found in a dedicated project, called [AnchorAdapters](https://github.com/viadee/javaAnchorAdapters). These can, depending on the use-case, significantly ease implementation and customization efforts.
 + Examples of Anchors' usage can be found in the [XAI Examples](https://github.com/viadee/xai_examples) project. It features a readily compilable Maven project that can be used to skip necessary configuration steps.
 
+## Why Java?
+Java has been chosen as the platform's foundation, since it provides multiple advantages: 
+it integrates well into a large ecosystem and can be used in conjunction with advanced technologies like H2O and 
+Apache Spark. 
+
+This implementation furthermore serves as a library based on which more approaches can be developed. 
+Among others, adapters, interfaces and API's are in development to offer the opportunity of platform-independent access.
+
+It is thus expected to reach a high dissemination among ML projects.
 
 ## The Algorithm
 
