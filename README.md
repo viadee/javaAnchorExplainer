@@ -61,6 +61,10 @@ new AnchorConstructionBuilder<>(classificationFunction, perturbationFunction, la
 The builder offers many more options on how to construct the anchor. Amongst others, the multi-armed bandit algorithm or
 the coverage calculation function may be customized. Additionally, the algorithm may be configured to utilize threading.
 
+### Tutorials and Examples
+
+As mentioned above, please refer to the [XAI Examples](https://github.com/viadee/xai_examples) project for ready-to-use application scenarios.
+
 # Collaboration
 
 The project is operated and further developed by the viadee Consulting AG in Münster, Westphalia. Results from theses at the WWU Münster and the FH Münster have been incorporated.
