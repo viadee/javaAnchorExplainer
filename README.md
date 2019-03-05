@@ -13,14 +13,9 @@ The initial proposal "Anchors: High-Precision Model-Agnostic Explanations" by Ma
 
 A short description of how the algorithm works is provided in the author's [*GitHub repository*](https://github.com/marcotcr/anchor/):
 
-> An anchor explanation is a rule that sufficiently “anchors” the
-prediction locally – such that changes to the rest of the feature
-values of the instance do not matter. In other words, for instances on which the anchor holds, the prediction is (almost)
-always the same.
+> An anchor explanation is a rule that sufficiently “anchors” the prediction locally – such that changes to the rest of the feature values of the instance do not matter. In other words, for instances on which the anchor holds, the prediction is (almost) always the same.
 
-> At the moment, we support explaining individual predictions for text classifiers or classifiers that act on tables (numpy arrays of numerical or categorical data). If there is enough interest, I can include code and examples for images.
-
-> The anchor method is able to explain any black box classifier, with two or more classes. All we require is that the classifier implements a function that takes in raw text or a numpy array and outputs a prediction (integer)
+> The anchor method is able to explain any black box classifier, with two or more classes. All we require is that the classifier implements a function that takes [a data instance] and outputs [an integer] prediction.
 
 
 ## Why Java?
