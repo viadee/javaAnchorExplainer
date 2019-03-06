@@ -37,6 +37,7 @@ public class ThreadedBatchExplainer<T extends DataInstance<?>> implements BatchE
     /**
      * Creates an instance of the {@link ThreadedBatchExplainer}
      *
+     * @param maxThreads              the max threads
      * @param executorService         Executor to use - if this one is not clustered, this instance will be closed after
      *                                finishing computations
      * @param executorServiceFunction used when this class is serialized (e. g. clustering). maxThreads is used as
@@ -53,6 +54,7 @@ public class ThreadedBatchExplainer<T extends DataInstance<?>> implements BatchE
     /**
      * Creates an instance of the {@link ThreadedBatchExplainer}
      *
+     * @param maxThreads              the max threads
      * @param executorService         Executor to use - if this one is not clustered, this instance will be closed after
      *                                finishing computations
      * @param executorServiceSupplier used when this class is serialized (e. g. clustering)

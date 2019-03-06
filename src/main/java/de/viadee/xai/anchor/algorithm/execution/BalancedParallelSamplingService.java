@@ -1,22 +1,17 @@
 package de.viadee.xai.anchor.algorithm.execution;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
 import de.viadee.xai.anchor.algorithm.AnchorCandidate;
 import de.viadee.xai.anchor.algorithm.ClassificationFunction;
 import de.viadee.xai.anchor.algorithm.DataInstance;
 import de.viadee.xai.anchor.algorithm.PerturbationFunction;
 import de.viadee.xai.anchor.algorithm.execution.sampling.SamplingFunction;
+
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.util.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Implementation of the {@link AbstractSamplingService} and extension of {@link ParallelSamplingService}.
@@ -46,9 +41,11 @@ public class BalancedParallelSamplingService<T extends DataInstance<?>> extends 
      * <p>
      * Requires both a perturbation and classification function to evaluate candidates
      *
-     * @param classificationFunction Function used to classify any instance of type
-     * @param perturbationFunction   Function used to create perturbations of the explained instance
-     * @param threadCount            the number of threads to use
+     * @param classificationFunction  Function used to classify any instance of type
+     * @param perturbationFunction    Function used to create perturbations of the explained instance
+     * @param executorService         the executor service
+     * @param executorServiceSupplier the executor service supplier
+     * @param threadCount             the number of threads to use
      */
     public BalancedParallelSamplingService(ClassificationFunction<T> classificationFunction,
                                            PerturbationFunction<T> perturbationFunction,
@@ -65,9 +62,11 @@ public class BalancedParallelSamplingService<T extends DataInstance<?>> extends 
      * <p>
      * Requires both a perturbation and classification function to evaluate candidates
      *
-     * @param classificationFunction Function used to classify any instance of type
-     * @param perturbationFunction   Function used to create perturbations of the explained instance
-     * @param threadCount            the number of threads to use
+     * @param classificationFunction  Function used to classify any instance of type
+     * @param perturbationFunction    Function used to create perturbations of the explained instance
+     * @param executorService         the executor service
+     * @param executorServiceFunction the executor service function
+     * @param threadCount             the number of threads to use
      */
     public BalancedParallelSamplingService(ClassificationFunction<T> classificationFunction,
                                            PerturbationFunction<T> perturbationFunction,
@@ -79,6 +78,12 @@ public class BalancedParallelSamplingService<T extends DataInstance<?>> extends 
         this.executorServiceFunction = executorServiceFunction;
     }
 
+    /**
+     * @param samplingFunction        the sampling function
+     * @param executorService         the executor service
+     * @param executorServiceSupplier the executor service supplier
+     * @param threadCount             the thread count
+     */
     public BalancedParallelSamplingService(SamplingFunction samplingFunction,
                                            ExecutorService executorService,
                                            ExecutorServiceSupplier executorServiceSupplier,
@@ -88,6 +93,12 @@ public class BalancedParallelSamplingService<T extends DataInstance<?>> extends 
         this.executorServiceFunction = null;
     }
 
+    /**
+     * @param samplingFunction        the sampling function
+     * @param executorService         the executor service
+     * @param executorServiceFunction the executor service function
+     * @param threadCount             the thread count
+     */
     public BalancedParallelSamplingService(SamplingFunction samplingFunction,
                                            ExecutorService executorService,
                                            ExecutorServiceFunction executorServiceFunction,

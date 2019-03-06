@@ -18,6 +18,8 @@ import java.util.stream.Collectors;
 /**
  * Implementation of the {@link AbstractSamplingService} that gathers samples in
  * a multiple threads.
+ * <p>
+ * TODO why is there such a  parameter abundance? Why is there no default constructor creating the executor services?
  *
  * @param <T> Type of the sampled instance
  */
