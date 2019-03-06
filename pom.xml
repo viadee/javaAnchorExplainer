@@ -13,6 +13,7 @@
     	Java application implementing the Anchors algorithm (https://github.com/marcotcr/anchor)
      	efficiently, in order to explain the underlying rules in machine learning models. 
      </description>
+    <url>https://github.com/viadee/javaAnchorExplainer</url>
 
 	<licenses>
 		<license>
