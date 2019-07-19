@@ -1,17 +1,13 @@
 package de.viadee.xai.anchor.algorithm.exploration;
 
-import de.viadee.xai.anchor.algorithm.AnchorConstructionBuilder;
-import de.viadee.xai.anchor.algorithm.AnchorResult;
-import de.viadee.xai.anchor.algorithm.ClassificationFunction;
-import de.viadee.xai.anchor.algorithm.DataInstance;
-import de.viadee.xai.anchor.algorithm.PerturbationFunction;
+import de.viadee.xai.anchor.algorithm.*;
 import de.viadee.xai.anchor.algorithm.coverage.CoverageIdentification;
 import de.viadee.xai.anchor.algorithm.util.NoiseGenerator;
-
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -46,7 +42,7 @@ public class FunctionSampleTest {
     private static List<Point> calculateCoveredPoints(AnchorResult<Point> result,
                                                       ClassificationFunction<Point> classificationFunction) {
         final Point resultPoint = result.getInstance();
-        final int resultLabel = result.getLabel();
+        final Serializable resultLabel = result.getLabel();
 
         final int perturbationDiameter = PERTURBATION_RANGE / 2;
 
@@ -58,7 +54,7 @@ public class FunctionSampleTest {
                 if (i == 0)
                     continue;
                 final Point testPoint = new Point(resultPoint.x + i, resultPoint.y);
-                if (classificationFunction.predict(testPoint) == resultLabel)
+                if (classificationFunction.predict(testPoint) == (int) resultLabel)
                     coveredPoints.add(testPoint);
             }
         }
@@ -68,7 +64,7 @@ public class FunctionSampleTest {
                     if (i == 0)
                         continue;
                     final Point testPoint = new Point(point.x, point.y + i);
-                    if (classificationFunction.predict(testPoint) == resultLabel)
+                    if (classificationFunction.predict(testPoint) == (int) resultLabel)
                         coveredPoints.add(testPoint);
                 }
             }

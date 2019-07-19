@@ -1,5 +1,6 @@
 package de.viadee.xai.anchor.algorithm;
 
+import java.io.Serializable;
 import java.util.Objects;
 
 /**
@@ -11,7 +12,7 @@ public class AnchorResult<T extends DataInstance<?>> extends AnchorCandidate {
     private static final long serialVersionUID = -1378097055362567551L;
 
     private final T instance;
-    private final int label;
+    private final Serializable label;
     private final boolean isAnchor;
     private final double timeSpent;
     private final double timeSpentSampling;
@@ -26,7 +27,7 @@ public class AnchorResult<T extends DataInstance<?>> extends AnchorCandidate {
      * @param timeSpent         the total time spent constructing the result
      * @param timeSpentSampling the total time spent sampling and evaluating candidates
      */
-    public AnchorResult(AnchorCandidate candidate, T instance, int label, boolean isAnchor, double timeSpent,
+    public AnchorResult(AnchorCandidate candidate, T instance, Serializable label, boolean isAnchor, double timeSpent,
                         double timeSpentSampling) {
         super(candidate.getOrderedFeatures(), candidate.getParentCandidate());
         super.setCoverage(candidate.getCoverage());
@@ -48,7 +49,7 @@ public class AnchorResult<T extends DataInstance<?>> extends AnchorCandidate {
     /**
      * @return the described instance's label
      */
-    public int getLabel() {
+    public Serializable getLabel() {
         return label;
     }
 
