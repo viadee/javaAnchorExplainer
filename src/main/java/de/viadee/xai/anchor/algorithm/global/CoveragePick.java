@@ -1,19 +1,15 @@
 package de.viadee.xai.anchor.algorithm.global;
 
+import de.viadee.xai.anchor.algorithm.*;
+import de.viadee.xai.anchor.algorithm.execution.ExecutorServiceFunction;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.concurrent.ExecutorService;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import de.viadee.xai.anchor.algorithm.AnchorCandidate;
-import de.viadee.xai.anchor.algorithm.AnchorConstruction;
-import de.viadee.xai.anchor.algorithm.AnchorConstructionBuilder;
-import de.viadee.xai.anchor.algorithm.AnchorResult;
-import de.viadee.xai.anchor.algorithm.DataInstance;
-import de.viadee.xai.anchor.algorithm.execution.ExecutorServiceFunction;
 
 /**
  * {@link CoveragePick} is a global explainer aiming to maximize the result's coverage.
@@ -88,7 +84,7 @@ public class CoveragePick<T extends DataInstance<?>> extends AbstractGlobalExpla
             iter = survivors.listIterator();
             while (iter.hasNext()) {
                 final AnchorResult<T> current = iter.next();
-                final boolean hasSameLabel = !includeTargetValue || bestExplanation.getLabel() == current.getLabel();
+                final boolean hasSameLabel = !includeTargetValue || bestExplanation.getExplainedInstanceLabel() == current.getExplainedInstanceLabel();
                 final boolean hasSameFeatureValue = current.getCanonicalFeatures().stream().anyMatch(feature ->
                         bestExplanation.getCanonicalFeatures().contains(feature) && current.getInstance()
                                 .getValue(feature).equals(bestExplanation.getInstance().getValue(feature)));
@@ -99,8 +95,8 @@ public class CoveragePick<T extends DataInstance<?>> extends AbstractGlobalExpla
         }
 
         if (includeTargetValue) {
-            result.stream().map(AnchorResult::getLabel).distinct().forEach(label -> {
-                final Double resultCoverage = result.stream().filter(a -> a.getLabel() == label)
+            result.stream().map(AnchorResult::getExplainedInstanceLabel).distinct().forEach(label -> {
+                final Double resultCoverage = result.stream().filter(a -> a.getExplainedInstanceLabel() == label)
                         .map(AnchorCandidate::getCoverage).reduce((x, y) -> x + y)
                         .orElse(0D);
                 LOGGER.info("The returned {} results for label {} exclusively cover a total of {}% of the model's input",

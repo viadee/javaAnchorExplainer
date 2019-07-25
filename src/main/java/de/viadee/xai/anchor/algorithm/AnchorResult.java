@@ -1,6 +1,5 @@
 package de.viadee.xai.anchor.algorithm;
 
-import java.io.Serializable;
 import java.util.Objects;
 
 /**
@@ -12,7 +11,7 @@ public class AnchorResult<T extends DataInstance<?>> extends AnchorCandidate {
     private static final long serialVersionUID = -1378097055362567551L;
 
     private final T instance;
-    private final Serializable label;
+    private final int explainedInstanceLabel;
     private final boolean isAnchor;
     private final double timeSpent;
     private final double timeSpentSampling;
@@ -20,20 +19,20 @@ public class AnchorResult<T extends DataInstance<?>> extends AnchorCandidate {
     /**
      * Constructs the instance
      *
-     * @param candidate         the {@link AnchorCandidate}
-     * @param instance          the instance described
-     * @param label             the instance's label
-     * @param isAnchor          if true, marks the result is an anchor and adheres to the set constraints
-     * @param timeSpent         the total time spent constructing the result
-     * @param timeSpentSampling the total time spent sampling and evaluating candidates
+     * @param candidate              the {@link AnchorCandidate}
+     * @param instance               the instance described
+     * @param explainedInstanceLabel the instance's explainedInstanceLabel
+     * @param isAnchor               if true, marks the result is an anchor and adheres to the set constraints
+     * @param timeSpent              the total time spent constructing the result
+     * @param timeSpentSampling      the total time spent sampling and evaluating candidates
      */
-    public AnchorResult(AnchorCandidate candidate, T instance, Serializable label, boolean isAnchor, double timeSpent,
-                        double timeSpentSampling) {
+    public AnchorResult(AnchorCandidate candidate, T instance, int explainedInstanceLabel, boolean isAnchor,
+                        double timeSpent, double timeSpentSampling) {
         super(candidate.getOrderedFeatures(), candidate.getParentCandidate());
         super.setCoverage(candidate.getCoverage());
         this.registerSamples(candidate.getSampledSize(), candidate.getPositiveSamples());
         this.instance = instance;
-        this.label = label;
+        this.explainedInstanceLabel = explainedInstanceLabel;
         this.isAnchor = isAnchor;
         this.timeSpent = timeSpent;
         this.timeSpentSampling = timeSpentSampling;
@@ -47,10 +46,10 @@ public class AnchorResult<T extends DataInstance<?>> extends AnchorCandidate {
     }
 
     /**
-     * @return the described instance's label
+     * @return the described instance's explainedInstanceLabel
      */
-    public Serializable getLabel() {
-        return label;
+    public int getExplainedInstanceLabel() {
+        return explainedInstanceLabel;
     }
 
     /**
@@ -81,7 +80,7 @@ public class AnchorResult<T extends DataInstance<?>> extends AnchorCandidate {
         if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
         AnchorResult<?> that = (AnchorResult<?>) o;
-        return label == that.label &&
+        return explainedInstanceLabel == that.explainedInstanceLabel &&
                 isAnchor == that.isAnchor &&
                 Double.compare(that.timeSpent, timeSpent) == 0 &&
                 Double.compare(that.timeSpentSampling, timeSpentSampling) == 0 &&
@@ -90,7 +89,7 @@ public class AnchorResult<T extends DataInstance<?>> extends AnchorCandidate {
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), instance, label, isAnchor, timeSpent, timeSpentSampling);
+        return Objects.hash(super.hashCode(), instance, explainedInstanceLabel, isAnchor, timeSpent, timeSpentSampling);
     }
 
 }

@@ -42,7 +42,7 @@ public class FunctionSampleTest {
     private static List<Point> calculateCoveredPoints(AnchorResult<Point> result,
                                                       ClassificationFunction<Point> classificationFunction) {
         final Point resultPoint = result.getInstance();
-        final Serializable resultLabel = result.getLabel();
+        final Serializable resultLabel = result.getExplainedInstanceLabel();
 
         final int perturbationDiameter = PERTURBATION_RANGE / 2;
 
