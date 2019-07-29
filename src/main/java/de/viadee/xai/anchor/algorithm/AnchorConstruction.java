@@ -286,6 +286,7 @@ public class AnchorConstruction<T extends DataInstance<?>> implements Serializab
     private void calculateCandidateCoverage(AnchorCandidate candidate) {
         if (!candidate.isCoverageUndefined())
             return;
+        LOGGER.debug("Evaluating coverage of candidate {}", candidate.getOrderedFeatures());
         candidate.setCoverage(coverageIdentification.calculateCoverage(candidate.getCanonicalFeatures()));
     }
 
@@ -358,7 +359,7 @@ public class AnchorConstruction<T extends DataInstance<?>> implements Serializab
             for (final AnchorCandidate candidate : bestCandidates) {
                 final boolean isValidCandidate = isValidCandidate(candidate, bestCandidateCount);
                 LOGGER.debug("Top candidate {} is{} a valid anchor with precision {}",
-                        candidate.getCanonicalFeatures(), (isValidCandidate) ? "" : " not", candidate.getPrecision());
+                        candidate.getOrderedFeatures(), (isValidCandidate) ? "" : " not", candidate.getPrecision());
                 // The best candidates returned do not necessarily have the right confidence constraints
                 // Check if this candidate is valid, i.e. adheres to the set constraints.
                 // Only then it can be a valid result candidate
@@ -370,7 +371,7 @@ public class AnchorConstruction<T extends DataInstance<?>> implements Serializab
 
                     // See if current anchor has better coverage then previously bet one
                     if (bestCandidate == null || candidate.getCoverage() > bestCandidate.getCoverage()) {
-                        LOGGER.debug("Found a new best anchor ({}) with a coverage of {}", candidate.getCanonicalFeatures(),
+                        LOGGER.debug("Found a new best anchor ({}) with a coverage of {}", candidate.getOrderedFeatures(),
                                 candidate.getCoverage());
                         bestCandidate = candidate;
                         if (candidate.getCoverage() == 1) {
