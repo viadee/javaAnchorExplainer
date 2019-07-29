@@ -410,6 +410,13 @@ public class AnchorConstruction<T extends DataInstance<?>> implements Serializab
             LOGGER.warn("No anchor found, returning best candidate");
         }
 
+        // The best candidate's coverage is guaranteed to be included. However, its parent rules' coverage may not be
+        AnchorCandidate currentBestCandidateParent = bestCandidate.getParentCandidate();
+        while (currentBestCandidateParent != null) {
+            calculateCandidateCoverage(currentBestCandidateParent);
+            currentBestCandidateParent = currentBestCandidateParent.getParentCandidate();
+        }
+
         final double timeSpent = System.currentTimeMillis() - startTime;
         LOGGER.info("Found result {} in {}ms", bestCandidate, timeSpent);
         return new AnchorResult<>(bestCandidate, explainedInstance, explainedInstanceLabel, isAnchor,
