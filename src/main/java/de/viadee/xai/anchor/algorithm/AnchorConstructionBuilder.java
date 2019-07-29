@@ -1,21 +1,16 @@
 package de.viadee.xai.anchor.algorithm;
 
-import java.io.Serializable;
-import java.util.concurrent.ExecutorService;
-
 import de.viadee.xai.anchor.algorithm.coverage.CoverageIdentification;
 import de.viadee.xai.anchor.algorithm.coverage.PerturbationBasedCoverageIdentification;
-import de.viadee.xai.anchor.algorithm.execution.BalancedParallelSamplingService;
-import de.viadee.xai.anchor.algorithm.execution.ExecutorServiceFunction;
-import de.viadee.xai.anchor.algorithm.execution.ExecutorServiceSupplier;
-import de.viadee.xai.anchor.algorithm.execution.LinearSamplingService;
-import de.viadee.xai.anchor.algorithm.execution.ParallelSamplingService;
-import de.viadee.xai.anchor.algorithm.execution.SamplingService;
+import de.viadee.xai.anchor.algorithm.execution.*;
 import de.viadee.xai.anchor.algorithm.execution.sampling.DefaultSamplingFunction;
 import de.viadee.xai.anchor.algorithm.execution.sampling.SamplingFunction;
 import de.viadee.xai.anchor.algorithm.exploration.BestAnchorIdentification;
 import de.viadee.xai.anchor.algorithm.exploration.KL_LUCB;
 import de.viadee.xai.anchor.algorithm.global.SubmodularPick;
+
+import java.io.Serializable;
+import java.util.concurrent.ExecutorService;
 
 /**
  * Builder class used to configure an {@link AnchorConstruction} instance easily.
@@ -24,8 +19,6 @@ import de.viadee.xai.anchor.algorithm.global.SubmodularPick;
  */
 public class AnchorConstructionBuilder<T extends DataInstance<?>> implements Serializable {
     private static final long serialVersionUID = -4081808558489352450L;
-
-    private static final int DEFAULT_COVERAGE_SAMPLE_COUNT = 1000;
 
     private SamplingFunction<T> samplingFunction;
     private T explainedInstance;
@@ -380,8 +373,7 @@ public class AnchorConstructionBuilder<T extends DataInstance<?>> implements Ser
         return new AnchorConstruction<>(bestAnchorIdentification, coverageIdentification, samplingService,
                 explainedInstance, explainedInstanceLabel,
                 (maxAnchorSize == null) ? explainedInstance.getFeatureCount() : maxAnchorSize,
-                beamSize, delta, epsilon, tau, tauDiscrepancy, initSampleCount,
-                lazyCoverageEvaluation, allowSuboptimalSteps);
+                beamSize, delta, epsilon, tau, tauDiscrepancy, initSampleCount, allowSuboptimalSteps);
     }
 
 }

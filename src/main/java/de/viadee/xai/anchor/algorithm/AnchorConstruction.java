@@ -40,7 +40,6 @@ public class AnchorConstruction<T extends DataInstance<?>> implements Serializab
     private final double tau;
     private final double tauDiscrepancy;
     private final int initSampleCount;
-    private final boolean lazyCoverageEvaluation;
     private final boolean allowSuboptimalSteps;
 
     private final SamplingService samplingService;
@@ -69,8 +68,6 @@ public class AnchorConstruction<T extends DataInstance<?>> implements Serializab
      *                                 the best arm identification algorithm. While theoretically, a guarantee that no
      *                                 candidates get discarded due to too few samples is provided by delta, using this
      *                                 argument has practical advantages.
-     * @param lazyCoverageEvaluation   if set true, a candidate's coverage will only be determined when needed to, i.e.
-     *                                 when extending or returning it
      * @param allowSuboptimalSteps     if set to false, candidates that are returned by the best arm identification get
      *                                 removed when their precision is lower than their parent's
      */
@@ -81,7 +78,7 @@ public class AnchorConstruction<T extends DataInstance<?>> implements Serializab
                        final int beamSize, final double delta, final double epsilon, final double tau,
                        final double tauDiscrepancy,
                        final int initSampleCount,
-                       boolean lazyCoverageEvaluation, boolean allowSuboptimalSteps) {
+                       boolean allowSuboptimalSteps) {
         if (bestAnchorIdentification == null)
             throw new IllegalArgumentException("Best anchor identification" + ParameterValidation.NULL_MESSAGE);
         if (coverageIdentification == null)
@@ -118,7 +115,6 @@ public class AnchorConstruction<T extends DataInstance<?>> implements Serializab
         this.tau = tau;
         this.tauDiscrepancy = tauDiscrepancy;
         this.initSampleCount = initSampleCount;
-        this.lazyCoverageEvaluation = lazyCoverageEvaluation;
         this.allowSuboptimalSteps = allowSuboptimalSteps;
         this.samplingService = samplingService;
     }
@@ -196,14 +192,10 @@ public class AnchorConstruction<T extends DataInstance<?>> implements Serializab
         }
         // Only accept those candidates that have a certain minimum coverage
         for (final AnchorCandidate candidate : intermediateResult) {
-            // Only calculate coverage when lazyCoverageEvaluation is set false
-            if (!lazyCoverageEvaluation)
-                calculateCandidateCoverage(candidate);
             // Construct candidate
             if (minCoverage > 0) {
-                // A minimum coverage has been set, so we already need to calculate the coverage right now
-                if (lazyCoverageEvaluation)
-                    calculateCandidateCoverage(candidate);
+                // A minimum coverage has been set, so we already need to calculate the coverage now
+                calculateCandidateCoverage(candidate);
                 if (candidate.getCoverage() < minCoverage) {
                     // No longer consider this candidate
                     continue;
@@ -473,7 +465,6 @@ public class AnchorConstruction<T extends DataInstance<?>> implements Serializab
                         "tau", tau,
                         "tauDiscrepancy", tauDiscrepancy,
                         "initSampleCount", initSampleCount,
-                        "lazyCoverageEvaluation", lazyCoverageEvaluation,
                         "allowSuboptimalSteps", allowSuboptimalSteps));
 
         return beamSearch();
