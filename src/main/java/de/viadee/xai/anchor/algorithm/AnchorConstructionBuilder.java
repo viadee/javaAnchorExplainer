@@ -37,15 +37,13 @@ public class AnchorConstructionBuilder<T extends DataInstance<?>> implements Ser
     private double tau = 1;
     private double tauDiscrepancy = 0.05;
     private int initSampleCount = 1;
-    private boolean lazyCoverageEvaluation = false;
     private boolean allowSuboptimalSteps = true;
 
     private AnchorConstructionBuilder(SamplingFunction<T> samplingFunction, T explainedInstance,
                                       int explainedInstanceLabel, BestAnchorIdentification bestAnchorIdentification,
                                       CoverageIdentification coverageIdentification, SamplingService samplingService,
                                       double delta, double epsilon, Integer maxAnchorSize, int beamSize, double tau,
-                                      double tauDiscrepancy, int initSampleCount, boolean lazyCoverageEvaluation,
-                                      boolean allowSuboptimalSteps) {
+                                      double tauDiscrepancy, int initSampleCount, boolean allowSuboptimalSteps) {
         this.samplingFunction = samplingFunction;
         this.explainedInstance = explainedInstance;
         this.explainedInstanceLabel = explainedInstanceLabel;
@@ -59,7 +57,6 @@ public class AnchorConstructionBuilder<T extends DataInstance<?>> implements Ser
         this.tau = tau;
         this.tauDiscrepancy = tauDiscrepancy;
         this.initSampleCount = initSampleCount;
-        this.lazyCoverageEvaluation = lazyCoverageEvaluation;
         this.allowSuboptimalSteps = allowSuboptimalSteps;
     }
 
@@ -128,7 +125,7 @@ public class AnchorConstructionBuilder<T extends DataInstance<?>> implements Ser
                 builder.explainedInstance, builder.explainedInstanceLabel, builder.bestAnchorIdentification,
                 builder.coverageIdentification, builder.samplingService, builder.delta, builder.epsilon,
                 builder.maxAnchorSize, builder.beamSize, builder.tau, builder.tauDiscrepancy, builder.initSampleCount,
-                builder.lazyCoverageEvaluation, builder.allowSuboptimalSteps);
+                builder.allowSuboptimalSteps);
 
         newBuilder.explainedInstance = explainedInstance;
         newBuilder.samplingFunction = newBuilder.samplingFunction.notifyOriginChange(explainedInstance);
@@ -324,19 +321,6 @@ public class AnchorConstructionBuilder<T extends DataInstance<?>> implements Ser
      */
     public AnchorConstructionBuilder<T> setSamplingService(final SamplingService samplingService) {
         this.samplingService = samplingService;
-        return this;
-    }
-
-    /**
-     * Sets lazy coverage evaluation.
-     * <p>
-     * If set true, a candidate's coverage will only be determined when needed to, i.e. when extending or returning it
-     *
-     * @param lazyCoverageEvaluation the lazy coverage evaluation value
-     * @return the current {@link AnchorConstructionBuilder} for chaining
-     */
-    public AnchorConstructionBuilder<T> setLazyCoverageEvaluation(final boolean lazyCoverageEvaluation) {
-        this.lazyCoverageEvaluation = lazyCoverageEvaluation;
         return this;
     }
 
