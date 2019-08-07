@@ -1,15 +1,9 @@
 package de.viadee.xai.anchor.algorithm;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.SortedSet;
-import java.util.TreeSet;
-
 import de.viadee.xai.anchor.algorithm.util.ParameterValidation;
+
+import java.io.Serializable;
+import java.util.*;
 
 /**
  * Representation of an Anchor candidate.
@@ -130,15 +124,6 @@ public class AnchorCandidate implements Serializable {
     }
 
     /**
-     * Returns the feature that has been added during the creation of this instance
-     *
-     * @return the added feature
-     */
-    public Integer getAddedFeature() {
-        return orderedFeatures.get(orderedFeatures.size() - 1);
-    }
-
-    /**
      * Sets the coverage of the anchor.
      * <p>
      * Its coverage may only be set once as it makes no sense of recalculating it.
@@ -158,6 +143,15 @@ public class AnchorCandidate implements Serializable {
         if (!ParameterValidation.isPercentage(coverage))
             throw new IllegalArgumentException("Coverage" + ParameterValidation.NOT_PERCENTAGE_MESSAGE);
         this.coverage = coverage;
+    }
+
+    /**
+     * Returns the feature that has been added during the creation of this instance
+     *
+     * @return the added feature
+     */
+    public Integer getAddedFeature() {
+        return orderedFeatures.get(orderedFeatures.size() - 1);
     }
 
     /**
@@ -231,7 +225,10 @@ public class AnchorCandidate implements Serializable {
      */
     public double getAddedCoverageInPercent() {
         final double parentCoverage = hasParentCandidate() ? parentCandidate.getCoverage() : 1;
-        return (coverage - parentCoverage) / parentCoverage;
+        // Prevent NaN as result
+        return (parentCoverage == 0)
+                ? 0
+                : ((coverage - parentCoverage) / parentCoverage);
     }
 
     @Override
