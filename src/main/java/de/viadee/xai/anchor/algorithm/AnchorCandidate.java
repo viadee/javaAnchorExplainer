@@ -37,9 +37,9 @@ public class AnchorCandidate implements Serializable {
      * @param parentCandidate the parent candidate this rule has been derived from
      */
     public AnchorCandidate(final Collection<Integer> features, final AnchorCandidate parentCandidate) {
-        if (!ParameterValidation.isNotEmpty(features))
-            throw new IllegalArgumentException("Candidate" + ParameterValidation.COLLECTION_EMPTY_MESSAGE);
-        if (parentCandidate == null && features.size() != 1)
+        if (features == null)
+            throw new IllegalArgumentException("Features" + ParameterValidation.NULL_MESSAGE);
+        if (parentCandidate == null && features.size() > 1)
             throw new IllegalArgumentException("No parent candidate specified");
         if (parentCandidate != null && (features.size() != parentCandidate.canonicalFeatures.size() + 1))
             throw new IllegalArgumentException("Parent candidate must have n-1 features");
@@ -63,7 +63,7 @@ public class AnchorCandidate implements Serializable {
     }
 
     private static AnchorCandidate fakeParent(final Collection<Integer> features) {
-        if (features.size() == 1) {
+        if (features.size() <= 1) {
             return null;
         } else {
             final Collection<Integer> parentFeatures = new ArrayList<>(features).subList(0, features.size() - 1);

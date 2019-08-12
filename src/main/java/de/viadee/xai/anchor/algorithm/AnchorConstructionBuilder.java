@@ -38,12 +38,14 @@ public class AnchorConstructionBuilder<T extends DataInstance<?>> implements Ser
     private double tauDiscrepancy = 0.05;
     private int initSampleCount = 1;
     private boolean allowSuboptimalSteps = true;
+    private boolean evaluateEmptyRule = true;
 
     private AnchorConstructionBuilder(SamplingFunction<T> samplingFunction, T explainedInstance,
                                       int explainedInstanceLabel, BestAnchorIdentification bestAnchorIdentification,
                                       CoverageIdentification coverageIdentification, SamplingService samplingService,
                                       double delta, double epsilon, Integer maxAnchorSize, int beamSize, double tau,
-                                      double tauDiscrepancy, int initSampleCount, boolean allowSuboptimalSteps) {
+                                      double tauDiscrepancy, int initSampleCount, boolean allowSuboptimalSteps,
+                                      boolean evaluateEmptyRule) {
         this.samplingFunction = samplingFunction;
         this.explainedInstance = explainedInstance;
         this.explainedInstanceLabel = explainedInstanceLabel;
@@ -58,6 +60,7 @@ public class AnchorConstructionBuilder<T extends DataInstance<?>> implements Ser
         this.tauDiscrepancy = tauDiscrepancy;
         this.initSampleCount = initSampleCount;
         this.allowSuboptimalSteps = allowSuboptimalSteps;
+        this.evaluateEmptyRule = evaluateEmptyRule;
     }
 
     /**
@@ -125,7 +128,7 @@ public class AnchorConstructionBuilder<T extends DataInstance<?>> implements Ser
                 builder.explainedInstance, builder.explainedInstanceLabel, builder.bestAnchorIdentification,
                 builder.coverageIdentification, builder.samplingService, builder.delta, builder.epsilon,
                 builder.maxAnchorSize, builder.beamSize, builder.tau, builder.tauDiscrepancy, builder.initSampleCount,
-                builder.allowSuboptimalSteps);
+                builder.allowSuboptimalSteps, builder.evaluateEmptyRule);
 
         newBuilder.explainedInstance = explainedInstance;
         newBuilder.samplingFunction = newBuilder.samplingFunction.notifyOriginChange(explainedInstance);
@@ -143,6 +146,20 @@ public class AnchorConstructionBuilder<T extends DataInstance<?>> implements Ser
 
     public SamplingService getSamplingService() {
         return samplingService;
+    }
+
+    /**
+     * Sets the sampling service
+     * <p>
+     * If setBestAnchorIdentification to null, the default
+     * {@link de.viadee.xai.anchor.algorithm.execution.LinearSamplingService} is used
+     *
+     * @param samplingService the sampling service
+     * @return the current {@link AnchorConstructionBuilder} for chaining
+     */
+    public AnchorConstructionBuilder<T> setSamplingService(final SamplingService samplingService) {
+        this.samplingService = samplingService;
+        return this;
     }
 
     /**
@@ -311,20 +328,6 @@ public class AnchorConstructionBuilder<T extends DataInstance<?>> implements Ser
     }
 
     /**
-     * Sets the sampling service
-     * <p>
-     * If setBestAnchorIdentification to null, the default
-     * {@link de.viadee.xai.anchor.algorithm.execution.LinearSamplingService} is used
-     *
-     * @param samplingService the sampling service
-     * @return the current {@link AnchorConstructionBuilder} for chaining
-     */
-    public AnchorConstructionBuilder<T> setSamplingService(final SamplingService samplingService) {
-        this.samplingService = samplingService;
-        return this;
-    }
-
-    /**
      * Sets allow suboptimal steps.
      * <p>
      * If set to false, candidates that are returned by the best arm identification get
@@ -335,6 +338,22 @@ public class AnchorConstructionBuilder<T extends DataInstance<?>> implements Ser
      */
     public AnchorConstructionBuilder<T> setAllowSuboptimalSteps(final boolean allowSuboptimalSteps) {
         this.allowSuboptimalSteps = allowSuboptimalSteps;
+        return this;
+    }
+
+    /**
+     * Sets evaluate empty rules.
+     * <p>
+     * Adds the empty rule to round 1 and evaluates it. This is to check, if the model
+     * varies at all, as in some cases, the model creates rules that all validate to
+     * precision 1. In these cases the user will know that an empty rule
+     * is the best rule. See issue #17.
+     *
+     * @param evaluateEmptyRule true, if empty rule is to be evaluates
+     * @return the current {@link AnchorConstructionBuilder} for chaining
+     */
+    public AnchorConstructionBuilder<T> setEvaluateEmptyRule(final boolean evaluateEmptyRule) {
+        this.evaluateEmptyRule = evaluateEmptyRule;
         return this;
     }
 
@@ -357,7 +376,8 @@ public class AnchorConstructionBuilder<T extends DataInstance<?>> implements Ser
         return new AnchorConstruction<>(bestAnchorIdentification, coverageIdentification, samplingService,
                 explainedInstance, explainedInstanceLabel,
                 (maxAnchorSize == null) ? explainedInstance.getFeatureCount() : maxAnchorSize,
-                beamSize, delta, epsilon, tau, tauDiscrepancy, initSampleCount, allowSuboptimalSteps);
+                beamSize, delta, epsilon, tau, tauDiscrepancy, initSampleCount, allowSuboptimalSteps,
+                evaluateEmptyRule);
     }
 
 }

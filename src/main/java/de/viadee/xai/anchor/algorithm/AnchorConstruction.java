@@ -41,6 +41,7 @@ public class AnchorConstruction<T extends DataInstance<?>> implements Serializab
     private final double tauDiscrepancy;
     private final int initSampleCount;
     private final boolean allowSuboptimalSteps;
+    private final boolean evaluateEmptyRule;
 
     private final SamplingService samplingService;
 
@@ -70,15 +71,18 @@ public class AnchorConstruction<T extends DataInstance<?>> implements Serializab
      *                                 argument has practical advantages.
      * @param allowSuboptimalSteps     if set to false, candidates that are returned by the best arm identification get
      *                                 removed when their precision is lower than their parent's
+     * @param evaluateEmptyRule        Adds the empty rule to round 1 and evaluates it. This is to check, if the model
+     *                                 varies at all, as in some cases, the model creates rules that all validate to
+     *                                 precision 1. In these cases the user will know that an empty rule
+     *                                 is the best rule. See issue #17.
      */
     AnchorConstruction(final BestAnchorIdentification bestAnchorIdentification,
                        final CoverageIdentification coverageIdentification,
                        final SamplingService samplingService,
                        final T explainedInstance, final int explainedInstanceLabel, final int maxAnchorSize,
                        final int beamSize, final double delta, final double epsilon, final double tau,
-                       final double tauDiscrepancy,
-                       final int initSampleCount,
-                       boolean allowSuboptimalSteps) {
+                       final double tauDiscrepancy, final int initSampleCount, final boolean allowSuboptimalSteps,
+                       final boolean evaluateEmptyRule) {
         if (bestAnchorIdentification == null)
             throw new IllegalArgumentException("Best anchor identification" + ParameterValidation.NULL_MESSAGE);
         if (coverageIdentification == null)
@@ -117,10 +121,7 @@ public class AnchorConstruction<T extends DataInstance<?>> implements Serializab
         this.initSampleCount = initSampleCount;
         this.allowSuboptimalSteps = allowSuboptimalSteps;
         this.samplingService = samplingService;
-    }
-
-    public SamplingService getSamplingService() {
-        return samplingService;
+        this.evaluateEmptyRule = evaluateEmptyRule;
     }
 
     private static String createKeyValueMap(Object... objects) {
@@ -323,9 +324,21 @@ public class AnchorConstruction<T extends DataInstance<?>> implements Serializab
         boolean stopLoop = false;
         while (currentSize <= maxAnchorSize && !stopLoop) {
             LOGGER.debug("Adding feature {} of {}", currentSize, maxAnchorSize);
+
             // Generate candidates based on previous round's best candidates
             final List<AnchorCandidate> anchorCandidates = generateCandidateSet(bestOfSize.get(currentSize - 1),
                     explainedInstance.getFeatureCount(), (bestCandidate != null) ? bestCandidate.getCoverage() : 0);
+
+            // Add an empty rule in round 1. See issue #17.
+            // We need to be careful to not let this rule get to the next round,
+            // as its arity differs from the other rules
+            AnchorCandidate emptyCandidate = null;
+            if (evaluateEmptyRule && currentSize == 1) {
+                emptyCandidate = new AnchorCandidate(Collections.emptyList());
+                emptyCandidate.setCoverage(1);
+                anchorCandidates.add(emptyCandidate);
+            }
+
             // If - for whatever reason - no more candidates can be identified, quit search
             if (anchorCandidates.size() == 0)
                 break;
@@ -333,6 +346,7 @@ public class AnchorConstruction<T extends DataInstance<?>> implements Serializab
             // Identify this round's best candidates
             final int bestCandidateCount = Math.min(anchorCandidates.size(), beamSize);
             final List<AnchorCandidate> bestCandidates = bestCandidate(anchorCandidates, bestCandidateCount);
+            bestCandidates.sort(Comparator.comparingDouble(AnchorCandidate::getPrecision).reversed());
             // However, filter candidates that have a precision of 0.
             // Or such that decrease their parents precision
             final Iterator<AnchorCandidate> iterator = bestCandidates.iterator();
@@ -355,6 +369,10 @@ public class AnchorConstruction<T extends DataInstance<?>> implements Serializab
             }
             bestOfSize.put(currentSize, bestCandidates);
 
+            // Make sure emptyCandidates gets evaluated
+            if (emptyCandidate != null && !bestCandidates.contains(emptyCandidate)) {
+                bestCandidates.add(emptyCandidate);
+            }
             // For each candidate check whether it
             for (final AnchorCandidate candidate : bestCandidates) {
                 final boolean isValidCandidate = isValidCandidate(candidate, bestCandidateCount);
@@ -381,6 +399,20 @@ public class AnchorConstruction<T extends DataInstance<?>> implements Serializab
                     }
                 }
             }
+
+            // In some cases, we might still have the empty rule in our result-set.
+            // This rule needs to be removed and replaced by the actual best rule
+            if (emptyCandidate != null && !stopLoop) {
+                bestCandidates.remove(emptyCandidate);
+                if (bestCandidates.size() < bestCandidateCount) {
+                    // After removing this candidate, there might be one element too few in the set
+                    anchorCandidates.stream()
+                            .filter(c -> !bestCandidates.contains(c))
+                            .max(Comparator.comparingDouble(AnchorCandidate::getPrecision))
+                            .ifPresent(bestCandidates::add);
+                }
+            }
+
             currentSize++;
         }
 

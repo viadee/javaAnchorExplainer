@@ -6,7 +6,7 @@
 
     <groupId>de.viadee.xai.anchor</groupId>
     <artifactId>algorithm</artifactId>
-    <version>1.0.2</version>
+    <version>1.0.3</version>
 
     <name>AnchorJ-Algorithm</name>
     <description>
