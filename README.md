@@ -32,6 +32,7 @@ It is thus expected to reach a high dissemination among ML projects.
 
 + This Anchors implementations features several add-ons and optional extensions which can be found in a dedicated project, called [AnchorAdapters](https://github.com/viadee/javaAnchorAdapters). These can, depending on the use-case, significantly ease implementation and customization efforts. The project aims to include methodological, i.e. default approaches to common Anchors applications. Thus, Anchors' drawback of not being application-agnostic is being approached for default domains.
 + Examples of Anchors' usage can be found in the [XAI Examples](https://github.com/viadee/xai_examples) project. It features a readily compilable Maven project that can be used to skip necessary configuration steps.
++ This implementation has been released as an [**R package**](https://github.com/viadee/anchorsOnR) and will soon be available on CRAN.
 
 
 ## Getting Started
